@@ -203,13 +203,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="LayerArray.cpp" />
-    <ClCompile Include="MainEngine.cpp" />
-    <ClCompile Include="MainEngine_Events.cpp" />
-    <ClCompile Include="MainEngine_fonts.cpp" />
-    <ClCompile Include="MainEngine_GUI.cpp" />
-    <ClCompile Include="MainEngine_logic.cpp" />
-    <ClCompile Include="MainEngine_graphic.cpp" />
+    <ClCompile Include="LayerList.cpp" />
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Application_Events.cpp" />
+    <ClCompile Include="fonts.cpp" />
+    <ClCompile Include="Application_logic.cpp" />
+    <ClCompile Include="Application_graphic.cpp" />
     <ClCompile Include="math_geometry.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -218,7 +217,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Shape.cpp" />
-    <ClCompile Include="TechnicalSketcher-Allegro.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -227,10 +226,13 @@
   <ItemGroup>
     <ClInclude Include="AllegroEngine.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="fonts.h" />
     <ClInclude Include="geometry.h" />
+    <ClInclude Include="GuiWindows.h" />
+    <ClInclude Include="StaticImGuiWindow.h" />
     <ClInclude Include="Layer.h" />
-    <ClInclude Include="LayerArray.h" />
-    <ClInclude Include="MainEngine.h" />
+    <ClInclude Include="LayerList.h" />
+    <ClInclude Include="Application.h" />
     <ClInclude Include="math_geometry.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="print.h" />

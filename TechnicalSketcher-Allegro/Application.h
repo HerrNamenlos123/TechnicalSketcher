@@ -1,0 +1,157 @@
+#pragma once
+
+#include "pch.h"
+#include "AllegroEngine.h"
+#include "Shape.h"
+#include "Layer.h"
+#include "LayerList.h"
+#include "GuiWindows.h"
+
+class Application : public AllegroEngine {
+public:
+
+	// User interface
+	glm::vec2 panOffset = { 0, 0 };
+	float scrollFactor = -0.2f;
+	float scale = 50;
+	float snapSize = 1;
+	float ctrl_currentLineThickness = 0.1;
+	float highlightDistanceToMouse = 8;
+
+	// Visuals
+	float gridLineColor = 220;	// Grayscale
+	float gridLineWidth = 1;
+	glm::vec3 gfx_disabledLineColor = color(200);
+	glm::vec3 gfx_normalLineColor = color(0);
+	glm::vec3 gfx_hoveredLineColor = color(252, 132, 3);
+	glm::vec3 gfx_selectedLineColor = color(255, 0, 0);
+	glm::vec3 gfx_selectionBoxColor = color(252, 132, 3);
+	glm::vec4 gfx_selectionBoxFillColor = color(200, 20, 0, 30);
+
+	// Controls
+	enum CursorTool selectedTool = TOOL_SELECT;
+	glm::vec2 mouse_workspace = { 0, 0 };
+	glm::vec2 mouseSnapped_workspace = { 0, 0 };
+
+	glm::vec2 previewPoint = { 0, 0 };
+	bool showPreviewPoint = false;
+	glm::vec2 previewLineStart = { 0, 0 };
+	bool drawingLine = false;
+	bool drawingSelectionBox = false;		// Selection box also uses previewPoint position
+
+	ShapeID hoveredShape = -1;
+	ShapeID mouseOnShape = -1;
+	std::vector<ShapeID> selectedShapes;
+
+	bool previewRegenerateFlag = false;
+
+	// Shapes
+	LayerList layers;
+	size_t maxLayers = 0;
+
+	// GUI
+	GuiRibbonWindow ribbonWindow;
+	GuiLayerWindow layerWindow;
+	GuiToolboxWindow toolboxWindow;
+	GuiMouseInfoWindow mouseInfoWindow;
+	bool isMouseOnGui = false;
+
+
+
+
+	// Main engine events from the AllegroEngine, defined in Application.cpp
+
+	Application();
+	
+	void setup() override;
+	void draw() override;
+	void destroy() override;
+	void keyPressed(int keycode, unsigned int modifiers) override;
+	void mouseScrolled(int x, int y) override;
+
+
+
+
+	// Main logic functions, defined in Application_logic.cpp
+
+	void updateMousePositions();
+	glm::vec2 convertScreenToWorkspaceCoords(glm::vec2 v);
+	glm::vec2 convertWorkspaceToScreenCoords(glm::vec2 v);
+
+	void generateLayerPreviews();
+	void addLayer();
+	void addLayer(const std::string& name);
+	void addLine(glm::vec2 p1, glm::vec2 p2);
+	void changeMode(int mode);
+	bool isShapeSelected(ShapeID shape);
+	bool deleteShape(ShapeID shape);
+	void cancelShape();
+
+	std::vector<ShapeID> getHoveredShapes();
+	ShapeID getClosestHoveredShape();
+
+	// Unspecific mouse actions
+	void mouseMoved();
+	void mouseHovered();
+	void mouseDragged();
+
+	// Select tool
+	void selectToolShapeClicked(ShapeID shape, bool ctrlKey);
+	//void selectToolShapePointClicked(ShapeID shape, int pointNumber);
+	void selectToolSpaceClicked(bool ctrlKey);
+	void selectToolRightClicked();
+	void selectToolShapeReleased(ShapeID shape, bool ctrlKey);
+	//void selectToolShapePointReleased(ShapeID shape, int pointNumber);
+	void selectToolSpaceReleased(bool ctrlKey);
+	void selectToolMouseRightReleased();
+
+	// Line tool
+	void lineToolSpaceClicked();
+	void lineToolRightClicked();
+	void lineToolMouseReleased();
+	void lineToolMouseRightReleased();
+
+	// Line strip tool
+	void lineStripToolSpaceClicked();
+	void lineStripToolRightClicked();
+	void lineStripToolMouseReleased();
+	void lineStripToolMouseRightReleased();
+
+
+
+
+
+	// Events and callbacks, defined in Application_Events.cpp
+
+	void handleEvents();
+
+	void OnMouseButtonLeftClicked();
+	void OnMouseButtonRightClicked();
+	void OnMouseButtonLeftReleased();
+	void OnMouseButtonRightReleased();
+	void OnMouseDragged();
+	void OnMouseHovered();
+	void OnMouseMoved();
+	void OnMouseScrolled(float amount);
+
+	void OnLayerSelect();
+	void OnMouseEnteredLayerWindow();
+
+
+
+
+	// Graphics functions, defined in Application_graphic.cpp
+
+	void renderApplication();
+	void renderShapes();
+	void renderLayerToBitmap(LayerID layer, ALLEGRO_BITMAP* bitmap);
+
+	// Returns an ALLEGRO_BITMAP* pointer, must be deleted with al_destroy_bitmap();
+	ALLEGRO_BITMAP* createLayerPreviewBitmap(LayerID layer, int sizeX, int sizeY);
+
+	void drawLittlePoint(glm::vec2 pos, float size);
+	void drawLine(glm::vec2 from, glm::vec2 to, float thickness, glm::vec3 color);
+	void drawOutlinedRectangle(glm::vec2 bottomleft, glm::vec2 topright, float outlineThickness, glm::vec3 color);
+	void drawGrid();
+
+};

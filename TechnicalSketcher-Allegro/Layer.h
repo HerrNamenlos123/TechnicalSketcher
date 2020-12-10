@@ -8,7 +8,7 @@ typedef size_t LayerID;
 class Layer {
 
 	std::vector<Shape> shapes;
-	ShapeID maxShapeID = 0;
+	ShapeID nextShapeID = 0;
 
 public:
 	std::string name;
@@ -47,10 +47,8 @@ public:
 
 	void addShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float thickness) {
 
-		ShapeID id = maxShapeID;
-		maxShapeID++;
-
-		shapes.push_back(Shape(id, type, p1, p2, thickness));
+		shapes.push_back(Shape(nextShapeID, type, p1, p2, thickness));
+		nextShapeID++;
 	}
 
 	bool removeShape(ShapeID shape) {
