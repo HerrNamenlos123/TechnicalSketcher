@@ -46,12 +46,14 @@ void Application::draw() {
 	//std::cout << "ShapeMovingMode: " << shapeMovingMode << std::endl;
 	//std::cout << "HoveredShape: " << hoveredShape << std::endl;
 	//std::cout << "MouseOnShape: " << mouseOnShape << std::endl;
+	//std::cout << "SelectedShape: #" << layers.getSelectedLayerID() << std::endl;
 }
 
 void Application::destroy() {
 }
 
 void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, bool repeat) {
+	
 	if (keycode == ALLEGRO_KEY_ESCAPE) {
 		close();
 		return;
@@ -122,6 +124,10 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 			}
 		}
 		previewRegenerateFlag = true;
+	}
+
+	if (keycode == ALLEGRO_KEY_S && (modifiers & ALLEGRO_KEYMOD_CTRL)) {
+		saveFile("test.tsk");
 	}
 }
 

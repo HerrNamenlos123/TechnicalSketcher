@@ -1,5 +1,6 @@
 #pragma once
 
+#include "json.hpp"
 typedef size_t ShapeID;
 
 enum ShapeType {
@@ -19,6 +20,8 @@ struct Shape {
 	Shape();
 	Shape(ShapeID _shapeID, enum ShapeType _type, glm::vec2 _p1, glm::vec2 _p2, float _thickness);
 	~Shape();
+
+	nlohmann::json getJson();
 
 
 };

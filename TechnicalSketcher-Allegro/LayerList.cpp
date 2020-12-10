@@ -13,31 +13,24 @@ LayerList::LayerList() : dummyLayer("dummy", -1) {
 
 void LayerList::addLayerFront(const std::string& name) {
 
-	std::cout << "addLayerFront" << std::endl;
+	//std::cout << "addLayerFront" << std::endl;
 
 	layers.push_back(Layer(name, nextLayerID));
-
-	// Select created layer if none is selected yet
-	if (selectedLayer == -1) {
-		selectedLayer = nextLayerID;
-	}
-
 	layerOrder.insert(layerOrder.begin(), nextLayerID);
+
+	selectLayer(nextLayerID); // Select just created layer
 
 	nextLayerID++;
 }
 
 void LayerList::addLayerBack(const std::string& name) {
 
-	std::cout << "addLayerBack" << std::endl;
+	//std::cout << "addLayerBack" << std::endl;
 
 	layers.push_back(Layer(name, nextLayerID));
-
-	if (selectedLayer == -1) {
-		selectedLayer = nextLayerID;
-	}
-
 	layerOrder.push_back(nextLayerID);
+
+	selectLayer(nextLayerID); // Select just created layer
 
 	nextLayerID++;
 }
@@ -49,7 +42,7 @@ void LayerList::addLayerBack(const std::string& name) {
 
 bool LayerList::moveLayerFront(LayerID id) {
 
-	std::cout << "moveLayerFront" << std::endl;
+	//std::cout << "moveLayerFront" << std::endl;
 	
 	// Find layerOrder index with this id
 	size_t orderIndex = __findLayerOrderIndex(id);
@@ -64,7 +57,7 @@ bool LayerList::moveLayerFront(LayerID id) {
 
 bool LayerList::moveLayerBack(LayerID id) {
 
-	std::cout << "moveLayerBack" << std::endl;
+	//std::cout << "moveLayerBack" << std::endl;
 
 	// Find layerOrder index with this id
 	size_t orderIndex = __findLayerOrderIndex(id);
@@ -83,7 +76,7 @@ bool LayerList::moveLayerBack(LayerID id) {
 
 bool LayerList::deleteLayer(LayerID id) {
 
-	std::cout << "deleteLayer" << std::endl;
+	//std::cout << "deleteLayer" << std::endl;
 
 	// Find the array index with this id
 	size_t arrayIndex = __findLayerArrayIndex(id);
@@ -95,6 +88,11 @@ bool LayerList::deleteLayer(LayerID id) {
 	layers.erase(layers.begin() + arrayIndex);
 	layerOrder.erase(layerOrder.begin() + orderIndex);
 
+	if (selectedLayer == id) {	// If selected layer deleted, select next one
+		selectedLayer = -1;
+		std::cout << "WARNING: Layer was deleted, not handled correctly yet!!!" << std::endl;
+	}
+
 	return true;
 }
 
@@ -103,6 +101,9 @@ bool LayerList::deleteLayer(LayerID id) {
 
 
 bool LayerList::layerExists(LayerID id) {
+
+	if (id == -1)
+		return false;
 
 	for (Layer& layer : layers) {
 		if (layer.layerID == id) {
@@ -115,7 +116,7 @@ bool LayerList::layerExists(LayerID id) {
 
 bool LayerList::selectLayer(LayerID id) {
 
-	std::cout << "selectLayer" << std::endl;
+	//std::cout << "selectLayer" << std::endl;
 
 	if (!layerExists(id))
 		return false;
@@ -178,6 +179,32 @@ std::vector<LayerID> LayerList::getSortedLayerIDsReverse() {
 	}
 
 	return sorted;
+}
+
+
+
+
+nlohmann::json LayerList::getJson() {
+
+	// Convert all information to a json object
+
+	nlohmann::json jsonLayers = nlohmann::json::array();
+	for (Layer& layer : layers) {
+		jsonLayers.push_back(layer.getJson());
+	}
+
+	nlohmann::json jsonLayerOrder = nlohmann::json::array();
+	for (LayerID id : layerOrder) {
+		jsonLayerOrder.push_back(id);
+	}
+
+	nlohmann::json json = nlohmann::json({
+		{ "layers", jsonLayers },
+		{ "layer_order", jsonLayerOrder },
+		{ "next_id", nextLayerID }
+	});
+
+	return json;
 }
 
 

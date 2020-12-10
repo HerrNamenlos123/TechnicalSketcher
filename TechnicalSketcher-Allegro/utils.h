@@ -34,7 +34,7 @@ std::vector<std::string> loadVectorFromString(const std::string& src);
 
 std::vector<std::string> loadVectorFromFile(const std::string& path);
 
-void saveStringToFile(const std::string& path, const std::string& file);
+bool saveStringToFile(const std::string& path, const std::string& file);
 
 
 /*

@@ -49,7 +49,7 @@ void Application::generateLayerPreviews() {
 		al_destroy_bitmap(bitmap);
 	}
 	previewRegenerateFlag = false;
-	std::cout << "Generated preview bitmaps, took " << (micros() - start) / 1000.0 << " ms" << std::endl;
+	//std::cout << "Generated preview bitmaps, took " << (micros() - start) / 1000.0 << " ms" << std::endl;
 }
 
 void Application::addLayer() {
@@ -62,12 +62,18 @@ void Application::addLayer(const std::string& name) {
 	cancelShape();
 
 	layers.addLayerFront(name);
-	maxLayers++;
+	maxLayers++;					// Just for the name, not critical
 
 	previewRegenerateFlag = true;
 }
 
 void Application::addLine(glm::vec2 p1, glm::vec2 p2) {
+
+	if (layers.getSelectedLayerID() == -1) {
+		std::cout << "WARNING: Can't draw, no layer selected!" << std::endl;
+		return;
+	}
+
 	if (p1 != p2) {
 		layers.getSelectedLayer().addShape(SHAPE_LINE, p1, p2, ctrl_currentLineThickness);
 	}
@@ -154,6 +160,9 @@ std::vector<ShapeID> Application::getHoveredShapes() {
 
 	std::vector<ShapeID> shapes;
 
+	if (layers.getSelectedLayerID() == -1)
+		return shapes;
+
 	for (Shape& shape : layers.getSelectedLayer().getShapes()) {
 
 		if (shape.type == SHAPE_LINE) {
@@ -171,6 +180,9 @@ std::vector<ShapeID> Application::getHoveredShapes() {
 }
 
 ShapeID Application::getClosestHoveredShape() {
+
+	if (layers.getSelectedLayerID() == -1)
+		return false;
 
 	ShapeID closestID = -1;
 	float closest = -1;
@@ -304,7 +316,7 @@ void Application::mouseDragged() {
 
 // Selection tool, a shape was clicked
 void Application::selectToolShapeClicked(ShapeID shape, bool ctrlKey) {
-	std::cout << "Shape #" << shape << " clicked" << std::endl;
+	//std::cout << "Shape #" << shape << " clicked" << std::endl;
 }
 
 //// Selection tool, a point of a shape was clicked
@@ -319,12 +331,12 @@ void Application::selectToolSpaceClicked(bool ctrlKey) {
 	showPreviewPoint = false;
 	previewLineStart = mouse_workspace;
 
-	std::cout << "Selection Space clicked" << std::endl;
+	//std::cout << "Selection Space clicked" << std::endl;
 }
 
 // Selection tool, right clicked
 void Application::selectToolRightClicked() {
-	std::cout << "Selection Right clicked" << std::endl;
+	//std::cout << "Selection Right clicked" << std::endl;
 }
 
 // Selection tool, a shape was released
@@ -337,7 +349,6 @@ void Application::selectToolShapeReleased(ShapeID shape, bool ctrlKey) {
 	// as the one that was clicked in the first place
 
 	if (shape == hoveredShape) {
-		std::cout << "Same shape released" << std::endl;
 		if (ctrlKey) {		// Shape was ctrl-clicked
 
 			bool existed = false;
@@ -359,7 +370,7 @@ void Application::selectToolShapeReleased(ShapeID shape, bool ctrlKey) {
 		}
 	}
 
-	std::cout << "Shape #" << shape << " released" << std::endl;
+	//std::cout << "Shape #" << shape << " released" << std::endl;
 }
 
 //// Selection tool, a point of a shape was released
@@ -376,12 +387,12 @@ void Application::selectToolSpaceReleased(bool ctrlKey) {
 		selectedShapes.clear();
 	}
 
-	std::cout << "Selection Space released" << std::endl;
+	//std::cout << "Selection Space released" << std::endl;
 }
 
 // Selection tool, right mouse button released
 void Application::selectToolMouseRightReleased() {
-	std::cout << "Selection mouse right released" << std::endl;
+	//std::cout << "Selection mouse right released" << std::endl;
 }
 
 
@@ -402,7 +413,7 @@ void Application::lineToolSpaceClicked() {
 		addLine(mouseSnapped_workspace, previewLineStart);
 	}
 
-	std::cout << "Line Space clicked" << std::endl;
+	//std::cout << "Line Space clicked" << std::endl;
 }
 
 // Line tool, right clicked
@@ -410,17 +421,17 @@ void Application::lineToolRightClicked() {
 
 	cancelShape();
 
-	std::cout << "Line tool, Right clicked" << std::endl;
+	//std::cout << "Line tool, Right clicked" << std::endl;
 }
 
 // Line tool, left mouse button released
 void Application::lineToolMouseReleased() {
-	std::cout << "Line mode mouse released" << std::endl;
+	//std::cout << "Line mode mouse released" << std::endl;
 }
 
 // Line tool, right mouse button released
 void Application::lineToolMouseRightReleased() {
-	std::cout << "Line mode mouse right released" << std::endl;
+	//std::cout << "Line mode mouse right released" << std::endl;
 }
 
 
@@ -441,7 +452,7 @@ void Application::lineStripToolSpaceClicked() {
 		previewLineStart = mouseSnapped_workspace;
 	}
 
-	std::cout << "Line strip Space clicked" << std::endl;
+	//std::cout << "Line strip Space clicked" << std::endl;
 }
 
 // Line strip tool, right clicked
@@ -449,15 +460,15 @@ void Application::lineStripToolRightClicked() {
 
 	cancelShape();
 
-	std::cout << "Line strip, Right clicked" << std::endl;
+	//std::cout << "Line strip, Right clicked" << std::endl;
 }
 
 // Line strip tool, left mouse button released
 void Application::lineStripToolMouseReleased() {
-	std::cout << "Line strip mode mouse released" << std::endl;
+	//std::cout << "Line strip mode mouse released" << std::endl;
 }
 
 // Line strip tool, right mouse button released
 void Application::lineStripToolMouseRightReleased() {
-	std::cout << "Line strip mode mouse right released" << std::endl;
+	//std::cout << "Line strip mode mouse right released" << std::endl;
 }

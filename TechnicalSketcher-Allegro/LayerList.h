@@ -35,6 +35,8 @@ public:
 	std::vector<LayerID> getSortedLayerIDs();
 	std::vector<LayerID> getSortedLayerIDsReverse();
 
+	nlohmann::json getJson();
+
 
 private:
 	size_t __findLayerArrayIndex(LayerID id);

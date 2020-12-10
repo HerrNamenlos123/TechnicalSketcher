@@ -268,7 +268,7 @@ void Application::OnLayerSelect() {
 
 	cancelShape();
 
-	std::cout << "OnLayerSelect" << std::endl;
+	//std::cout << "OnLayerSelect" << std::endl;
 }
 
 void Application::OnMouseEnteredLayerWindow() {

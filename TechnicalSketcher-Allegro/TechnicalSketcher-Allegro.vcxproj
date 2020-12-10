@@ -172,6 +172,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AllegroEngine.cpp" />
+    <ClCompile Include="Application_files.cpp" />
     <ClCompile Include="geometry.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_allegro5.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -229,6 +230,7 @@
     <ClInclude Include="fonts.h" />
     <ClInclude Include="geometry.h" />
     <ClInclude Include="GuiWindows.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="StaticImGuiWindow.h" />
     <ClInclude Include="Layer.h" />
     <ClInclude Include="LayerList.h" />

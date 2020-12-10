@@ -19,6 +19,7 @@ public:
 		name = n;
 		bitmap = nullptr;
 		layerID = id;
+		nextShapeID = 0;
 	}
 
 	Layer(const Layer& layer) {
@@ -26,6 +27,7 @@ public:
 		shapes = layer.shapes;
 		bitmap = nullptr;
 		layerID = layer.layerID;
+		nextShapeID = layer.nextShapeID;
 	};
 
 	void operator=(const Layer& layer) {
@@ -33,6 +35,7 @@ public:
 		shapes = layer.shapes;
 		bitmap = nullptr;
 		layerID = layer.layerID;
+		nextShapeID = layer.nextShapeID;
 	};
 
 	~Layer() {
@@ -46,6 +49,8 @@ public:
 	}
 
 	void addShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float thickness) {
+
+		//std::cout << "Shape added to layer " << name << " with id " << nextShapeID << std::endl;
 
 		shapes.push_back(Shape(nextShapeID, type, p1, p2, thickness));
 		nextShapeID++;
@@ -80,5 +85,26 @@ public:
 		}
 
 		throw std::logic_error("Can't find shape with ID " + std::to_string(shape) + " in layer '" + name + "'");
+	}
+
+	nlohmann::json getJson() {
+
+		// Convert all data to a json object
+
+		nlohmann::json json;
+
+		nlohmann::json jsonShapes = nlohmann::json::array();
+		for (Shape& shape : shapes) {
+			jsonShapes.push_back(shape.getJson());
+		}
+
+		json = nlohmann::json{
+			{ "id", layerID },
+			{ "name", name },
+			{ "next_id", nextShapeID },
+			{ "shapes", jsonShapes }
+		};
+
+		return json;
 	}
 };

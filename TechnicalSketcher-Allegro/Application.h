@@ -6,6 +6,7 @@
 #include "Layer.h"
 #include "LayerList.h"
 #include "GuiWindows.h"
+#include "json.hpp"
 
 class Application : public AllegroEngine {
 public:
@@ -154,5 +155,12 @@ public:
 	void drawLine(glm::vec2 from, glm::vec2 to, float thickness, glm::vec3 color);
 	void drawOutlinedRectangle(glm::vec2 bottomleft, glm::vec2 topright, float outlineThickness, glm::vec3 color);
 	void drawGrid();
+
+
+
+
+	// File loading and saving, defined in Application_files.cpp
+
+	bool saveFile(const std::string& file);
 
 };
