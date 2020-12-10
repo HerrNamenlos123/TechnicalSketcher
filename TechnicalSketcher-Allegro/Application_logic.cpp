@@ -199,6 +199,7 @@ ShapeID Application::getClosestHoveredShape() {
 
 
 
+
 void Application::mouseMoved() {
 
 	switch (selectedTool) {
