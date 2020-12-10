@@ -66,7 +66,7 @@ public:
 	void setup() override;
 	void draw() override;
 	void destroy() override;
-	void keyPressed(int keycode, unsigned int modifiers) override;
+	void keyPressed(int keycode, int unicode, unsigned int modifiers, bool repeat) override;
 	void mouseScrolled(int x, int y) override;
 
 
@@ -86,6 +86,7 @@ public:
 	bool isShapeSelected(ShapeID shape);
 	bool deleteShape(ShapeID shape);
 	void cancelShape();
+	void prepareGUI();
 
 	std::vector<ShapeID> getHoveredShapes();
 	ShapeID getClosestHoveredShape();

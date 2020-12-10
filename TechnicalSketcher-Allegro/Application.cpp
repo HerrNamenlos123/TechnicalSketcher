@@ -28,6 +28,9 @@ void Application::draw() {
 	// and the snapped version in the grid
 	updateMousePositions();
 
+	// Do some stuff like processing the preview flag
+	prepareGUI();
+
 	// Update all ImGui window overlays
 	ribbonWindow.update({ width, height });
 	layerWindow.update(layers);
@@ -48,7 +51,7 @@ void Application::draw() {
 void Application::destroy() {
 }
 
-void Application::keyPressed(int keycode, unsigned int modifiers) {
+void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, bool repeat) {
 	if (keycode == ALLEGRO_KEY_ESCAPE) {
 		close();
 		return;
@@ -63,6 +66,7 @@ void Application::keyPressed(int keycode, unsigned int modifiers) {
 			deleteShape(selectedShapes[i]);
 		}
 		selectedShapes.clear();
+		previewRegenerateFlag = true;
 	}
 	else if (keycode == ALLEGRO_KEY_UP) {
 
@@ -75,6 +79,7 @@ void Application::keyPressed(int keycode, unsigned int modifiers) {
 				}
 			}
 		}
+		previewRegenerateFlag = true;
 
 	}
 	else if (keycode == ALLEGRO_KEY_DOWN) {
@@ -88,6 +93,7 @@ void Application::keyPressed(int keycode, unsigned int modifiers) {
 				}
 			}
 		}
+		previewRegenerateFlag = true;
 
 	}
 	else if (keycode == ALLEGRO_KEY_RIGHT) {
@@ -101,6 +107,7 @@ void Application::keyPressed(int keycode, unsigned int modifiers) {
 				}
 			}
 		}
+		previewRegenerateFlag = true;
 
 	}
 	else if (keycode == ALLEGRO_KEY_LEFT) {
@@ -114,7 +121,7 @@ void Application::keyPressed(int keycode, unsigned int modifiers) {
 				}
 			}
 		}
-
+		previewRegenerateFlag = true;
 	}
 }
 

@@ -11,7 +11,7 @@ void Application::renderApplication() {
 
 	// First part of the selection box
 	if (drawingSelectionBox) {			// Fill should be in the back
-		filledRectangle(previewPoint, mouse, gfx_selectionBoxFillColor);
+		filledRectangle(convertWorkspaceToScreenCoords(previewLineStart), mouse, gfx_selectionBoxFillColor);
 	}
 
 	// Main elements of the application
@@ -28,7 +28,7 @@ void Application::renderApplication() {
 
 	// Second part of the selection box
 	if (drawingSelectionBox) {			// Outline in the front
-		outlinedRectangle(previewPoint, mouse, gfx_selectionBoxColor, 1);
+		outlinedRectangle(convertWorkspaceToScreenCoords(previewLineStart), mouse, gfx_selectionBoxColor, 1);
 	}
 }
 

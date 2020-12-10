@@ -176,6 +176,10 @@ void AllegroEngine::run(int w, int h, int flags) {
 			keyReleased(event.keyboard.keycode, event.keyboard.modifiers);
 			break;
 
+		case ALLEGRO_EVENT_KEY_CHAR:
+			keyPressed(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers, event.keyboard.repeat);
+			break;
+
 		case ALLEGRO_EVENT_DISPLAY_CLOSE:
 			close();
 			break;

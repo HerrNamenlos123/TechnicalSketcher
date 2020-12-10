@@ -273,11 +273,6 @@ void Application::OnLayerSelect() {
 
 void Application::OnMouseEnteredLayerWindow() {
 
-	if (previewRegenerateFlag) {
-		generateLayerPreviews();
-		previewRegenerateFlag = false;
-	}
-
-	std::cout << "OnMouseEnteredLayerWindow" << std::endl;
+	//std::cout << "OnMouseEnteredLayerWindow" << std::endl;
 }
 

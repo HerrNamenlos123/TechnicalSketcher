@@ -77,6 +77,9 @@ public:
 	virtual void keyPressed(int keycode, unsigned int modifiers) {
 	}
 
+	virtual void keyPressed(int keycode, int unicode, unsigned int modifiers, bool repeat) {
+	}
+
 	virtual void keyReleased(int keycode, unsigned int modifiers) {
 	}
 

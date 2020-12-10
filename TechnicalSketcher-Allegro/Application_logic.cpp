@@ -135,6 +135,17 @@ void Application::cancelShape() {
 	drawingLine = false;
 }
 
+void Application::prepareGUI() {
+
+	if (isMouseOnGui && previewRegenerateFlag) {
+		generateLayerPreviews();
+		previewRegenerateFlag = false;
+	}
+}
+
+
+
+
 
 
 
@@ -218,7 +229,28 @@ void Application::mouseHovered() {
 	case TOOL_SELECT:
 
 		hoveredShape = getClosestHoveredShape();
-		drawingSelectionBox = false;
+
+		// Stop drawing selection box
+		if (drawingSelectionBox) {
+			drawingSelectionBox = false;
+			selectedShapes.clear();
+
+			float left = std::min(previewLineStart.x, mouse_workspace.x);
+			float right = std::max(previewLineStart.x, mouse_workspace.x);
+			float top = std::max(previewLineStart.y, mouse_workspace.y);
+			float bottom = std::min(previewLineStart.y, mouse_workspace.y);
+
+			for (Shape& shape : layers.getSelectedLayer().getShapes()) {
+				if (shape.type == SHAPE_LINE) {
+					if (shape.p1.x >= left && shape.p1.x <= right && shape.p1.y >= bottom && shape.p1.y <= top &&
+						shape.p2.x >= left && shape.p2.x <= right && shape.p2.y >= bottom && shape.p2.y <= top)
+					{
+						// Line is fully contained in the selection box
+						selectedShapes.push_back(shape.shapeID);
+					}
+				}
+			}
+		}
 
 		break;
 
@@ -281,6 +313,11 @@ void Application::selectToolShapeClicked(ShapeID shape, bool ctrlKey) {
 
 // Selection tool, the blank space was clicked
 void Application::selectToolSpaceClicked(bool ctrlKey) {
+
+	drawingSelectionBox = true;
+	showPreviewPoint = false;
+	previewLineStart = mouse_workspace;
+
 	std::cout << "Selection Space clicked" << std::endl;
 }
 
@@ -423,75 +460,3 @@ void Application::lineStripToolMouseReleased() {
 void Application::lineStripToolMouseRightReleased() {
 	std::cout << "Line strip mode mouse right released" << std::endl;
 }
-
-
-
-
-/*if (cursorMode == MODE_LINE || cursorMode == MODE_LINE_STRIP) {
-
-		
-	}
-	else if (cursorMode == MODE_SELECT) {
-
-		bool ctrl = getKey(ALLEGRO_KEY_LCTRL);
-
-		if (hoveredShape == -1) {
-			if (!ctrl) {	// Prevent unselecting everything when missing the line
-				selectedShapes.clear();
-
-				// Start drawing selection box
-				draggingSelectionBox = true;
-				previewPoint = mouse;
-				showPreviewPoint = false;
-			}
-		}
-		else {
-
-			if (ctrl) {	// CTRL Key is held
-
-				if (isShapeSelected(hoveredShape)) {	// If already selected, unselect
-
-					// Remove from the list
-					for (size_t i = 0; i < selectedShapes.size(); i++) {
-						if (selectedShapes[i] == hoveredShape) {
-							selectedShapes.erase(selectedShapes.begin() + i);
-						}
-					}
-				}
-				else {
-					selectedShapes.push_back(hoveredShape);
-				}
-			}
-			else {
-				selectedShapes.clear();
-				selectedShapes.push_back(hoveredShape);
-			}
-		}
-	}*/
-
-
-
-
-	// Stop drawing selection box
-	/*if (draggingSelectionBox) {
-		draggingSelectionBox = false;
-		selectedShapes.clear();
-
-		glm::vec2 prev = (previewPoint - glm::vec2(width, height) * 0.5f - panOffset) / scale;
-
-		float left = std::min(prev.x, mousePos.x);
-		float right = std::max(prev.x, mousePos.x);
-		float top = std::max(prev.y, mousePos.y);
-		float bottom = std::min(prev.y, mousePos.y);
-
-		for (Shape& shape : layers.findLayer(layers.selectedLayer).getShapes()) {
-			if (shape.type == SHAPE_LINE) {
-				if (shape.p1.x >= left && shape.p1.x <= right && shape.p1.y >= bottom && shape.p1.y <= top &&
-					shape.p2.x >= left && shape.p2.x <= right && shape.p2.y >= bottom && shape.p2.y <= top)
-				{
-					// Line is fully contained in the selection box
-					selectedShapes.push_back(shape.shapeID);
-				}
-			}
-		}
-	}*/
