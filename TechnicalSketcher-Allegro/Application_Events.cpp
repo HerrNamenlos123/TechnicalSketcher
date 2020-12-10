@@ -50,21 +50,6 @@ void Application::handleEvents() {
 				   layerWindow.isMouseOnWindow |
 				   toolboxWindow.isMouseOnWindow |
 				   mouseInfoWindow.isMouseOnWindow;
-
-	// Mouse dragged
-	if (mousePressed && pmouse != mouse) {
-		OnMouseDragged();
-	}
-
-	// Mouse hovered
-	if (!mousePressed && pmouse != mouse) {
-		OnMouseHovered();
-	}
-
-	// Mouse moved
-	if (pmouse != mouse) {
-		OnMouseMoved();
-	}
 	
 	// Left mouse button pressed
 	if (mouseButtonLeftPressed && !pmouseButtonLeftPressed) {
@@ -84,6 +69,21 @@ void Application::handleEvents() {
 	// Right mouse button released
 	if (!mouseButtonRightPressed && pmouseButtonRightPressed) {
 		OnMouseButtonRightReleased();
+	}
+
+	// Mouse dragged
+	if (mousePressed && pmouse != mouse) {
+		OnMouseDragged();
+	}
+
+	// Mouse hovered
+	if (!mousePressed && pmouse != mouse) {
+		OnMouseHovered();
+	}
+
+	// Mouse moved
+	if (pmouse != mouse) {
+		OnMouseMoved();
 	}
 }
 

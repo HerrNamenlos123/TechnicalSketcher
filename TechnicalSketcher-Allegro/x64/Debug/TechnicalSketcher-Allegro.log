@@ -1,2 +1,8 @@
-﻿  Application_logic.cpp
+﻿  Application.cpp
+  Application_Events.cpp
+  Application_graphic.cpp
+  Application_logic.cpp
+  LayerList.cpp
+  main.cpp
+  Generating Code...
   TechnicalSketcher-Allegro.vcxproj -> F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\x64\Debug\TechnicalSketcher-Allegro.exe

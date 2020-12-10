@@ -41,8 +41,8 @@ void Application::draw() {
 	renderApplication();
 
 	//std::cout << "ShapeMovingMode: " << shapeMovingMode << std::endl;
-	std::cout << "HoveredShape: " << hoveredShape << std::endl;
-	std::cout << "MouseOnShape: " << mouseOnShape << std::endl;
+	//std::cout << "HoveredShape: " << hoveredShape << std::endl;
+	//std::cout << "MouseOnShape: " << mouseOnShape << std::endl;
 }
 
 void Application::destroy() {
