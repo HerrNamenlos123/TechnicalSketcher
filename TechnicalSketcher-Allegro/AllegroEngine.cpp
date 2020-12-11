@@ -181,7 +181,7 @@ void AllegroEngine::run(int w, int h, int flags) {
 			break;
 
 		case ALLEGRO_EVENT_DISPLAY_CLOSE:
-			close();
+			wantsToClose = true;
 			break;
 
 		case ALLEGRO_EVENT_DISPLAY_RESIZE:

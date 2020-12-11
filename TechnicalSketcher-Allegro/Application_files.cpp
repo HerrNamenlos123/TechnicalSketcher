@@ -4,13 +4,13 @@
 #include "utils.h"
 
 
-bool Application::saveFile(const std::string& file) {
+bool Application::saveFile(const std::string& filename) {
 
 	// Save all layers and shapes in this json object
 	nlohmann::json json;
 
 	try {
-		json = layers.getJson();
+		json = file.getJson();
 	}
 	catch (...) {
 		std::cout << "Error: Failed to construct json object" <<
@@ -21,13 +21,13 @@ bool Application::saveFile(const std::string& file) {
 	//std::cout << json.dump(4) << std::endl;
 
 	// Save to file
-	bool success = saveStringToFile(file, json.dump(4));
+	bool success = saveStringToFile(filename, json.dump(4));
 
 	if (success) {
-		std::cout << "Saved file '" << file << "'" << std::endl;
+		std::cout << "Saved file '" << filename << "'" << std::endl;
 	}
 	else {
-		std::cout << "Failed to save file '" << file << "'" << std::endl;
+		std::cout << "Failed to save file '" << filename << "'" << std::endl;
 	}
 
 	return success;

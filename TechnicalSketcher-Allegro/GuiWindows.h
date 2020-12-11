@@ -3,6 +3,7 @@
 #include "StaticImGuiWindow.h"
 #include "config.h"
 #include "LayerList.h"
+#include "SketchFile.h"
 
 #define __IMGUI_WINDOW_FLAGS (ImGuiWindowFlags_NoTitleBar | \
 						      ImGuiWindowFlags_NoMove | \
@@ -40,7 +41,7 @@ public:
 
 
 
-class GuiLayerWindow : public StaticImGuiWindow<LayerList&> {
+class GuiLayerWindow : public StaticImGuiWindow<SketchFile&> {
 
 	bool wasMouseOnWindow = false;
 
@@ -62,7 +63,7 @@ public:
 	}
 
 	// Core logic in here
-	void updateWindow(LayerList& layers) override {
+	void updateWindow(SketchFile& file) override {
 
 		ImGui::PushFont(font_pt20);
 
@@ -82,14 +83,17 @@ public:
 
 		bool anyActive = false;
 
-		for (LayerID id : layers.getSortedLayerIDs()) {
-			Layer& layer = layers.findLayer(id);
+		for (LayerID id : file.getLayerList().getSortedLayerIDs()) {
+			Layer* layer = file.getLayerList().findLayer(id);
 
-			std::string name = layer.name + "##" + std::to_string(layer.layerID);
+			if (!layer)
+				continue;
+
+			std::string name = layer->name + "##" + std::to_string(layer->layerID);
 
 			// Draw GUI element and if clicked save flag, which will be read from the main loop event handler
-			if (ImGui::Selectable(name.c_str(), layers.getSelectedLayerID() == layer.layerID)) {
-				selectedLayer = layer.layerID;
+			if (ImGui::Selectable(name.c_str(), file.getLayerList().getSelectedLayerID() == layer->layerID)) {
+				selectedLayer = layer->layerID;
 				layerSelectedFlag = true;
 			}
 
@@ -101,12 +105,12 @@ public:
 			if (ImGui::IsItemActive() && !ImGui::IsItemHovered() && isMouseOnWindow) {
 				if (ImGui::GetMouseDragDelta(0).y < 0.f)
 				{
-					moveLayerFrontID = layer.layerID;
+					moveLayerFrontID = layer->layerID;
 					moveLayerFrontFlag = true;
 					ImGui::ResetMouseDragDelta();
 				}
 				else {
-					moveLayerBackID = layer.layerID;
+					moveLayerBackID = layer->layerID;
 					moveLayerBackFlag = true;
 					ImGui::ResetMouseDragDelta();
 				}
@@ -114,9 +118,9 @@ public:
 
 			// Draw the preview of the layer
 			if (ImGui::IsItemHovered()) {
-				if (layer.bitmap != nullptr) {
+				if (layer->bitmap != nullptr) {
 					ImGui::BeginTooltip();
-					ImGui::Image(layer.bitmap, ImVec2(GUI_PREVIEWWINDOW_SIZE, GUI_PREVIEWWINDOW_SIZE));
+					ImGui::Image(layer->bitmap, ImVec2(GUI_PREVIEWWINDOW_SIZE, GUI_PREVIEWWINDOW_SIZE));
 					ImGui::EndTooltip();
 				}
 				else {
@@ -138,10 +142,10 @@ public:
 		ImGui::PopFont();
 	}
 
-	void update(LayerList& layerlist) {
+	void update(SketchFile& file) {
 
 		// Call the main update function, which in turn calls above updateWindow()
-		updateStaticImGuiWindow(layerlist);
+		updateStaticImGuiWindow(file);
 	}
 };
 

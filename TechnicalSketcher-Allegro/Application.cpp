@@ -16,7 +16,6 @@ void Application::setup() {
 	loadImGuiFonts();
 
 	changeMode(TOOL_SELECT);
-	addLayer();
 
 	generateLayerPreviews();
 	showPreviewPoint = false;
@@ -33,7 +32,7 @@ void Application::draw() {
 
 	// Update all ImGui window overlays
 	ribbonWindow.update({ width, height });
-	layerWindow.update(layers);
+	layerWindow.update(file);
 	toolboxWindow.update();
 	mouseInfoWindow.update({ width, height }, mouse_workspace, mouseSnapped_workspace);
 
@@ -47,6 +46,10 @@ void Application::draw() {
 	//std::cout << "HoveredShape: " << hoveredShape << std::endl;
 	//std::cout << "MouseOnShape: " << mouseOnShape << std::endl;
 	//std::cout << "SelectedShape: #" << layers.getSelectedLayerID() << std::endl;
+
+	if (wantsToClose) {
+		close();
+	}
 }
 
 void Application::destroy() {
@@ -59,7 +62,7 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 		return;
 	}
 
-	std::vector<Shape>& shapes = layers.getSelectedLayer().getShapes();
+	Layer* layer = file.getCurrentLayer();
 
 	if (keycode == ALLEGRO_KEY_DELETE) {
 
@@ -68,62 +71,62 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 			deleteShape(selectedShapes[i]);
 		}
 		selectedShapes.clear();
-		previewRegenerateFlag = true;
+		file.setPreviewRegenerateFlag();
 	}
 	else if (keycode == ALLEGRO_KEY_UP) {
 
 		for (size_t i = 0; i < selectedShapes.size(); i++) {
-			for (Shape& shape : shapes) {
-				if (shape.shapeID == selectedShapes[i]) {
-					shape.p1.y -= snapSize;
-					shape.p2.y -= snapSize;
+			for (Shape* shape : layer->getShapes()) {
+				if (shape->shapeID == selectedShapes[i]) {
+					shape->p1.y -= snapSize;
+					shape->p2.y -= snapSize;
 					break;
 				}
 			}
 		}
-		previewRegenerateFlag = true;
+		file.setPreviewRegenerateFlag();
 
 	}
 	else if (keycode == ALLEGRO_KEY_DOWN) {
 
 		for (size_t i = 0; i < selectedShapes.size(); i++) {
-			for (Shape& shape : shapes) {
-				if (shape.shapeID == selectedShapes[i]) {
-					shape.p1.y += snapSize;
-					shape.p2.y += snapSize;
+			for (Shape* shape : layer->getShapes()) {
+				if (shape->shapeID == selectedShapes[i]) {
+					shape->p1.y += snapSize;
+					shape->p2.y += snapSize;
 					break;
 				}
 			}
 		}
-		previewRegenerateFlag = true;
+		file.setPreviewRegenerateFlag();
 
 	}
 	else if (keycode == ALLEGRO_KEY_RIGHT) {
 
 		for (size_t i = 0; i < selectedShapes.size(); i++) {
-			for (Shape& shape : shapes) {
-				if (shape.shapeID == selectedShapes[i]) {
-					shape.p1.x += snapSize;
-					shape.p2.x += snapSize;
+			for (Shape* shape : layer->getShapes()) {
+				if (shape->shapeID == selectedShapes[i]) {
+					shape->p1.x += snapSize;
+					shape->p2.x += snapSize;
 					break;
 				}
 			}
 		}
-		previewRegenerateFlag = true;
+		file.setPreviewRegenerateFlag();
 
 	}
 	else if (keycode == ALLEGRO_KEY_LEFT) {
 
 		for (size_t i = 0; i < selectedShapes.size(); i++) {
-			for (Shape& shape : shapes) {
-				if (shape.shapeID == selectedShapes[i]) {
-					shape.p1.x -= snapSize;
-					shape.p2.x -= snapSize;
+			for (Shape* shape : layer->getShapes()) {
+				if (shape->shapeID == selectedShapes[i]) {
+					shape->p1.x -= snapSize;
+					shape->p2.x -= snapSize;
 					break;
 				}
 			}
 		}
-		previewRegenerateFlag = true;
+		file.setPreviewRegenerateFlag();
 	}
 
 	if (keycode == ALLEGRO_KEY_S && (modifiers & ALLEGRO_KEYMOD_CTRL)) {

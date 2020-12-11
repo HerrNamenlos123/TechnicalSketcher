@@ -28,12 +28,14 @@ public:
 	bool layerExists(LayerID id);
 	bool selectLayer(LayerID id);
 	LayerID getSelectedLayerID();
-	Layer& getSelectedLayer();
+	Layer* getSelectedLayer();
 
-	Layer& findLayer(LayerID id);
+	Layer* findLayer(LayerID id);
 	std::vector<Layer>& getLayers();
 	std::vector<LayerID> getSortedLayerIDs();
 	std::vector<LayerID> getSortedLayerIDsReverse();
+	std::vector<Layer>* getLayerPointer();
+	std::vector<Layer*> getLayerPointers();
 
 	nlohmann::json getJson();
 

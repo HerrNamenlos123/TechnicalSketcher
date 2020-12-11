@@ -129,7 +129,7 @@ LayerID LayerList::getSelectedLayerID() {
 	return selectedLayer;
 }
 
-Layer& LayerList::getSelectedLayer() {
+Layer* LayerList::getSelectedLayer() {
 	return findLayer(selectedLayer);
 }
 
@@ -138,15 +138,15 @@ Layer& LayerList::getSelectedLayer() {
 
 
 
-Layer& LayerList::findLayer(LayerID id) {
+Layer* LayerList::findLayer(LayerID id) {
 
 	for (Layer& layer : layers) {
 		if (layer.layerID == id) {
-			return layer;
+			return &layer;
 		}
 	}
 
-	throw std::logic_error("Can't find Layer with ID " + std::to_string(id) + " in LayerList");
+	return nullptr;
 }
 
 
@@ -180,6 +180,25 @@ std::vector<LayerID> LayerList::getSortedLayerIDsReverse() {
 
 	return sorted;
 }
+
+std::vector<Layer>* LayerList::getLayerPointer() {
+	return &layers;
+}
+
+std::vector<Layer*> LayerList::getLayerPointers() {
+
+	std::vector<Layer*> pointers;
+
+	for (size_t i = 0; i < layers.size(); i++) {
+		pointers.push_back(&layers[i]);
+	}
+
+	return pointers;
+}
+
+
+
+
 
 
 

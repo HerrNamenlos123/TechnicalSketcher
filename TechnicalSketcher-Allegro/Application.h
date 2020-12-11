@@ -2,9 +2,7 @@
 
 #include "pch.h"
 #include "AllegroEngine.h"
-#include "Shape.h"
-#include "Layer.h"
-#include "LayerList.h"
+#include "SketchFile.h"
 #include "GuiWindows.h"
 #include "json.hpp"
 
@@ -44,18 +42,15 @@ public:
 	ShapeID mouseOnShape = -1;
 	std::vector<ShapeID> selectedShapes;
 
-	bool previewRegenerateFlag = false;
-
-	// Shapes
-	LayerList layers;
-	size_t maxLayers = 0;
-
 	// GUI
 	GuiRibbonWindow ribbonWindow;
 	GuiLayerWindow layerWindow;
 	GuiToolboxWindow toolboxWindow;
 	GuiMouseInfoWindow mouseInfoWindow;
 	bool isMouseOnGui = false;
+
+	// File
+	SketchFile file;
 
 
 
@@ -80,8 +75,6 @@ public:
 	glm::vec2 convertWorkspaceToScreenCoords(glm::vec2 v);
 
 	void generateLayerPreviews();
-	void addLayer();
-	void addLayer(const std::string& name);
 	void addLine(glm::vec2 p1, glm::vec2 p2);
 	void changeMode(int mode);
 	bool isShapeSelected(ShapeID shape);
@@ -146,11 +139,7 @@ public:
 
 	void renderApplication();
 	void renderShapes();
-	void renderLayerToBitmap(LayerID layer, ALLEGRO_BITMAP* bitmap);
-
-	// Returns an ALLEGRO_BITMAP* pointer, must be deleted with al_destroy_bitmap();
-	ALLEGRO_BITMAP* createLayerPreviewBitmap(LayerID layer, int sizeX, int sizeY);
-
+	void renderLayerToBitmap(Layer* layer, ALLEGRO_BITMAP* bitmap);
 	void drawLittlePoint(glm::vec2 pos, float size);
 	void drawLine(glm::vec2 from, glm::vec2 to, float thickness, glm::vec3 color);
 	void drawOutlinedRectangle(glm::vec2 bottomleft, glm::vec2 topright, float outlineThickness, glm::vec3 color);

@@ -5,6 +5,11 @@
 
 
 
+
+
+
+
+
 void Application::renderApplication() {
 
 	background(255);
@@ -40,36 +45,36 @@ void Application::renderApplication() {
 
 void Application::renderShapes() {
 
-	for (LayerID id : layers.getSortedLayerIDsReverse()) {
-		Layer& layer = layers.findLayer(id);
+	for (LayerID id : file.getLayerList().getSortedLayerIDsReverse()) {
+		Layer* layer = file.getLayerList().findLayer(id);
 
-		for (Shape& shape : layer.getShapes()) {
+		for (Shape* shape : layer->getShapes()) {
 
-			switch (shape.type) {
+			switch (shape->type) {
 			case SHAPE_LINE:
 
-				if (layer.layerID == layers.getSelectedLayerID()) {
+				if (layer->layerID == file.getLayerList().getSelectedLayerID()) {
 
 					// Shape is selected
-					if (isShapeSelected(shape.shapeID)) {
-						if (shape.shapeID == hoveredShape) {	// Shape is selected and hovered
-							drawLine(shape.p1, shape.p2, shape.thickness, (gfx_hoveredLineColor + gfx_selectedLineColor) / 2.f);
+					if (isShapeSelected(shape->shapeID)) {
+						if (shape->shapeID == hoveredShape) {	// Shape is selected and hovered
+							drawLine(shape->p1, shape->p2, shape->thickness, (gfx_hoveredLineColor + gfx_selectedLineColor) / 2.f);
 						}
 						else {
-							drawLine(shape.p1, shape.p2, shape.thickness, gfx_selectedLineColor);
+							drawLine(shape->p1, shape->p2, shape->thickness, gfx_selectedLineColor);
 						}
 					}
 					else { // Shape is simply hovered
-						if (shape.shapeID == hoveredShape) {
-							drawLine(shape.p1, shape.p2, shape.thickness, gfx_hoveredLineColor);
+						if (shape->shapeID == hoveredShape) {
+							drawLine(shape->p1, shape->p2, shape->thickness, gfx_hoveredLineColor);
 						}
 						else {
-							drawLine(shape.p1, shape.p2, shape.thickness, gfx_normalLineColor);
+							drawLine(shape->p1, shape->p2, shape->thickness, gfx_normalLineColor);
 						}
 					}
 				}
 				else {
-					drawLine(shape.p1, shape.p2, shape.thickness, gfx_disabledLineColor);
+					drawLine(shape->p1, shape->p2, shape->thickness, gfx_disabledLineColor);
 				}
 				break;
 
@@ -83,8 +88,8 @@ void Application::renderShapes() {
 	}
 }
 
-void Application::renderLayerToBitmap(LayerID layer, ALLEGRO_BITMAP* bitmap) {
-	std::vector<Shape>& shapes = layers.findLayer(layer).getShapes();
+void Application::renderLayerToBitmap(Layer* layer, ALLEGRO_BITMAP* bitmap) {
+	std::vector<Shape*> shapes = layer->getShapes();
 
 	int sizeX = al_get_bitmap_width(bitmap);
 	int sizeY = al_get_bitmap_height(bitmap);
@@ -98,30 +103,30 @@ void Application::renderLayerToBitmap(LayerID layer, ALLEGRO_BITMAP* bitmap) {
 	}
 
 	// Calculate the encapsulated frame
-	float leftMost = shapes[0].p1.x;
-	float rightMost = shapes[0].p1.x;
-	float bottomMost = shapes[0].p1.y;
-	float topMost = shapes[0].p1.y;
+	float leftMost = shapes[0]->p1.x;
+	float rightMost = shapes[0]->p1.x;
+	float bottomMost = shapes[0]->p1.y;
+	float topMost = shapes[0]->p1.y;
 
-	for (Shape& s : shapes) {
+	for (Shape* s : shapes) {
 
-		if (s.p1.x < leftMost)
-			leftMost = s.p1.x;
-		if (s.p1.x > rightMost)
-			rightMost = s.p1.x;
-		if (s.p1.y < bottomMost)
-			bottomMost = s.p1.y;
-		if (s.p1.y > topMost)
-			topMost = s.p1.y;
+		if (s->p1.x < leftMost)
+			leftMost = s->p1.x;
+		if (s->p1.x > rightMost)
+			rightMost = s->p1.x;
+		if (s->p1.y < bottomMost)
+			bottomMost = s->p1.y;
+		if (s->p1.y > topMost)
+			topMost = s->p1.y;
 
-		if (s.p2.x < leftMost)
-			leftMost = s.p2.x;
-		if (s.p2.x > rightMost)
-			rightMost = s.p2.x;
-		if (s.p2.y < bottomMost)
-			bottomMost = s.p2.y;
-		if (s.p2.y > topMost)
-			topMost = s.p2.y;
+		if (s->p2.x < leftMost)
+			leftMost = s->p2.x;
+		if (s->p2.x > rightMost)
+			rightMost = s->p2.x;
+		if (s->p2.y < bottomMost)
+			bottomMost = s->p2.y;
+		if (s->p2.y > topMost)
+			topMost = s->p2.y;
 	}
 
 	glm::vec2 sourceFrameSize = { rightMost - leftMost, topMost - bottomMost };
@@ -182,35 +187,20 @@ void Application::renderLayerToBitmap(LayerID layer, ALLEGRO_BITMAP* bitmap) {
 	al_set_target_bitmap(bitmap);
 	al_clear_to_color(al_color(color(255)));
 
-	for (Shape& s : shapes) {
+	for (Shape* s : shapes) {
 
 		glm::vec2 scaled1;
-		scaled1.x = mapFloat(s.p1.x, mappedLeft, mappedRight, 0, sizeX);
-		scaled1.y = mapFloat(s.p1.y, mappedTop, mappedBottom, 0, sizeY);
+		scaled1.x = mapFloat(s->p1.x, mappedLeft, mappedRight, 0, sizeX);
+		scaled1.y = mapFloat(s->p1.y, mappedTop, mappedBottom, 0, sizeY);
 		glm::vec2 scaled2;
-		scaled2.x = mapFloat(s.p2.x, mappedLeft, mappedRight, 0, sizeX);
-		scaled2.y = mapFloat(s.p2.y, mappedTop, mappedBottom, 0, sizeY);
+		scaled2.x = mapFloat(s->p2.x, mappedLeft, mappedRight, 0, sizeX);
+		scaled2.y = mapFloat(s->p2.y, mappedTop, mappedBottom, 0, sizeY);
 
-		float thickness = mapFloat(s.thickness, 0, mappedWidth, 0, sizeX);
+		float thickness = mapFloat(s->thickness, 0, mappedWidth, 0, sizeX);
 		fancyLine(scaled1, scaled2, color(0), thickness);
 	}
 
 	al_set_target_bitmap(previousBuffer);
-}
-
-// 
-// Returns an ALLEGRO_BITMAP* pointer, must be deleted with al_destroy_bitmap();
-//
-ALLEGRO_BITMAP* Application::createLayerPreviewBitmap(LayerID layer, int sizeX, int sizeY) {
-
-	ALLEGRO_BITMAP* bitmap = al_create_bitmap(sizeX, sizeY);
-	if (bitmap == nullptr) {
-		return nullptr;
-	}
-
-	renderLayerToBitmap(layer, bitmap);
-
-	return bitmap;
 }
 
 void Application::drawLittlePoint(glm::vec2 pos, float size) {

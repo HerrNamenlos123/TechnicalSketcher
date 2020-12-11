@@ -219,6 +219,8 @@
     </ClCompile>
     <ClCompile Include="Shape.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ShapeSelector.cpp" />
+    <ClCompile Include="SketchFile.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -231,6 +233,8 @@
     <ClInclude Include="geometry.h" />
     <ClInclude Include="GuiWindows.h" />
     <ClInclude Include="json.hpp" />
+    <ClInclude Include="ShapeSelector.h" />
+    <ClInclude Include="SketchFile.h" />
     <ClInclude Include="StaticImGuiWindow.h" />
     <ClInclude Include="Layer.h" />
     <ClInclude Include="LayerList.h" />

@@ -37,48 +37,32 @@ glm::vec2 Application::convertWorkspaceToScreenCoords(glm::vec2 v) {
 }
 
 
-
-
-
 void Application::generateLayerPreviews() {
-	timestamp_t start = micros();
 
-	for (Layer& layer : layers.getLayers()) {
-		ALLEGRO_BITMAP* bitmap = createLayerPreviewBitmap(layer.layerID, GUI_PREVIEWWINDOW_SIZE, GUI_PREVIEWWINDOW_SIZE);
-		layer.cloneFrom(bitmap);
-		al_destroy_bitmap(bitmap);
+	if (file.getPreviewRegenerateFlag()) {
+		for (Layer* layer : file.getLayers()) {
+
+			ALLEGRO_BITMAP* bitmap = al_create_bitmap(GUI_PREVIEWWINDOW_SIZE, GUI_PREVIEWWINDOW_SIZE);
+
+			if (bitmap != nullptr) {
+				renderLayerToBitmap(layer, bitmap);
+				layer->cloneFrom(bitmap);
+			}
+			else {
+				std::cout << "WARNING: Failed to create ALLEGRO bitmap!!!" << std::endl;
+			}
+
+			al_destroy_bitmap(bitmap);
+		}
+		file.clearPreviewRegenerateFlag();
 	}
-	previewRegenerateFlag = false;
-	//std::cout << "Generated preview bitmaps, took " << (micros() - start) / 1000.0 << " ms" << std::endl;
 }
 
-void Application::addLayer() {
-	addLayer("Layer #" + std::to_string(maxLayers));
-	previewRegenerateFlag = true;
-}
-
-void Application::addLayer(const std::string& name) {
-
-	cancelShape();
-
-	layers.addLayerFront(name);
-	maxLayers++;					// Just for the name, not critical
-
-	previewRegenerateFlag = true;
-}
 
 void Application::addLine(glm::vec2 p1, glm::vec2 p2) {
 
-	if (layers.getSelectedLayerID() == -1) {
-		std::cout << "WARNING: Can't draw, no layer selected!" << std::endl;
-		return;
-	}
-
-	if (p1 != p2) {
-		layers.getSelectedLayer().addShape(SHAPE_LINE, p1, p2, ctrl_currentLineThickness);
-	}
-
-	previewRegenerateFlag = true;
+	file.addShape(SHAPE_LINE, p1, p2, ctrl_currentLineThickness);
+	file.setPreviewRegenerateFlag();
 }
 
 void Application::changeMode(int mode) {
@@ -127,8 +111,14 @@ bool Application::isShapeSelected(ShapeID shape) {
 }
 
 bool Application::deleteShape(ShapeID shape) {
-	previewRegenerateFlag = true;
-	return layers.getSelectedLayer().removeShape(shape);
+
+	Layer* layer = file.getCurrentLayer();
+
+	if (layer) {
+		return layer->removeShape(shape);
+	}
+
+	return false;
 }
 
 void Application::cancelShape() {
@@ -143,10 +133,7 @@ void Application::cancelShape() {
 
 void Application::prepareGUI() {
 
-	if (isMouseOnGui && previewRegenerateFlag) {
-		generateLayerPreviews();
-		previewRegenerateFlag = false;
-	}
+	generateLayerPreviews();
 }
 
 
@@ -160,18 +147,15 @@ std::vector<ShapeID> Application::getHoveredShapes() {
 
 	std::vector<ShapeID> shapes;
 
-	if (layers.getSelectedLayerID() == -1)
-		return shapes;
+	for (Shape* shape : file.getCurrentLayerShapes()) {
 
-	for (Shape& shape : layers.getSelectedLayer().getShapes()) {
+		if (shape->type == SHAPE_LINE) {
 
-		if (shape.type == SHAPE_LINE) {
-
-			glm::vec2 p1 = convertWorkspaceToScreenCoords(shape.p1);
-			glm::vec2 p2 = convertWorkspaceToScreenCoords(shape.p2);
+			glm::vec2 p1 = convertWorkspaceToScreenCoords(shape->p1);
+			glm::vec2 p2 = convertWorkspaceToScreenCoords(shape->p2);
 
 			if (getDistanceAroundLine(p1, p2, mouse) <= highlightDistanceToMouse) {
-				shapes.push_back(shape.shapeID);
+				shapes.push_back(shape->shapeID);
 			}
 		}
 	}
@@ -181,24 +165,21 @@ std::vector<ShapeID> Application::getHoveredShapes() {
 
 ShapeID Application::getClosestHoveredShape() {
 
-	if (layers.getSelectedLayerID() == -1)
-		return false;
-
 	ShapeID closestID = -1;
 	float closest = -1;
 
-	for (Shape& shape : layers.getSelectedLayer().getShapes()) {
+	for (Shape* shape : file.getCurrentLayerShapes()) {
 
-		if (shape.type == SHAPE_LINE) {
+		if (shape->type == SHAPE_LINE) {
 
-			glm::vec2 p1 = convertWorkspaceToScreenCoords(shape.p1);
-			glm::vec2 p2 = convertWorkspaceToScreenCoords(shape.p2);
+			glm::vec2 p1 = convertWorkspaceToScreenCoords(shape->p1);
+			glm::vec2 p2 = convertWorkspaceToScreenCoords(shape->p2);
 
 			float distance = getDistanceAroundLine(p1, p2, mouse);
 
 			if (distance <= highlightDistanceToMouse && (distance < closest || closest == -1)) {
 				closest = distance;
-				closestID = shape.shapeID;
+				closestID = shape->shapeID;
 			}
 		}
 	}
@@ -253,13 +234,13 @@ void Application::mouseHovered() {
 			float top = std::max(previewLineStart.y, mouse_workspace.y);
 			float bottom = std::min(previewLineStart.y, mouse_workspace.y);
 
-			for (Shape& shape : layers.getSelectedLayer().getShapes()) {
-				if (shape.type == SHAPE_LINE) {
-					if (shape.p1.x >= left && shape.p1.x <= right && shape.p1.y >= bottom && shape.p1.y <= top &&
-						shape.p2.x >= left && shape.p2.x <= right && shape.p2.y >= bottom && shape.p2.y <= top)
+			for (Shape* shape : file.getCurrentLayerShapes()) {
+				if (shape->type == SHAPE_LINE) {
+					if (shape->p1.x >= left && shape->p1.x <= right && shape->p1.y >= bottom && shape->p1.y <= top &&
+						shape->p2.x >= left && shape->p2.x <= right && shape->p2.y >= bottom && shape->p2.y <= top)
 					{
 						// Line is fully contained in the selection box
-						selectedShapes.push_back(shape.shapeID);
+						selectedShapes.push_back(shape->shapeID);
 					}
 				}
 			}

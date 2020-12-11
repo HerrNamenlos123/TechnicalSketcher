@@ -68,23 +68,30 @@ public:
 		return false;
 	}
 
-	std::vector<Shape>& getShapes() {
-		return shapes;
+	std::vector<Shape*> getShapes() {
+
+		std::vector<Shape*> s;
+
+		for (size_t i = 0; i < shapes.size(); i++) {
+			s.push_back(&shapes[i]);
+		}
+
+		return s;
 	}
 
 	size_t size() {
 		return shapes.size();
 	}
 
-	Shape& findShape(ShapeID shape) {
+	Shape* findShape(ShapeID shape) {
 
 		for (size_t i = 0; i < shapes.size(); i++) {
 			if (shapes[i].shapeID == shape) {
-				return shapes[i];
+				return &shapes[i];
 			}
 		}
 
-		throw std::logic_error("Can't find shape with ID " + std::to_string(shape) + " in layer '" + name + "'");
+		return nullptr;
 	}
 
 	nlohmann::json getJson() {

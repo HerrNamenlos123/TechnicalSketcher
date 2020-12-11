@@ -54,6 +54,8 @@ public:
 	bool mouseWheelPressed = false;
 	bool mousePressed = false;
 
+	bool wantsToClose = false;
+
 
 
 	// Constructor and deconstructor

@@ -10,20 +10,20 @@ void Application::handleEvents() {
 	// Handle control events from the LayerWindow GUI to the application
 
 	if (layerWindow.moveLayerBackFlag) {
-		layers.moveLayerBack(layerWindow.moveLayerBackID);
+		file.moveLayerBack(layerWindow.moveLayerBackID);
 		layerWindow.moveLayerBackFlag = false;
 	}
 	if (layerWindow.moveLayerFrontFlag) {
-		layers.moveLayerFront(layerWindow.moveLayerFrontID);
+		file.moveLayerFront(layerWindow.moveLayerFrontID);
 		layerWindow.moveLayerFrontFlag = false;
 	}
 	if (layerWindow.layerSelectedFlag) {
-		layers.selectLayer(layerWindow.selectedLayer);
+		file.getLayerList().selectLayer(layerWindow.selectedLayer);
 		OnLayerSelect();
 		layerWindow.layerSelectedFlag = false;
 	}
 	if (layerWindow.addLayerFlag) {
-		addLayer();
+		file.addNewLayer();
 		generateLayerPreviews();
 		layerWindow.addLayerFlag = false;
 	}
