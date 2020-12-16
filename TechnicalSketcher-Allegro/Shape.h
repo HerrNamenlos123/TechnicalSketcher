@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstddef>
 #include "json.hpp"
+
 typedef size_t ShapeID;
 
 enum ShapeType {

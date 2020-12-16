@@ -63,6 +63,7 @@ void Application::addLine(glm::vec2 p1, glm::vec2 p2) {
 
 	file.addShape(SHAPE_LINE, p1, p2, ctrl_currentLineThickness);
 	file.setPreviewRegenerateFlag();
+	file.fileChanged();
 }
 
 void Application::changeMode(int mode) {
@@ -75,7 +76,7 @@ void Application::changeMode(int mode) {
 	case TOOL_SELECT:
 		selectedTool = TOOL_SELECT;
 		showPreviewPoint = false;
-		drawingSelectionBox = false;
+		selectionBoxActive = false;
 		break;
 
 	case TOOL_LINE:
@@ -83,7 +84,7 @@ void Application::changeMode(int mode) {
 		previewPoint = mouseSnapped_workspace;
 		showPreviewPoint = true;
 		drawingLine = false;
-		drawingSelectionBox = false;
+		selectionBoxActive = false;
 		break;
 
 	case TOOL_LINE_STRIP:
@@ -91,7 +92,7 @@ void Application::changeMode(int mode) {
 		previewPoint = mouseSnapped_workspace;
 		showPreviewPoint = true;
 		drawingLine = false;
-		drawingSelectionBox = false;
+		selectionBoxActive = false;
 		break;
 
 	default:
@@ -135,13 +136,6 @@ void Application::prepareGUI() {
 
 	generateLayerPreviews();
 }
-
-
-
-
-
-
-
 
 std::vector<ShapeID> Application::getHoveredShapes() {
 
@@ -200,7 +194,12 @@ void Application::mouseMoved() {
 	case TOOL_SELECT:
 
 		// Choose closest hovered shape
-		mouseOnShape = getClosestHoveredShape();
+		hoveredShape = getClosestHoveredShape();
+
+		if (selectionBoxActive) {
+			selectionBoxPointB = mouse_workspace;
+		}
+
 		break;
 
 	case TOOL_LINE:
@@ -222,17 +221,19 @@ void Application::mouseHovered() {
 
 	case TOOL_SELECT:
 
-		hoveredShape = getClosestHoveredShape();
+		lastHoveredShape = getClosestHoveredShape();
 
 		// Stop drawing selection box
-		if (drawingSelectionBox) {
-			drawingSelectionBox = false;
-			selectedShapes.clear();
+		if (selectionBoxActive) {
+			selectionBoxActive = false;
 
-			float left = std::min(previewLineStart.x, mouse_workspace.x);
-			float right = std::max(previewLineStart.x, mouse_workspace.x);
-			float top = std::max(previewLineStart.y, mouse_workspace.y);
-			float bottom = std::min(previewLineStart.y, mouse_workspace.y);
+			if (!getKey(ALLEGRO_KEY_LCTRL))
+				selectedShapes.clear();
+
+			float left = std::min(selectionBoxPointA.x, selectionBoxPointB.x);
+			float right = std::max(selectionBoxPointA.x, selectionBoxPointB.x);
+			float top = std::max(selectionBoxPointA.y, selectionBoxPointB.y);
+			float bottom = std::min(selectionBoxPointA.y, selectionBoxPointB.y);
 
 			for (Shape* shape : file.getCurrentLayerShapes()) {
 				if (shape->type == SHAPE_LINE) {
@@ -280,8 +281,8 @@ void Application::mouseDragged() {
 	}
 
 	// Un-hover shape when mouse is dragged off
-	if (mouseOnShape != hoveredShape) {
-		hoveredShape = -1;
+	if (hoveredShape != lastHoveredShape) {
+		lastHoveredShape = -1;
 	}
 }
 
@@ -308,9 +309,10 @@ void Application::selectToolShapeClicked(ShapeID shape, bool ctrlKey) {
 // Selection tool, the blank space was clicked
 void Application::selectToolSpaceClicked(bool ctrlKey) {
 
-	drawingSelectionBox = true;
+	selectionBoxActive = true;
 	showPreviewPoint = false;
-	previewLineStart = mouse_workspace;
+	selectionBoxPointA = mouse_workspace;
+	selectionBoxPointB = mouse_workspace;
 
 	//std::cout << "Selection Space clicked" << std::endl;
 }
@@ -324,12 +326,12 @@ void Application::selectToolRightClicked() {
 void Application::selectToolShapeReleased(ShapeID shape, bool ctrlKey) {
 
 	// Quickly update shape if mouse has not moved
-	mouseOnShape = getClosestHoveredShape();
+	hoveredShape = getClosestHoveredShape();
 
 	// Only do something if released shape is the same 
 	// as the one that was clicked in the first place
 
-	if (shape == hoveredShape) {
+	if (shape == lastHoveredShape) {
 		if (ctrlKey) {		// Shape was ctrl-clicked
 
 			bool existed = false;
@@ -364,7 +366,7 @@ void Application::selectToolSpaceReleased(bool ctrlKey) {
 
 	// Unselect all shapes, but only if ctrl is not pressed
 	// to avoid frustration when selecting shapes
-	if (!ctrlKey && hoveredShape == -1) {
+	if (!ctrlKey && lastHoveredShape == -1 && !selectionBoxActive) {
 		selectedShapes.clear();
 	}
 

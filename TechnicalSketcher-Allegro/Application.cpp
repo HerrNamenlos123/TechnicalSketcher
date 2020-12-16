@@ -72,6 +72,7 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 		}
 		selectedShapes.clear();
 		file.setPreviewRegenerateFlag();
+		file.fileChanged();
 	}
 	else if (keycode == ALLEGRO_KEY_UP) {
 
@@ -85,6 +86,7 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 			}
 		}
 		file.setPreviewRegenerateFlag();
+		file.fileChanged();
 
 	}
 	else if (keycode == ALLEGRO_KEY_DOWN) {
@@ -99,6 +101,7 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 			}
 		}
 		file.setPreviewRegenerateFlag();
+		file.fileChanged();
 
 	}
 	else if (keycode == ALLEGRO_KEY_RIGHT) {
@@ -113,6 +116,7 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 			}
 		}
 		file.setPreviewRegenerateFlag();
+		file.fileChanged();
 
 	}
 	else if (keycode == ALLEGRO_KEY_LEFT) {
@@ -127,10 +131,22 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 			}
 		}
 		file.setPreviewRegenerateFlag();
+		file.fileChanged();
 	}
 
+	// Ctrl + S
 	if (keycode == ALLEGRO_KEY_S && (modifiers & ALLEGRO_KEYMOD_CTRL)) {
-		saveFile("test.tsk");
+		if (modifiers & ALLEGRO_KEYMOD_SHIFT) {
+			saveFile(true);	// Save as
+		}
+		else {
+			saveFile();		// Save normally
+		}
+	}
+
+	// Ctrl + O
+	if (keycode == ALLEGRO_KEY_O && (modifiers & ALLEGRO_KEYMOD_CTRL)) {
+		//openFile();
 	}
 }
 

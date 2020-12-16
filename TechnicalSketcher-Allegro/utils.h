@@ -28,7 +28,7 @@ double random(double min, double max);
 
 //std::wstring stringToWString(std::string str);
 
-std::string loadStringFromFile(const std::string& path);
+std::string loadStringFromFile(const std::wstring& path);
 
 std::vector<std::string> loadVectorFromString(const std::string& src);
 

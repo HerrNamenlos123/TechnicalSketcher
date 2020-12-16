@@ -15,8 +15,10 @@ void Application::renderApplication() {
 	background(255);
 
 	// First part of the selection box
-	if (drawingSelectionBox) {			// Fill should be in the back
-		filledRectangle(convertWorkspaceToScreenCoords(previewLineStart), mouse, gfx_selectionBoxFillColor);
+	if (selectionBoxActive) {			// Fill should be in the back
+		glm::vec2 p1 = convertWorkspaceToScreenCoords(selectionBoxPointA);
+		glm::vec2 p2 = convertWorkspaceToScreenCoords(selectionBoxPointB);
+		filledRectangle(p1, p2, gfx_selectionBoxFillColor);
 	}
 
 	// Main elements of the application
@@ -32,8 +34,10 @@ void Application::renderApplication() {
 	}
 
 	// Second part of the selection box
-	if (drawingSelectionBox) {			// Outline in the front
-		outlinedRectangle(convertWorkspaceToScreenCoords(previewLineStart), mouse, gfx_selectionBoxColor, 1);
+	if (selectionBoxActive) {			// Outline in the front
+		glm::vec2 p1 = convertWorkspaceToScreenCoords(selectionBoxPointA);
+		glm::vec2 p2 = convertWorkspaceToScreenCoords(selectionBoxPointB);
+		outlinedRectangle(p1, p2, gfx_selectionBoxColor, 1);
 	}
 }
 
@@ -57,7 +61,7 @@ void Application::renderShapes() {
 
 					// Shape is selected
 					if (isShapeSelected(shape->shapeID)) {
-						if (shape->shapeID == hoveredShape) {	// Shape is selected and hovered
+						if (shape->shapeID == lastHoveredShape) {	// Shape is selected and hovered
 							drawLine(shape->p1, shape->p2, shape->thickness, (gfx_hoveredLineColor + gfx_selectedLineColor) / 2.f);
 						}
 						else {
@@ -65,7 +69,7 @@ void Application::renderShapes() {
 						}
 					}
 					else { // Shape is simply hovered
-						if (shape->shapeID == hoveredShape) {
+						if (shape->shapeID == lastHoveredShape) {
 							drawLine(shape->p1, shape->p2, shape->thickness, gfx_hoveredLineColor);
 						}
 						else {

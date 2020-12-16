@@ -10,6 +10,10 @@ class SketchFile {
 	bool regeneratePreviews = true;
 
 public:
+	std::string filename = "Unnamed";
+	bool __fileChanged = false;
+	bool __fileChangedEventFlag = false;
+	std::string __fileLocation = "";
 
 	SketchFile();
 
@@ -31,6 +35,7 @@ public:
 	bool getPreviewRegenerateFlag();
 
 	void addShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float lineThickness);
+	void fileChanged();
 
 	nlohmann::json getJson();
 };

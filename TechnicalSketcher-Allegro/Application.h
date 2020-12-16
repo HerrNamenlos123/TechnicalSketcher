@@ -36,11 +36,14 @@ public:
 	bool showPreviewPoint = false;
 	glm::vec2 previewLineStart = { 0, 0 };
 	bool drawingLine = false;
-	bool drawingSelectionBox = false;		// Selection box also uses previewPoint position
 
-	ShapeID hoveredShape = -1;
-	ShapeID mouseOnShape = -1;
+	bool selectionBoxActive = false;
+	glm::vec2 selectionBoxPointA = { 0, 0 };
+	glm::vec2 selectionBoxPointB = { 0, 0 };
+
 	std::vector<ShapeID> selectedShapes;
+	ShapeID hoveredShape = -1;
+	ShapeID lastHoveredShape = -1;
 
 	// GUI
 	GuiRibbonWindow ribbonWindow;
@@ -150,6 +153,6 @@ public:
 
 	// File loading and saving, defined in Application_files.cpp
 
-	bool saveFile(const std::string& file);
+	bool saveFile(bool saveAs = false);
 
 };

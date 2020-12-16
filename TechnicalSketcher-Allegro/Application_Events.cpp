@@ -44,6 +44,16 @@ void Application::handleEvents() {
 
 
 
+	// Handle file events
+
+	if (file.__fileChangedEventFlag) {
+		al_set_window_title(display, ("*" + file.filename + " - TechnicalSketcher").c_str());
+		file.__fileChangedEventFlag = false;
+	}
+	toolboxWindow.selectedTool = selectedTool;
+
+
+
 	// Mouse events
 
 	isMouseOnGui = ribbonWindow.isMouseOnWindow |
@@ -72,12 +82,10 @@ void Application::handleEvents() {
 	}
 
 	// Mouse dragged
-	if (mousePressed && pmouse != mouse) {
+	if (mousePressed) {
 		OnMouseDragged();
 	}
-
-	// Mouse hovered
-	if (!mousePressed && pmouse != mouse) {
+	else {	// Mouse hovered
 		OnMouseHovered();
 	}
 
@@ -104,8 +112,8 @@ void Application::OnMouseButtonLeftClicked() {
 
 	case TOOL_SELECT:
 
-		if (mouseOnShape != -1) {		// A Shape was clicked
-			selectToolShapeClicked(mouseOnShape, getKey(ALLEGRO_KEY_LCTRL));
+		if (hoveredShape != -1) {		// A Shape was clicked
+			selectToolShapeClicked(hoveredShape, getKey(ALLEGRO_KEY_LCTRL));
 		}
 		else {								// Open space was clicked
 			selectToolSpaceClicked(getKey(ALLEGRO_KEY_LCTRL));
@@ -170,8 +178,8 @@ void Application::OnMouseButtonLeftReleased() {
 
 	case TOOL_SELECT:
 		
-		if (mouseOnShape != -1) {			// A Shape was clicked
-			selectToolShapeReleased(mouseOnShape, getKey(ALLEGRO_KEY_LCTRL));
+		if (hoveredShape != -1) {			// A Shape was clicked
+			selectToolShapeReleased(hoveredShape, getKey(ALLEGRO_KEY_LCTRL));
 		}
 		else {								// Open space was clicked
 			selectToolSpaceReleased(getKey(ALLEGRO_KEY_LCTRL));

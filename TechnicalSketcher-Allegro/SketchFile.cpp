@@ -48,26 +48,33 @@ std::vector<Shape*> SketchFile::getCurrentLayerShapes() {
 
 void SketchFile::addNewLayer() {
 	addNewLayer("Layer #" + std::to_string(nextLayerName));
-	setPreviewRegenerateFlag();
 }
 
 void SketchFile::addNewLayer(const std::string& name) {
 	layers.addLayerFront(name);
 	nextLayerName++;
+	setPreviewRegenerateFlag();
+	fileChanged();
 }
 
 void SketchFile::deleteLayer(LayerID id) {
 	layers.deleteLayer(id);
+	setPreviewRegenerateFlag();
+	fileChanged();
 }
 
 
 
 void SketchFile::moveLayerFront(LayerID id) {
 	layers.moveLayerFront(id);
+	setPreviewRegenerateFlag();
+	fileChanged();
 }
 
 void SketchFile::moveLayerBack(LayerID id) {
 	layers.moveLayerBack(id);
+	setPreviewRegenerateFlag();
+	fileChanged();
 }
 
 
@@ -96,6 +103,13 @@ void SketchFile::addShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float
 
 	if (layer) {
 		layer->addShape(type, p1, p2, lineThickness);
+	}
+}
+
+void SketchFile::fileChanged() {
+	if (!__fileChanged) {
+		__fileChanged = true;
+		__fileChangedEventFlag = true;
 	}
 }
 
