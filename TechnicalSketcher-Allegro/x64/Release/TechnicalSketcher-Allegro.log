@@ -1,0 +1,6 @@
+﻿  Application_files.cpp
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\TechnicalSketcher-Allegro\src\Application_files.cpp(99,8): error C2228: Links von ".__fileLocation" müssen sich in einer Klasse/Struktur/Union befinden
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\TechnicalSketcher-Allegro\src\Application_files.cpp(99,8): message : Typ ist "ALLEGRO_FILECHOOSER *"
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\TechnicalSketcher-Allegro\src\Application_files.cpp(99,8): message : Wollten Sie stattdessen "->" verwenden?
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\TechnicalSketcher-Allegro\src\Application_files.cpp(125,82): error C2660: "al_set_window_title": Funktion akzeptiert keine 1 Argumente
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\packages\Allegro.5.2.6\build\native\include\allegro5\display.h(163,1): message : Siehe Deklaration von "al_set_window_title"

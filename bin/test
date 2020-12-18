@@ -1,0 +1,20 @@
+[
+    [
+        "next_layer_id",
+        1
+    ],
+    {
+        "layer_order": [
+            0
+        ],
+        "layers": [
+            {
+                "id": 0,
+                "name": "Layer #0",
+                "next_id": 0,
+                "shapes": []
+            }
+        ],
+        "next_id": 1
+    }
+]

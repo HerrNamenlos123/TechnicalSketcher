@@ -110,7 +110,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>imgui/backends;imgui;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>imgui/backends;imgui;.;./include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,7 +127,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>imgui/backends;imgui;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>imgui/backends;imgui;.;./include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,7 +144,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>imgui/backends;imgui;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>imgui/backends;imgui;.;./include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -161,7 +161,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>imgui/backends;imgui;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>imgui/backends;imgui;.;./include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -171,9 +171,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AllegroEngine.cpp" />
-    <ClCompile Include="Application_files.cpp" />
-    <ClCompile Include="geometry.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_allegro5.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -204,44 +201,52 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="LayerList.cpp" />
-    <ClCompile Include="Application.cpp" />
-    <ClCompile Include="Application_Events.cpp" />
-    <ClCompile Include="fonts.cpp" />
-    <ClCompile Include="Application_logic.cpp" />
-    <ClCompile Include="Application_graphic.cpp" />
-    <ClCompile Include="math_geometry.cpp" />
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="src\AllegroEngine.cpp" />
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Application_Events.cpp" />
+    <ClCompile Include="src\Application_files.cpp" />
+    <ClCompile Include="src\Application_graphic.cpp" />
+    <ClCompile Include="src\Application_logic.cpp" />
+    <ClCompile Include="src\fonts.cpp" />
+    <ClCompile Include="src\geometry.cpp" />
+    <ClCompile Include="src\LayerList.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\math_geometry.cpp" />
+    <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Shape.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="SketchFile.cpp" />
-    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="src\Shape.cpp" />
+    <ClCompile Include="src\SketchFile.cpp" />
+    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AllegroEngine.h" />
-    <ClInclude Include="config.h" />
-    <ClInclude Include="fonts.h" />
-    <ClInclude Include="geometry.h" />
-    <ClInclude Include="GuiWindows.h" />
-    <ClInclude Include="json.hpp" />
-    <ClInclude Include="SketchFile.h" />
-    <ClInclude Include="StaticImGuiWindow.h" />
-    <ClInclude Include="Layer.h" />
-    <ClInclude Include="LayerList.h" />
-    <ClInclude Include="Application.h" />
-    <ClInclude Include="math_geometry.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="print.h" />
-    <ClInclude Include="Shape.h" />
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="include\AllegroEngine.h" />
+    <ClInclude Include="include\Application.h" />
+    <ClInclude Include="include\config.h" />
+    <ClInclude Include="include\fonts.h" />
+    <ClInclude Include="include\geometry.h" />
+    <ClInclude Include="include\GuiWindows.h" />
+    <ClInclude Include="include\json.hpp" />
+    <ClInclude Include="include\Layer.h" />
+    <ClInclude Include="include\LayerList.h" />
+    <ClInclude Include="include\math_geometry.h" />
+    <ClInclude Include="include\pch.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\print.h" />
+    <ClInclude Include="include\Shape.h" />
+    <ClInclude Include="include\SketchFile.h" />
+    <ClInclude Include="include\StaticImGuiWindow.h" />
+    <ClInclude Include="include\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
