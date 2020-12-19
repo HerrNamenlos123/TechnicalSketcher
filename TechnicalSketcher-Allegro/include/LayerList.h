@@ -36,6 +36,7 @@ public:
 	std::vector<Layer>* getLayerPointer();
 	std::vector<Layer*> getLayerPointers();
 
+	bool loadJson(nlohmann::json json);
 	nlohmann::json getJson();
 
 

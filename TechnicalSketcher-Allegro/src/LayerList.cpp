@@ -211,7 +211,31 @@ std::vector<Layer*> LayerList::getLayerPointers() {
 
 
 
+bool LayerList::loadJson(nlohmann::json json) {
 
+	// Try to parse data
+	try {
+
+		nextLayerID = json["next_layer_id"];
+		std::vector<int> order = json["layer_order"];
+
+		layerOrder.clear();
+		for (int i = 0; i < order.size(); i++) {
+			layerOrder.push_back(static_cast<LayerID>(order[i]));
+		}
+
+		for (nlohmann::json j : json["layers"]) {
+			layers.push_back(Layer(j));
+		}
+
+		selectedLayer = layerOrder[0];
+	}
+	catch (...) {
+		return false;
+	}
+
+	return true;
+}
 
 nlohmann::json LayerList::getJson() {
 
@@ -230,7 +254,7 @@ nlohmann::json LayerList::getJson() {
 	nlohmann::json json = nlohmann::json({
 		{ "layers", jsonLayers },
 		{ "layer_order", jsonLayerOrder },
-		{ "next_id", nextLayerID }
+		{ "next_layer_id", nextLayerID }
 	});
 
 	return json;

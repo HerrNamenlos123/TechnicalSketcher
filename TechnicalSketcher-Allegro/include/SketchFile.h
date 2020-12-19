@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LayerList.h"
+#include "config.h"
 
 class SketchFile {
 
@@ -10,7 +11,7 @@ class SketchFile {
 	bool regeneratePreviews = true;
 
 public:
-	std::string filename = "Unnamed";
+	std::string filename = DEFAULT_FILENAME;
 	bool __fileChanged = false;
 	bool __fileChangedEventFlag = false;
 	std::string __fileLocation = "";
@@ -38,5 +39,6 @@ public:
 	void fileChanged();
 
 	void openNewFile();
+	bool loadFile(const std::string& content, const std::string& path, const std::string& displayName);
 	nlohmann::json getJson();
 };

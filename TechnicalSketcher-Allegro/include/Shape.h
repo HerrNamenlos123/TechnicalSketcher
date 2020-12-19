@@ -20,6 +20,7 @@ struct Shape {
 	float thickness = 0;
 
 	Shape();
+	Shape(nlohmann::json j);
 	Shape(ShapeID _shapeID, enum ShapeType _type, glm::vec2 _p1, glm::vec2 _p2, float _thickness);
 	~Shape();
 

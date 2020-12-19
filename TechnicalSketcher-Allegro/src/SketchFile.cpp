@@ -116,7 +116,7 @@ void SketchFile::openNewFile() {
 	layers.clear();
 	nextLayerName = 0;
 	regeneratePreviews = true;
-	filename = "Unnamed";
+	filename = DEFAULT_FILENAME;
 
 	addNewLayer();
 
@@ -125,11 +125,46 @@ void SketchFile::openNewFile() {
 	__fileLocation = "";
 }
 
+bool SketchFile::loadFile(const std::string& content, const std::string& path, const std::string& displayName) {
+
+	// Temporary containers
+	LayerList tempLayers;
+	size_t tempNextName;
+	
+	// Parse the file content
+	try {
+		nlohmann::json data = nlohmann::json::parse(content);
+
+		tempNextName = data["next_layer_name"];
+
+		if (!tempLayers.loadJson(data)) {
+			return false;
+		}
+	}
+	catch (...) {
+		return false;
+	}
+
+	// File was successfully parsed, load to memory now
+	layers.clear();
+	layers = tempLayers;
+	nextLayerName = tempNextName;
+	regeneratePreviews = true;
+	filename = displayName;
+
+	__fileChanged = false;
+	__fileChangedEventFlag = false;
+	__fileLocation = path;
+
+	return true;
+}
+
 nlohmann::json SketchFile::getJson() {
 
 	nlohmann::json json;
 
-	json = nlohmann::json{ { "next_layer_id", nextLayerName }, layers.getJson() };
+	json = layers.getJson();
+	json["next_layer_name"] = nextLayerName;
 
 	return json;
 }

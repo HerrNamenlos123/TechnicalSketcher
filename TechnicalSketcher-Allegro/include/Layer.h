@@ -30,6 +30,17 @@ public:
 		nextShapeID = layer.nextShapeID;
 	};
 
+	Layer(nlohmann::json j) {
+		name = j["name"].get<std::string>();
+		bitmap = nullptr;
+		layerID = j["id"];
+		nextShapeID = j["next_layer_id"];
+
+		for (nlohmann::json sh : j["shapes"]) {
+			shapes.push_back(Shape(sh));
+		}
+	};
+
 	void operator=(const Layer& layer) {
 		name = layer.name;
 		shapes = layer.shapes;
@@ -108,7 +119,7 @@ public:
 		json = nlohmann::json{
 			{ "id", layerID },
 			{ "name", name },
-			{ "next_id", nextShapeID },
+			{ "next_layer_id", nextShapeID },
 			{ "shapes", jsonShapes }
 		};
 

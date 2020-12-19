@@ -50,35 +50,12 @@ void Application::draw() {
 	//std::cout << "SelectedShape: #" << layers.getSelectedLayerID() << std::endl;
 
 	if (wantsToClose) {
-		if (file.__fileChanged) {
-
-			// Ask the user if file needs to be saved
-			int r = al_show_native_message_box(display,
-				"Save changes",
-				(file.filename + " contains unsaved changes").c_str(),
-				"Do you want to save it?",
-				NULL,
-				ALLEGRO_MESSAGEBOX_YES_NO | ALLEGRO_MESSAGEBOX_WARN
-			);
-
-			if (r == 1) {	// Yes clicked
-				if (saveFile()) {
-					std::cout << "Main loop set close flag" << std::endl;
-					close();
-				}
-				else {
-					// Reset flag and continue program
-					wantsToClose = false;
-				}
-			}
-			else {
-				std::cout << "Main loop set close flag" << std::endl;
-				close();
-			}
-		}
-		else {
+		if (closeFile()) {
 			std::cout << "Main loop set close flag" << std::endl;
 			close();
+		}
+		else {
+			wantsToClose = false;
 		}
 	}
 }
@@ -106,7 +83,7 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 
 	// Ctrl + O
 	if (keycode == ALLEGRO_KEY_O && (modifiers & ALLEGRO_KEYMOD_CTRL)) {
-		//openFile();
+		openFile();
 	}
 
 	Layer* layer = file.getCurrentLayer();
