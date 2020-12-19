@@ -50,8 +50,36 @@ void Application::draw() {
 	//std::cout << "SelectedShape: #" << layers.getSelectedLayerID() << std::endl;
 
 	if (wantsToClose) {
-		std::cout << "Main loop set close flag" << std::endl;
-		close();
+		if (file.__fileChanged) {
+
+			// Ask the user if file needs to be saved
+			int r = al_show_native_message_box(display,
+				"Save changes",
+				(file.filename + " contains unsaved changes").c_str(),
+				"Do you want to save it?",
+				NULL,
+				ALLEGRO_MESSAGEBOX_YES_NO | ALLEGRO_MESSAGEBOX_WARN
+			);
+
+			if (r == 1) {	// Yes clicked
+				if (saveFile()) {
+					std::cout << "Main loop set close flag" << std::endl;
+					close();
+				}
+				else {
+					// Reset flag and continue program
+					wantsToClose = false;
+				}
+			}
+			else {
+				std::cout << "Main loop set close flag" << std::endl;
+				close();
+			}
+		}
+		else {
+			std::cout << "Main loop set close flag" << std::endl;
+			close();
+		}
 	}
 }
 
@@ -59,10 +87,26 @@ void Application::destroy() {
 }
 
 void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, bool repeat) {
-	
+
+	// Handle key events
+
 	if (keycode == ALLEGRO_KEY_ESCAPE) {
-		close();
-		return;
+		wantsToClose = true;
+	}
+
+	// Ctrl + S
+	if (keycode == ALLEGRO_KEY_S && (modifiers & ALLEGRO_KEYMOD_CTRL)) {
+		if (getKey(ALLEGRO_KEYMOD_SHIFT)) {
+			saveFile(true);	// Save as
+		}
+		else {
+			saveFile();		// Save normally
+		}
+	}
+
+	// Ctrl + O
+	if (keycode == ALLEGRO_KEY_O && (modifiers & ALLEGRO_KEYMOD_CTRL)) {
+		//openFile();
 	}
 
 	Layer* layer = file.getCurrentLayer();
@@ -135,21 +179,6 @@ void Application::keyPressed(int keycode, int unicode, unsigned int modifiers, b
 		}
 		file.setPreviewRegenerateFlag();
 		file.fileChanged();
-	}
-
-	// Ctrl + S
-	if (keycode == ALLEGRO_KEY_S && (modifiers & ALLEGRO_KEYMOD_CTRL)) {
-		if (modifiers & ALLEGRO_KEYMOD_SHIFT) {
-			saveFile(true);	// Save as
-		}
-		else {
-			saveFile();		// Save normally
-		}
-	}
-
-	// Ctrl + O
-	if (keycode == ALLEGRO_KEY_O && (modifiers & ALLEGRO_KEYMOD_CTRL)) {
-		//openFile();
 	}
 }
 

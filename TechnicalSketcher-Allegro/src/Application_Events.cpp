@@ -6,7 +6,6 @@
 
 void Application::handleEvents() {
 
-
 	// Handle control events from the LayerWindow GUI to the application
 
 	if (layerWindow.moveLayerBackFlag) {

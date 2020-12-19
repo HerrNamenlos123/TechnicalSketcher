@@ -165,44 +165,49 @@ void AllegroEngine::run(int w, int h, int flags) {
 			drawn = true;
 		}
 
-		// Wait until any event happens
-		al_wait_for_event(events, &event);
+		// Handle all pending events
+		while (!al_is_event_queue_empty(events)) {
 
-		// Let ImGui know about any event
-		ImGui_ImplAllegro5_ProcessEvent(&event);
+			// Retrieve event and check if it's valid
+			if (!al_get_next_event(events, &event))
+				break;
 
-		switch (event.type) {
+			// Let ImGui know about the event
+			ImGui_ImplAllegro5_ProcessEvent(&event);
 
-		case ALLEGRO_EVENT_KEY_DOWN:
-			keyPressed(event.keyboard.keycode, event.keyboard.modifiers);
-			break;
+			switch (event.type) {
 
-		case ALLEGRO_EVENT_KEY_UP:
-			keyReleased(event.keyboard.keycode, event.keyboard.modifiers);
-			break;
+			case ALLEGRO_EVENT_KEY_DOWN:
+				keyPressed(event.keyboard.keycode, event.keyboard.modifiers);
+				break;
 
-		case ALLEGRO_EVENT_KEY_CHAR:
-			keyPressed(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers, event.keyboard.repeat);
-			break;
+			case ALLEGRO_EVENT_KEY_UP:
+				keyReleased(event.keyboard.keycode, event.keyboard.modifiers);
+				break;
 
-		case ALLEGRO_EVENT_DISPLAY_CLOSE:
-			wantsToClose = true;
-			std::cout << "Allegro wants to close" << std::endl;
-			break;
+			case ALLEGRO_EVENT_KEY_CHAR:
+				keyPressed(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers, event.keyboard.repeat);
+				break;
 
-		case ALLEGRO_EVENT_DISPLAY_RESIZE:
-			ImGui_ImplAllegro5_InvalidateDeviceObjects();
-			al_acknowledge_resize(display);
-			ImGui_ImplAllegro5_CreateDeviceObjects();
-			break;
+			case ALLEGRO_EVENT_DISPLAY_CLOSE:
+				wantsToClose = true;
+				std::cout << "Allegro wants to close" << std::endl;
+				break;
 
-		case ALLEGRO_EVENT_TIMER:
-			al_flip_display();
-			drawn = false;
-			break;
+			case ALLEGRO_EVENT_DISPLAY_RESIZE:
+				ImGui_ImplAllegro5_InvalidateDeviceObjects();
+				al_acknowledge_resize(display);
+				ImGui_ImplAllegro5_CreateDeviceObjects();
+				break;
 
-		default:
-			break;
+			case ALLEGRO_EVENT_TIMER:
+				al_flip_display();
+				drawn = false;
+				break;
+
+			default:
+				break;
+			}
 		}
 	}
 

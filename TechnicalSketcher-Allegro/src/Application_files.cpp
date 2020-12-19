@@ -51,7 +51,7 @@ std::string getSaveFilename(Application* app) {
                 int r = al_show_native_message_box(app->display, 
                             "Confirm Save as", 
                             (std::string(al_get_path_filename(p1)) + " already exists.").c_str(),
-                            "Do you really want to overwrite it?", 
+                            "Do you really want to replace it?", 
                             NULL, 
                             ALLEGRO_MESSAGEBOX_YES_NO | ALLEGRO_MESSAGEBOX_WARN
                         );
