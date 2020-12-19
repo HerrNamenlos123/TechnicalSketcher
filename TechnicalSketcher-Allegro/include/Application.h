@@ -154,6 +154,7 @@ public:
 	// File loading and saving, defined in Application_files.cpp
 
 	void updateWindowTitle();
+	bool openPreviousFile();
 	bool closeFile();
 	bool openFile();
 	bool saveFile(bool saveAs = false);

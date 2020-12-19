@@ -20,6 +20,8 @@ void Application::setup() {
 	generateLayerPreviews();
 	showPreviewPoint = false;
 
+	openPreviousFile();
+
 	updateWindowTitle();
 }
 

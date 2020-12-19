@@ -5,9 +5,26 @@
 #include <windows.h>
 #include <shlobj.h>
 
+#define RECENT_FILE ((getExeDirectory() + "/recent").c_str())
+
 
 bool inAlphabet(char c) {
     return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+std::string getExeDirectory() {
+    ALLEGRO_PATH* path = al_get_standard_path(ALLEGRO_EXENAME_PATH);
+
+    std::string str = al_get_path_drive(path);
+    str += "/";
+    for (int i = 0; i < al_get_path_num_components(path); i++) {
+        str += al_get_path_component(path, i);
+        str += "/";
+    }
+
+    al_destroy_path(path);
+
+    return str;
 }
 
 
@@ -16,6 +33,26 @@ void Application::updateWindowTitle() {
         al_set_window_title(display, ("*" + file.filename + " - TechnicalSketcher").c_str());
     else
         al_set_window_title(display, (file.filename + " - TechnicalSketcher").c_str());
+}
+
+bool Application::openPreviousFile() {
+    try {
+        std::string path = loadStringFromFile(RECENT_FILE);
+
+        if (path != "") {
+
+            ALLEGRO_PATH* p = al_create_path(path.c_str());
+            std::string displayName = al_get_path_filename(p);
+            al_destroy_path(p);
+
+            std::string content = loadStringFromFile(path);
+            return file.loadFile(content, path, displayName);
+        }
+    }
+    catch (...) {
+    }
+
+    return false;
 }
 
 
@@ -37,6 +74,11 @@ bool Application::closeFile() {
                 return false;       // Say that closing was not successful
             }
         }
+    }
+
+    // Save that this file was opened last
+    if (!saveStringToFile(RECENT_FILE, file.__fileLocation)) {
+        errorMessage("Failed to save file '" + std::string(RECENT_FILE) + "'");
     }
 
     // Now just delete everything
