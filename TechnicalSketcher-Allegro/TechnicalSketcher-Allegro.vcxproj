@@ -219,6 +219,7 @@
     <ClCompile Include="src\Application_files.cpp" />
     <ClCompile Include="src\Application_graphic.cpp" />
     <ClCompile Include="src\Application_logic.cpp" />
+    <ClCompile Include="src\Application_updates.cpp" />
     <ClCompile Include="src\fonts.cpp" />
     <ClCompile Include="src\geometry.cpp" />
     <ClCompile Include="src\LayerList.cpp" />

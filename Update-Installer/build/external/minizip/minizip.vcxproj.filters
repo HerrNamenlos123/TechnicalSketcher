@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\minizip\ioapi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\minizip\unzip.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\minizip\zip.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\minizip\ioapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\minizip\unzip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\minizip\zip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\minizip\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{544F505D-6B2C-30C1-9321-452EB68DEFC9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{10A5FEB0-C2E5-3BB1-9BD1-1262FAAE9B3F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

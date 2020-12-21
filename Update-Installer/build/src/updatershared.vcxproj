@@ -1,0 +1,319 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9038B93E-F7CF-31FA-BD21-393E40F54AA8}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>updatershared</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\src\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">updatershared.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">updatershared</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\src\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">updatershared.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">updatershared</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\src\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">updatershared.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">updatershared</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\src\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">updatershared.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">updatershared</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;TIXML_USE_STL;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;TIXML_USE_STL;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TIXML_USE_STL;CMAKE_INTDIR="Release";NO_ATOLL_DEFINITION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TIXML_USE_STL;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TIXML_USE_STL;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TIXML_USE_STL;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TIXML_USE_STL;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TIXML_USE_STL;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\TinyThread\source;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\zlib;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\bzip2;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\external\win32cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SF:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer" "-BF:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/build" --check-stamp-file "F:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/build/src/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.17\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckIncludeFile.c.in;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\UsePkgConfig.cmake;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\cmake\modules\GenerateCppResourceFile.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\src\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SF:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer" "-BF:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/build" --check-stamp-file "F:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/build/src/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.17\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckIncludeFile.c.in;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\UsePkgConfig.cmake;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\cmake\modules\GenerateCppResourceFile.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\src\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SF:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer" "-BF:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/build" --check-stamp-file "F:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/build/src/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-3.17\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckIncludeFile.c.in;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\UsePkgConfig.cmake;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\cmake\modules\GenerateCppResourceFile.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\src\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SF:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer" "-BF:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/build" --check-stamp-file "F:/Documents/C++/CppProjects/Visual Studio 2019/TechnicalSketcher-Allegro/Update-Installer/build/src/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-3.17\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckIncludeFile.c.in;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.17\Modules\UsePkgConfig.cmake;F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\cmake\modules\GenerateCppResourceFile.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\src\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\AppInfo.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\DirIterator.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\FileUtils.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\Log.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\ProcessUtils.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\StandardDirs.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\UpdateInstaller.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\UpdateScript.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\UpdaterOptions.cpp" />
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\UpdateDialogWin32.cpp" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\AppInfo.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\DirIterator.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\FileUtils.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\Log.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\ProcessUtils.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\StandardDirs.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\UpdateInstaller.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\UpdateScript.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\UpdaterOptions.h" />
+    <ClInclude Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\UpdateDialogWin32.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\ZERO_CHECK.vcxproj">
+      <Project>{858448E6-2A79-34E7-8082-D610F45A0C8E}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\external\AnyOption\anyoption.vcxproj">
+      <Project>{7836BA26-B188-3F34-B34F-A8040150BE52}</Project>
+      <Name>anyoption</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\external\minizip\minizip.vcxproj">
+      <Project>{513EFEE7-E1C7-3207-96D1-634E908FD338}</Project>
+      <Name>minizip</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\external\TinyThread\tinythread.vcxproj">
+      <Project>{C57BB497-6052-31B9-B2C5-CDA13620238F}</Project>
+      <Name>tinythread</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\build\external\tinyxml\tinyxml.vcxproj">
+      <Project>{8FBDF92F-4601-3EDB-A72A-7A5AB992FB12}</Project>
+      <Name>tinyxml</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -159,4 +159,11 @@ public:
 	bool openFile();
 	bool saveFile(bool saveAs = false);
 
+
+
+
+	// Application updater functions for checking, downloading and installing updates
+
+	void checkForUpdates();
+
 };

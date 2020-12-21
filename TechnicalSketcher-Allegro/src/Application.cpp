@@ -39,6 +39,8 @@ void Application::setup() {
 	openPreviousFile();
 
 	updateWindowTitle();
+
+	checkForUpdates();
 }
 
 void Application::draw() {

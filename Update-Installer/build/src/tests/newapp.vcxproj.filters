@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\tests\new_app.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Update-Installer\src\tests\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{10A5FEB0-C2E5-3BB1-9BD1-1262FAAE9B3F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
