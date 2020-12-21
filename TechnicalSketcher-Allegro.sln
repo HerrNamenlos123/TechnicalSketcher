@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TechnicalSketcher-Allegro",
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "AppInstaller-x64", "AppInstaller-x64\AppInstaller-x64.vdproj", "{A70C41A0-F58F-40D1-B24E-AD8D3F7D9276}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "AppInstaller-x86", "AppInstaller-x86\AppInstaller-x86.vdproj", "{ABCCFF6C-6FC6-4688-98AE-04E77201AC61}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -30,11 +28,6 @@ Global
 		{A70C41A0-F58F-40D1-B24E-AD8D3F7D9276}.Release|x64.ActiveCfg = Release
 		{A70C41A0-F58F-40D1-B24E-AD8D3F7D9276}.Release|x64.Build.0 = Release
 		{A70C41A0-F58F-40D1-B24E-AD8D3F7D9276}.Release|x86.ActiveCfg = Release
-		{ABCCFF6C-6FC6-4688-98AE-04E77201AC61}.Debug|x64.ActiveCfg = Debug
-		{ABCCFF6C-6FC6-4688-98AE-04E77201AC61}.Debug|x86.ActiveCfg = Debug
-		{ABCCFF6C-6FC6-4688-98AE-04E77201AC61}.Release|x64.ActiveCfg = Release
-		{ABCCFF6C-6FC6-4688-98AE-04E77201AC61}.Release|x86.ActiveCfg = Release
-		{ABCCFF6C-6FC6-4688-98AE-04E77201AC61}.Release|x86.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

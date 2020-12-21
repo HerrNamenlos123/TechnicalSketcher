@@ -1,26 +1,7 @@
-﻿  pch.cpp
-  imgui_impl_allegro5.cpp
-  imgui.cpp
-  imgui_demo.cpp
-  imgui_draw.cpp
-  imgui_widgets.cpp
-  AllegroEngine.cpp
-  Application.cpp
-  Application_Events.cpp
-  Application_files.cpp
-  Application_graphic.cpp
-  Application_logic.cpp
-  fonts.cpp
-  geometry.cpp
-  LayerList.cpp
-  main.cpp
-  math_geometry.cpp
-  Shape.cpp
-  SketchFile.cpp
-  utils.cpp
+﻿  AllegroEngine.cpp
   Code wird generiert.
-  1279 of 3399 functions (37.6%) were compiled, the rest were copied from previous compilation.
-    260 functions were new in current compilation
-    92 functions had inline decision re-evaluated but remain unchanged
+  2 of 3401 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    16 functions had inline decision re-evaluated but remain unchanged
   Codegenerierung ist abgeschlossen.
   TechnicalSketcher-Allegro.vcxproj -> F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\x64\Release\TechnicalSketcher-Allegro.exe

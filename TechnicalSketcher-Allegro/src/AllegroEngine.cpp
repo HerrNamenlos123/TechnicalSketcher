@@ -169,44 +169,45 @@ void AllegroEngine::run(int w, int h, int flags) {
 		while (!al_is_event_queue_empty(events)) {
 
 			// Retrieve event and check if it's valid
-			if (!al_get_next_event(events, &event))
-				break;
+			if (al_get_next_event(events, &event)) {
 
-			// Let ImGui know about the event
-			ImGui_ImplAllegro5_ProcessEvent(&event);
+				// Let ImGui know about the event
+				ImGui_ImplAllegro5_ProcessEvent(&event);
 
-			switch (event.type) {
+				switch (event.type) {
 
-			case ALLEGRO_EVENT_KEY_DOWN:
-				keyPressed(event.keyboard.keycode, event.keyboard.modifiers);
-				break;
+				case ALLEGRO_EVENT_KEY_DOWN:
+					keyPressed(event.keyboard.keycode, event.keyboard.modifiers);
+					break;
 
-			case ALLEGRO_EVENT_KEY_UP:
-				keyReleased(event.keyboard.keycode, event.keyboard.modifiers);
-				break;
+				case ALLEGRO_EVENT_KEY_UP:
+					keyReleased(event.keyboard.keycode, event.keyboard.modifiers);
+					break;
 
-			case ALLEGRO_EVENT_KEY_CHAR:
-				keyPressed(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers, event.keyboard.repeat);
-				break;
+				case ALLEGRO_EVENT_KEY_CHAR:
+					keyPressed(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers, event.keyboard.repeat);
+					break;
 
-			case ALLEGRO_EVENT_DISPLAY_CLOSE:
-				wantsToClose = true;
-				std::cout << "Allegro wants to close" << std::endl;
-				break;
+				case ALLEGRO_EVENT_DISPLAY_CLOSE:
+					wantsToClose = true;
+					break;
 
-			case ALLEGRO_EVENT_DISPLAY_RESIZE:
-				ImGui_ImplAllegro5_InvalidateDeviceObjects();
-				al_acknowledge_resize(display);
-				ImGui_ImplAllegro5_CreateDeviceObjects();
-				break;
+				case ALLEGRO_EVENT_DISPLAY_RESIZE:
+					ImGui_ImplAllegro5_InvalidateDeviceObjects();
+					al_acknowledge_resize(display);
+					ImGui_ImplAllegro5_CreateDeviceObjects();
+					break;
 
-			case ALLEGRO_EVENT_TIMER:
-				al_flip_display();
-				drawn = false;
-				break;
+				case ALLEGRO_EVENT_TIMER:
+					if (drawn) {
+						al_flip_display();
+						drawn = false;
+					}
+					break;
 
-			default:
-				break;
+				default:
+					break;
+				}
 			}
 		}
 	}
