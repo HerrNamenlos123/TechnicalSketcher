@@ -43,6 +43,8 @@ public:
 	size_t framecount = 0;
 	int width = 0;
 	int height = 0;
+	int screenWidth = 0;
+	int screenHeight = 0;
 	glm::vec2 pmouse = { 0, 0 };
 	glm::vec2 mouse  = { 0, 0 };
 	bool pmouseButtonLeftPressed = false;

@@ -136,11 +136,17 @@ void AllegroEngine::run(int w, int h, int flags) {
 	width = w;
 	height = h;
 
-	// Initialize everything
+	// Initialize everything and create window
 	if (!initAll(flags)) {
 		uninstallAll();
 		return;
 	}
+
+	// Get the desktop screen resolution
+	ALLEGRO_MONITOR_INFO monitor;
+	al_get_monitor_info(0, &monitor);
+	screenWidth = monitor.x2 - monitor.x1;
+	screenHeight = monitor.y2 - monitor.y1;
 
 	// Add event triggers
 	al_register_event_source(events, al_get_keyboard_event_source());

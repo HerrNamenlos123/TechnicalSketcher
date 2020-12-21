@@ -1,6 +1,10 @@
-﻿  AllegroEngine.cpp
+﻿  Application.cpp
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\TechnicalSketcher-Allegro\include\config.h(7,1): warning C4005: "DEFAULT_WINDOW_WIDTH": Makro-Neudefinition
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\TechnicalSketcher-Allegro\include\config.h(5): message : Siehe vorherige Definition von "DEFAULT_WINDOW_WIDTH"
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\TechnicalSketcher-Allegro\include\config.h(8,1): warning C4005: "DEFAULT_WINDOW_HEIGHT": Makro-Neudefinition
+F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\TechnicalSketcher-Allegro\include\config.h(6): message : Siehe vorherige Definition von "DEFAULT_WINDOW_HEIGHT"
   Code wird generiert.
-  2 of 3401 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  1 of 3399 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     16 functions had inline decision re-evaluated but remain unchanged
   Codegenerierung ist abgeschlossen.

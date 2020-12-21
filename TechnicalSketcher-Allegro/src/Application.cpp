@@ -13,6 +13,22 @@ Application::Application() {
 
 void Application::setup() {
 
+	// If screen is too small with a little margin, start in fullscreen mode
+	float margin = 1.2f;
+	if (screenWidth / margin < DEFAULT_WINDOW_WIDTH || screenHeight / margin < DEFAULT_WINDOW_HEIGHT) {
+		width = (int)(screenWidth / margin);
+		height = (int)(screenHeight / margin);
+		al_resize_display(display, width, height);
+		al_set_window_position(display, (screenWidth - width) / 2, (screenHeight - height) / 2);
+		al_set_display_flag(display, ALLEGRO_MAXIMIZED, true);
+	}
+	else {	// Set up window normally
+		al_set_window_position(display, (screenWidth - width) / 2, (screenHeight - height) / 2);
+		al_resize_display(display, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+		width = DEFAULT_WINDOW_WIDTH;
+		height = DEFAULT_WINDOW_HEIGHT;
+	}
+
 	loadImGuiFonts();
 
 	changeMode(TOOL_SELECT);
