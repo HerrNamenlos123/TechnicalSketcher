@@ -358,7 +358,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TechnicalSketcher"
         "ProductCode" = "8:{E371DF56-95D4-4664-9103-5529CFE72D6D}"
-        "PackageCode" = "8:{C8E38D79-535D-4DAA-9BB3-24EDDAC11048}"
+        "PackageCode" = "8:{EEF10550-A355-403B-9359-12783A72A684}"
         "UpgradeCode" = "8:{66BA3CEE-6F94-4D84-8E86-89B216989694}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
@@ -478,11 +478,25 @@
         }
         "Shortcut"
         {
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_2396382D82B94102B0F0ED86AAC3C792"
+            {
+            "Name" = "8:TechnicalSketcher"
+            "Arguments" = "8:"
+            "Description" = "8:Create beautiful sketches easily"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_604C515BB9C940D388B2FC58C1907922"
+            "Folder" = "8:_23769D6E140845B9BEDFCD5240BF7A8E"
+            "WorkingFolder" = "8:_AEC6D6E7FAB7433192997E9CB7181237"
+            "Icon" = "8:_682C8626C6DC4AD4984B125FBC6D01F3"
+            "Feature" = "8:"
+            }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_30A7DA7270CC4B33B5876C2F1860C8E1"
             {
             "Name" = "8:TechnicalSketcher"
             "Arguments" = "8:"
-            "Description" = "8:"
+            "Description" = "8:Create beautiful sketches easily"
             "ShowCmd" = "3:1"
             "IconIndex" = "3:0"
             "Transitive" = "11:FALSE"
