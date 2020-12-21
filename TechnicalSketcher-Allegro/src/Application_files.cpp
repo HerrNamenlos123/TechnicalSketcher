@@ -3,21 +3,20 @@
 #include "Application.h"
 #include "utils.h"
 #include <windows.h>
-#include <shlobj.h>
 
-#define RECENT_FILE ((getExeDirectory() + "/recent").c_str())
+#define RECENT_FILE ((getUserDataDirectory() + "TechnicalSketcher/recent.txt").c_str())
 
 
 bool inAlphabet(char c) {
     return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
-std::string getExeDirectory() {
-    ALLEGRO_PATH* path = al_get_standard_path(ALLEGRO_EXENAME_PATH);
+std::string getUserDataDirectory() {
+    ALLEGRO_PATH* path = al_get_standard_path(ALLEGRO_USER_DATA_PATH);
 
     std::string str = al_get_path_drive(path);
-    str += "/";
-    for (int i = 0; i < al_get_path_num_components(path); i++) {
+
+    for (int i = 0; i < al_get_path_num_components(path) - 1; i++) {
         str += al_get_path_component(path, i);
         str += "/";
     }
@@ -77,6 +76,7 @@ bool Application::closeFile() {
     }
 
     // Save that this file was opened last
+    al_make_directory((getUserDataDirectory() + "TechnicalSketcher/").c_str());
     if (!saveStringToFile(RECENT_FILE, file.__fileLocation)) {
         errorMessage("Failed to save file '" + std::string(RECENT_FILE) + "'");
     }

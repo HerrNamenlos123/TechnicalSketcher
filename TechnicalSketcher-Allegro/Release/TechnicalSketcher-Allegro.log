@@ -1,0 +1,25 @@
+﻿  pch.cpp
+  imgui_impl_allegro5.cpp
+  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  AllegroEngine.cpp
+  Application.cpp
+  Application_Events.cpp
+  Application_files.cpp
+  Application_graphic.cpp
+  Application_logic.cpp
+  fonts.cpp
+  geometry.cpp
+  LayerList.cpp
+  main.cpp
+  math_geometry.cpp
+  Shape.cpp
+  SketchFile.cpp
+  utils.cpp
+  Code wird generiert.
+  Previous IPDB not found, fall back to full compilation.
+  All 3104 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Codegenerierung ist abgeschlossen.
+  TechnicalSketcher-Allegro.vcxproj -> F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\Release\TechnicalSketcher-Allegro.exe

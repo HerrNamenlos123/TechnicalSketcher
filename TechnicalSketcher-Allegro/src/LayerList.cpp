@@ -220,7 +220,7 @@ bool LayerList::loadJson(nlohmann::json json) {
 		std::vector<int> order = json["layer_order"];
 
 		layerOrder.clear();
-		for (int i = 0; i < order.size(); i++) {
+		for (size_t i = 0; i < order.size(); i++) {
 			layerOrder.push_back(static_cast<LayerID>(order[i]));
 		}
 

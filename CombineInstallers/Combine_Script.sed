@@ -1,0 +1,43 @@
+[Version]
+Class=IEXPRESS
+SEDVersion=3
+[Options]
+PackagePurpose=InstallApp
+ShowInstallProgramWindow=0
+HideExtractAnimation=0
+UseLongFileName=1
+InsideCompressed=0
+CAB_FixedSize=0
+CAB_ResvCodeSigning=0
+RebootMode=N
+InstallPrompt=%InstallPrompt%
+DisplayLicense=%DisplayLicense%
+FinishMessage=%FinishMessage%
+TargetName=%TargetName%
+FriendlyName=%FriendlyName%
+AppLaunched=%AppLaunched%
+PostInstallCmd=%PostInstallCmd%
+AdminQuietInstCmd=%AdminQuietInstCmd%
+UserQuietInstCmd=%UserQuietInstCmd%
+SourceFiles=SourceFiles
+[Strings]
+InstallPrompt=
+DisplayLicense=
+FinishMessage=
+TargetName=F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\CombineInstallers\x64\TechnicalSketcher-Setup-x64.EXE
+FriendlyName=TechnicalSketcher-Setup-x64
+AppLaunched=setup.exe
+PostInstallCmd=<None>
+AdminQuietInstCmd=
+UserQuietInstCmd=
+FILE0="setup.exe"
+FILE1="TechnicalSketcher-Setup-x64.msi"
+FILE2="vc_redist.x64.exe"
+[SourceFiles]
+SourceFiles0=F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\AppInstaller-x64\Release\
+SourceFiles1=F:\Documents\C++\CppProjects\Visual Studio 2019\TechnicalSketcher-Allegro\AppInstaller-x64\Release\vcredist_x64\
+[SourceFiles0]
+%FILE0%=
+%FILE1%=
+[SourceFiles1]
+%FILE2%=

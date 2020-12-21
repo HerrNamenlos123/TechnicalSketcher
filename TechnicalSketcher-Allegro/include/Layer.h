@@ -69,7 +69,7 @@ public:
 
 	bool removeShape(ShapeID shape) {
 
-		for (int i = 0; i < shapes.size(); i++) {
+		for (size_t i = 0; i < shapes.size(); i++) {
 			if (shapes[i].shapeID == shape) {
 				shapes.erase(shapes.begin() + i);
 				return true;
