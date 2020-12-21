@@ -273,7 +273,7 @@ bool AllegroEngine::initAll(int flags) {
 		return false;
 	}
 
-	timer = al_create_timer(1.f / 60.f);
+	timer = al_create_timer(1.f / 30.f);
 	if (timer == nullptr) {
 		errorMessage("Failed to create Allegro timer!");
 		return false;
