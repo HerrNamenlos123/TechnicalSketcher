@@ -11,11 +11,11 @@ INSTALL_DIR = File.expand_path("install dir/")
 PACKAGE_DIR = File.expand_path("package-dir/")
 
 if (RbConfig::CONFIG['host_os'] =~ /mswin|mingw/)
-	OLDAPP_NAME = "oldapp.exe"
-	NEWAPP_NAME = "newapp.exe"
+	OLDAPP_NAME = "release/oldapp.exe"
+	NEWAPP_NAME = "release/newapp.exe"
 	APP_NAME = "app.exe"
 	UPDATER_NAME = "updater.exe"
-	ZIP_TOOL = "C:/Cygwin/bin/zip.exe"
+	ZIP_TOOL = "C:/cygwin64/bin/zip.exe"
 else
 	OLDAPP_NAME = "oldapp"
 	NEWAPP_NAME = "newapp"
@@ -89,13 +89,13 @@ end
 # Create the update archive containing the new app
 Dir.mkdir(PACKAGE_DIR)
 FileUtils.cp(NEWAPP_NAME,"#{PACKAGE_DIR}/#{APP_NAME}")
-system("#{ZIP_TOOL} #{ZIP_FLAGS} #{PACKAGE_DIR}/app-pkg.zip -j #{PACKAGE_DIR}/#{APP_NAME}")
+system("#{ZIP_TOOL} #{ZIP_FLAGS} \"#{PACKAGE_DIR}/app-pkg.zip\" -j \"#{PACKAGE_DIR}/#{APP_NAME}\"")
 FileUtils.rm("#{PACKAGE_DIR}/#{APP_NAME}")
 
 # Copy the install script and updater to the target
 # directory
 replace_vars("file_list.xml","#{PACKAGE_DIR}/file_list.xml",file_list_vars)
-FileUtils.cp("../#{UPDATER_NAME}","#{PACKAGE_DIR}/#{UPDATER_NAME}")
+FileUtils.cp("../Release/#{UPDATER_NAME}","#{PACKAGE_DIR}/#{UPDATER_NAME}")
 
 # Run the updater using the new syntax
 #
