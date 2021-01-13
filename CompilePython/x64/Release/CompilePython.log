@@ -1,0 +1,41 @@
+﻿  Deploy python file to single .exe
+  118 INFO: PyInstaller: 4.1
+  118 INFO: Python: 3.9.1
+  119 INFO: Platform: Windows-10-10.0.18362-SP0
+  122 INFO: wrote F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\updater.spec
+  132 INFO: UPX is not available.
+  136 INFO: Extending PYTHONPATH with paths
+  ['F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\ApplicationUpdater',
+   'F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\CompilePython']
+  153 INFO: checking Analysis
+  241 INFO: checking PYZ
+  291 INFO: checking PKG
+  304 INFO: Building because F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\build\updater\updater.exe.manifest changed
+  304 INFO: Building PKG (CArchive) PKG-00.pkg
+  2551 INFO: Building PKG (CArchive) PKG-00.pkg completed successfully.
+  2554 INFO: Bootloader c:\users\florian\appdata\local\programs\python\python39\lib\site-packages\PyInstaller\bootloader\Windows-64bit\run.exe
+  2554 INFO: checking EXE
+  2557 INFO: Rebuilding EXE-00.toc because pkg is more recent
+  2557 INFO: Building EXE from EXE-00.toc
+  2559 INFO: Appending archive to EXE F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\dist\updater.exe
+  2570 INFO: Building EXE from EXE-00.toc completed successfully.
+  106 INFO: PyInstaller: 4.1
+  106 INFO: Python: 3.9.1
+  107 INFO: Platform: Windows-10-10.0.18362-SP0
+  108 INFO: wrote F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\uninstall.spec
+  113 INFO: UPX is not available.
+  115 INFO: Extending PYTHONPATH with paths
+  ['F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\ApplicationUpdater',
+   'F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\CompilePython']
+  132 INFO: checking Analysis
+  182 INFO: checking PYZ
+  214 INFO: checking PKG
+  218 INFO: Building because F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\build\uninstall\uninstall.exe.manifest changed
+  218 INFO: Building PKG (CArchive) PKG-00.pkg
+  3854 INFO: Building PKG (CArchive) PKG-00.pkg completed successfully.
+  3857 INFO: Bootloader c:\users\florian\appdata\local\programs\python\python39\lib\site-packages\PyInstaller\bootloader\Windows-64bit\run.exe
+  3858 INFO: checking EXE
+  3860 INFO: Rebuilding EXE-00.toc because pkg is more recent
+  3860 INFO: Building EXE from EXE-00.toc
+  3863 INFO: Appending archive to EXE F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\dist\uninstall.exe
+  3883 INFO: Building EXE from EXE-00.toc completed successfully.

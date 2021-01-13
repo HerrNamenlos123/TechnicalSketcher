@@ -7,13 +7,8 @@ public:
 	
 	bool Setup() override {
 
-		//Battery::Updater::CheckForGithubUpdate("HerrNamenlos123", "TechnicalSketcher");
-		Battery::NetUtils::DownloadFile("https://github.com/HerrNamenlos123/TechnicalSketcher/releases/download/v0.1-alpha.3/TechnicalSketcher-Setup-x64.msi"
-			, "testFile.bin", "cacert.pem");
-		
-		/*std::cout << "Filesize: " << (int64_t)Battery::NetUtils::GetSizeOfDownloadFile(
-			"https://github.com/HerrNamenlos123/TechnicalSketcher/releases/download/v0.1-alpha.3/TechnicalSketcher-Setup-x64.msi",
-			"cacert.pem", "gister") << std::endl;*/
+		// Prevent ImGui from saving a .ini file
+		ImGui::GetIO().IniFilename = NULL;
 
 		return true;
 	}
