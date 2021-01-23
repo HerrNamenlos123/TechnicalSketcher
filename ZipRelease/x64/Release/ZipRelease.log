@@ -6,12 +6,12 @@
   --
   Path = AutomaticUpdaterRelease.zip
   Type = zip
-  Physical Size = 18758598
+  Physical Size = 12142206
   
   Updating archive: AutomaticUpdaterRelease.zip
   
   
-  Delete data from archive: 5 files, 20856111 bytes (20 MiB)
+  Delete data from archive: 4 files, 14207399 bytes (14 MiB)
   Add new data to archive: 0 files, 0 bytes
   
   
@@ -28,15 +28,15 @@
   Physical Size = 22
   
   Scanning the drive:
-  1 file, 2899968 bytes (2832 KiB)
+  1 file, 3025408 bytes (2955 KiB)
   
   Updating archive: AutomaticUpdaterRelease.zip
   
-  Add new data to archive: 1 file, 2899968 bytes (2832 KiB)
+  Add new data to archive: 1 file, 3025408 bytes (2955 KiB)
   
   
   Files read from disk: 1
-  Archive size: 1216740 bytes (1189 KiB)
+  Archive size: 1242154 bytes (1214 KiB)
   Everything is Ok
   
   7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
@@ -45,16 +45,16 @@
   --
   Path = AutomaticUpdaterRelease.zip
   Type = zip
-  Physical Size = 1216740
+  Physical Size = 1242154
   
   Updating archive: AutomaticUpdaterRelease.zip
   
-  Keep old data in archive: 1 file, 2899968 bytes (2832 KiB)
+  Keep old data in archive: 1 file, 3025408 bytes (2955 KiB)
   Add new data to archive: 0 files, 0 bytes
   
   
   Files read from disk: 0
-  Archive size: 1216748 bytes (1189 KiB)
+  Archive size: 1242162 bytes (1214 KiB)
   Everything is Ok
   
   7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
@@ -63,19 +63,19 @@
   --
   Path = AutomaticUpdaterRelease.zip
   Type = zip
-  Physical Size = 1216748
+  Physical Size = 1242162
   
   Scanning the drive:
   1 file, 106297 bytes (104 KiB)
   
   Updating archive: AutomaticUpdaterRelease.zip
   
-  Keep old data in archive: 1 file, 2899968 bytes (2832 KiB)
+  Keep old data in archive: 1 file, 3025408 bytes (2955 KiB)
   Add new data to archive: 1 file, 106297 bytes (104 KiB)
   
   
   Files read from disk: 1
-  Archive size: 1231346 bytes (1203 KiB)
+  Archive size: 1256762 bytes (1228 KiB)
   Everything is Ok
   
   7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
@@ -84,16 +84,16 @@
   --
   Path = AutomaticUpdaterRelease.zip
   Type = zip
-  Physical Size = 1231346
+  Physical Size = 1256762
   
   Updating archive: AutomaticUpdaterRelease.zip
   
-  Keep old data in archive: 2 files, 3006265 bytes (2936 KiB)
+  Keep old data in archive: 2 files, 3131705 bytes (3059 KiB)
   Add new data to archive: 0 files, 0 bytes
   
   
   Files read from disk: 0
-  Archive size: 1231354 bytes (1203 KiB)
+  Archive size: 1256770 bytes (1228 KiB)
   Everything is Ok
   
   7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
@@ -102,19 +102,19 @@
   --
   Path = AutomaticUpdaterRelease.zip
   Type = zip
-  Physical Size = 1231354
+  Physical Size = 1256770
   
   Scanning the drive:
-  1 file, 14 bytes (1 KiB)
+  1 file, 15 bytes (1 KiB)
   
   Updating archive: AutomaticUpdaterRelease.zip
   
-  Keep old data in archive: 2 files, 3006265 bytes (2936 KiB)
-  Add new data to archive: 1 file, 14 bytes (1 KiB)
+  Keep old data in archive: 2 files, 3131705 bytes (3059 KiB)
+  Add new data to archive: 1 file, 15 bytes (1 KiB)
   
   
   Files read from disk: 1
-  Archive size: 1231494 bytes (1203 KiB)
+  Archive size: 1256911 bytes (1228 KiB)
   Everything is Ok
   
   7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
@@ -123,19 +123,19 @@
   --
   Path = AutomaticUpdaterRelease.zip
   Type = zip
-  Physical Size = 1231494
+  Physical Size = 1256911
   
   Scanning the drive:
-  1 file, 7375769 bytes (7203 KiB)
+  1 file, 5598397 bytes (5468 KiB)
   
   Updating archive: AutomaticUpdaterRelease.zip
   
-  Keep old data in archive: 3 files, 3006279 bytes (2936 KiB)
-  Add new data to archive: 1 file, 7375769 bytes (7203 KiB)
+  Keep old data in archive: 3 files, 3131720 bytes (3059 KiB)
+  Add new data to archive: 1 file, 5598397 bytes (5468 KiB)
   
   
   Files read from disk: 1
-  Archive size: 8453320 bytes (8256 KiB)
+  Archive size: 6714249 bytes (6557 KiB)
   Everything is Ok
   
   7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
@@ -144,17 +144,17 @@
   --
   Path = AutomaticUpdaterRelease.zip
   Type = zip
-  Physical Size = 8453320
+  Physical Size = 6714249
   
   Scanning the drive:
-  1 file, 10474063 bytes (10229 KiB)
+  1 file, 5583579 bytes (5453 KiB)
   
   Updating archive: AutomaticUpdaterRelease.zip
   
-  Keep old data in archive: 4 files, 10382048 bytes (10139 KiB)
-  Add new data to archive: 1 file, 10474063 bytes (10229 KiB)
+  Keep old data in archive: 4 files, 8730117 bytes (8526 KiB)
+  Add new data to archive: 1 file, 5583579 bytes (5453 KiB)
   
   
   Files read from disk: 1
-  Archive size: 18758598 bytes (18 MiB)
+  Archive size: 12156814 bytes (12 MiB)
   Everything is Ok

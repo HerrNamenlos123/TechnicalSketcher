@@ -83,7 +83,7 @@
     <CustomBuildStep>
       <Command>msiinfo ..\Installer-x64\Release\TechnicalSketcher-Installer-x64.msi -w10 &amp;&amp; copy ..\Installer-x64\Release\TechnicalSketcher-Installer-x64.msi ..\Deploy\TechnicalSketcher-Installer-x64.msi
 
-copy ..\ZipRelease\AutomaticUpdaterRelease.zip ..\Deploy\AutomaticUpdaterRelease.zip</Command>
+CopyDeployed.bat</Command>
     </CustomBuildStep>
     <CustomBuildStep>
       <Message>Deploy Installers</Message>

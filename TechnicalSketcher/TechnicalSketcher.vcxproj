@@ -59,7 +59,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/BatteryEngine/imgui/backends;../../BatteryEngine/BatteryEngine;../../BatteryEngine/BatteryEngine/imgui;../../BatteryEngine/include;../include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -78,7 +78,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/BatteryEngine/imgui/backends;../../BatteryEngine/BatteryEngine;../../BatteryEngine/BatteryEngine/imgui;../../BatteryEngine/include;../include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -97,6 +97,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Application.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\version" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TechnicalSketcher.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
