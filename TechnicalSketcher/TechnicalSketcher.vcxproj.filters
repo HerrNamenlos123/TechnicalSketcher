@@ -31,9 +31,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\version" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="TechnicalSketcher.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
@@ -42,5 +39,8 @@
     <Image Include="..\icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\version" />
   </ItemGroup>
 </Project>

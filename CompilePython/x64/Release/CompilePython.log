@@ -1,27 +1,35 @@
 ﻿  Deploy python file to single .exe
-  120 INFO: PyInstaller: 3.4
-  120 INFO: Python: 3.7.4
-  120 INFO: Platform: Windows-10-10.0.18362-SP0
-  122 INFO: wrote F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\updater.spec
-  129 INFO: UPX is not available.
-  131 INFO: Extending PYTHONPATH with paths
+  100 INFO: PyInstaller: 3.4
+  100 INFO: Python: 3.7.4
+  101 INFO: Platform: Windows-10-10.0.18362-SP0
+  104 INFO: wrote F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\updater.spec
+  110 INFO: UPX is not available.
+  113 INFO: Extending PYTHONPATH with paths
   ['F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\ApplicationUpdater',
    'F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\CompilePython']
-  131 INFO: checking Analysis
-  155 INFO: checking PYZ
-  172 INFO: checking PKG
-  175 INFO: Bootloader c:\users\florian\appdata\local\programs\python\python37\lib\site-packages\PyInstaller\bootloader\Windows-64bit\run.exe
-  175 INFO: checking EXE
-  111 INFO: PyInstaller: 3.4
-  112 INFO: Python: 3.7.4
-  113 INFO: Platform: Windows-10-10.0.18362-SP0
-  114 INFO: wrote F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\uninstall.spec
-  119 INFO: UPX is not available.
-  122 INFO: Extending PYTHONPATH with paths
+  113 INFO: checking Analysis
+  137 INFO: checking PYZ
+  153 INFO: checking PKG
+  156 INFO: Bootloader c:\users\florian\appdata\local\programs\python\python37\lib\site-packages\PyInstaller\bootloader\Windows-64bit\run.exe
+  156 INFO: checking EXE
+  158 INFO: Rebuilding EXE-00.toc because updater.exe missing
+  158 INFO: Building EXE from EXE-00.toc
+  159 INFO: Appending archive to EXE F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\dist\updater.exe
+  184 INFO: Building EXE from EXE-00.toc completed successfully.
+  128 INFO: PyInstaller: 3.4
+  128 INFO: Python: 3.7.4
+  129 INFO: Platform: Windows-10-10.0.18362-SP0
+  130 INFO: wrote F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\uninstall.spec
+  136 INFO: UPX is not available.
+  139 INFO: Extending PYTHONPATH with paths
   ['F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\ApplicationUpdater',
    'F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\CompilePython']
-  122 INFO: checking Analysis
-  144 INFO: checking PYZ
-  160 INFO: checking PKG
-  163 INFO: Bootloader c:\users\florian\appdata\local\programs\python\python37\lib\site-packages\PyInstaller\bootloader\Windows-64bit\run.exe
-  163 INFO: checking EXE
+  139 INFO: checking Analysis
+  164 INFO: checking PYZ
+  182 INFO: checking PKG
+  185 INFO: Bootloader c:\users\florian\appdata\local\programs\python\python37\lib\site-packages\PyInstaller\bootloader\Windows-64bit\run.exe
+  185 INFO: checking EXE
+  186 INFO: Rebuilding EXE-00.toc because uninstall.exe missing
+  186 INFO: Building EXE from EXE-00.toc
+  187 INFO: Appending archive to EXE F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\CompilePython\dist\uninstall.exe
+  210 INFO: Building EXE from EXE-00.toc completed successfully.
