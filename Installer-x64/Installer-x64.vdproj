@@ -15,18 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_3105A66315CAEBA8DD550515DB96D267"
-        "OwnerKey" = "8:_7682DBB9759E4E9D84B989DC3D128CA9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_4FDD01CB2B3243AC8EAE8C3AE816F250"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_7682DBB9759E4E9D84B989DC3D128CA9"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -39,8 +27,8 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_CCC743DF149BA94C25FF86C232F13921"
-        "OwnerKey" = "8:_7682DBB9759E4E9D84B989DC3D128CA9"
+        "MsmKey" = "8:_C7A1A3C6C6FD4FE5AAB222757C716179"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -51,13 +39,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_F4AD6C0030D07F1D09052C8F746B4C3E"
-        "OwnerKey" = "8:_7682DBB9759E4E9D84B989DC3D128CA9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_FE30FB84F7EA4C33BA2B4C180BA94AC9"
+        "MsmKey" = "8:_F594565C099C40EC84D7F75BD57C3B69"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -133,17 +115,17 @@
     {
         "CustomAction"
         {
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_CDD81FF2636844C2B09865CFF99CA10D"
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_7056A3C90C6143E6BFD088C72177DB1F"
             {
             "Name" = "8:uninstall.exe"
             "Condition" = "8:"
-            "Object" = "8:_4FDD01CB2B3243AC8EAE8C3AE816F250"
+            "Object" = "8:_F594565C099C40EC84D7F75BD57C3B69"
             "FileType" = "3:2"
             "InstallAction" = "3:4"
             "Arguments" = "8:/Uninstall"
             "EntryPoint" = "8:"
             "Sequence" = "3:1"
-            "Identifier" = "8:_37DF3BB6_1184_4BA5_A137_E5D3D6376089"
+            "Identifier" = "8:_7E65BF14_CCFC_4860_B845_377CE7808CB8"
             "InstallerClass" = "11:FALSE"
             "CustomActionData" = "8:"
             }
@@ -162,46 +144,6 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3105A66315CAEBA8DD550515DB96D267"
-            {
-            "SourcePath" = "8:ntdll.dll"
-            "TargetName" = "8:ntdll.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_CEFE525F479642D4A3320E746FC60785"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4FDD01CB2B3243AC8EAE8C3AE816F250"
-            {
-            "SourcePath" = "8:..\\CompilePython\\dist\\uninstall.exe"
-            "TargetName" = "8:uninstall.exe"
-            "Tag" = "8:"
-            "Folder" = "8:_603E8DC6FFCB4EA4BA7088DEAEF8AAC9"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BF2FCAAC27CB47EAA8A79403AA89D4E5"
             {
             "SourcePath" = "8:..\\icon.ico"
@@ -222,12 +164,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CCC743DF149BA94C25FF86C232F13921"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C7A1A3C6C6FD4FE5AAB222757C716179"
             {
-            "SourcePath" = "8:IMM32.dll"
-            "TargetName" = "8:IMM32.dll"
+            "SourcePath" = "8:..\\DeployInstallers\\dist\\updater.exe"
+            "TargetName" = "8:updater.exe"
             "Tag" = "8:"
-            "Folder" = "8:_CEFE525F479642D4A3320E746FC60785"
+            "Folder" = "8:_603E8DC6FFCB4EA4BA7088DEAEF8AAC9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -238,8 +180,8 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EAD563110AFB4D90922B3BE3472BBBBC"
@@ -262,30 +204,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F4AD6C0030D07F1D09052C8F746B4C3E"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F594565C099C40EC84D7F75BD57C3B69"
             {
-            "SourcePath" = "8:OPENGL32.dll"
-            "TargetName" = "8:OPENGL32.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_CEFE525F479642D4A3320E746FC60785"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FE30FB84F7EA4C33BA2B4C180BA94AC9"
-            {
-            "SourcePath" = "8:..\\CompilePython\\dist\\updater.exe"
-            "TargetName" = "8:updater.exe"
+            "SourcePath" = "8:..\\DeployInstallers\\dist\\uninstall.exe"
+            "TargetName" = "8:uninstall.exe"
             "Tag" = "8:"
             "Folder" = "8:_603E8DC6FFCB4EA4BA7088DEAEF8AAC9"
             "Condition" = "8:"
@@ -369,8 +291,8 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TechnicalSketcher"
-        "ProductCode" = "8:{73A8DFFA-FC14-4BFF-8125-B5236C7034FC}"
-        "PackageCode" = "8:{EDE15E5C-69C4-4C8B-952C-884EBBBB28EE}"
+        "ProductCode" = "8:{F70963AE-51FB-46B3-838C-36BE176A4C58}"
+        "PackageCode" = "8:{6A664F62-F1C8-491E-A438-B160303F8715}"
         "UpgradeCode" = "8:{26A7B0AC-EEB7-4CD3-BDE6-CC94686D4590}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
