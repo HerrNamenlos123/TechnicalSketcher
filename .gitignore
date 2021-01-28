@@ -33,3 +33,12 @@
 
 # Visual Studio folder
 .vs
+
+# Python files
+*.spec
+
+# Various Folders
+bin/
+Deploy/
+History/
+64/
