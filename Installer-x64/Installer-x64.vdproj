@@ -227,6 +227,29 @@
         }
         "FileType"
         {
+            "{5EB83D71-FA18-4901-BE56-DE22E13CC478}:_75F59D5D43454F0D8BBA0C00BA02D9BB"
+            {
+            "Name" = "8:TechnicalSketcher"
+            "Description" = "8:TechnicalSketcher Drawing"
+            "Extensions" = "8:.tsk"
+            "MIME" = "8:"
+            "Icon" = "8:_BF2FCAAC27CB47EAA8A79403AA89D4E5"
+            "IconIndex" = "3:0"
+                "Command"
+                {
+                "Command" = "8:_7682DBB9759E4E9D84B989DC3D128CA9"
+                }
+                "Verbs"
+                {
+                    "{95C0C507-CBF0-42B8-B119-07219E384A4A}:_E2D12ED095874F049F789BCCDA34BDA6"
+                    {
+                    "Command" = "8:&Open"
+                    "Verb" = "8:open"
+                    "Arguments" = "8:\"%1\""
+                    "Order" = "3:0"
+                    }
+                }
+            }
         }
         "Folder"
         {
@@ -291,15 +314,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TechnicalSketcher"
-        "ProductCode" = "8:{F70963AE-51FB-46B3-838C-36BE176A4C58}"
-        "PackageCode" = "8:{6A664F62-F1C8-491E-A438-B160303F8715}"
+        "ProductCode" = "8:{D34BC77E-0726-4010-8A46-20D77147DAF6}"
+        "PackageCode" = "8:{AE1B3C58-A3CE-43AE-97DE-CCDA094DAED7}"
         "UpgradeCode" = "8:{26A7B0AC-EEB7-4CD3-BDE6-CC94686D4590}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
-        "RemovePreviousVersions" = "11:FALSE"
+        "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.0.1"
+        "ProductVersion" = "8:1.0.0"
         "Manufacturer" = "8:Florian Zachs"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -551,7 +574,7 @@
                             "ContextData" = "8:"
                             "Attributes" = "3:0"
                             "Setting" = "3:2"
-                            "Value" = "8:The installer will guide you through the steps required to install TechnicalSketcher on your computer."
+                            "Value" = "8:The installer will guide you through the steps required to install TechnicalSketcher on your computer. NOTE: If you later want to uninstall, but the process fails, try repairing the install in the 'programs and features' window and then try uninstalling again!"
                             "DefaultValue" = "8:#1215"
                             "UsePlugInResources" = "11:TRUE"
                             }

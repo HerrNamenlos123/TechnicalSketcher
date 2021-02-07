@@ -59,14 +59,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/spdlog/include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>../../BatteryEngine/bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Debug\x64\BatteryEngine-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Debug\x64\BatteryEngine-static.lib;opengl32.lib;winmm.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -78,8 +79,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/spdlog/include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -87,16 +89,17 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>../../BatteryEngine/bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Release\x64\BatteryEngine-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Release\x64\BatteryEngine-static.lib;opengl32.lib;winmm.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Application.cpp" />
-    <ClCompile Include="..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Application.h" />
+    <ClInclude Include="..\include\config.h" />
+    <ClInclude Include="..\include\PerlinNoise.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +112,10 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resource\fragment.glsl" />
+    <None Include="..\resource\vertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

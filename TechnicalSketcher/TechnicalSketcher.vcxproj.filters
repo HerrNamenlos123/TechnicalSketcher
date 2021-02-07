@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -27,6 +24,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PerlinNoise.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -42,5 +45,13 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\version" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resource\fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\resource\vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
