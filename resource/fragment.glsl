@@ -3,52 +3,76 @@
 
 out vec4 FragColor;
 
-uniform vec2 lineP1;
-uniform vec2 lineP2;
-uniform float lineThickness;
-uniform float lineOutline;
+uniform vec2 arc_center;
+uniform float arc_radius;
+uniform float arc_start_angle;
+uniform float arc_end_angle;
+uniform float arc_thickness;
+uniform float arc_falloff;
 
 varying vec4 color;
 varying vec2 uv;
 varying vec2 screenPos;
 
-float lineDistance(vec2 P, vec2 L1, vec2 L2) {
-    float lower = distance(L1, L2);
+float PI = 3.1415926535897;
 
-    if (lower != 0)
-        return abs((L2.x - L1.x)*(L1.y - P.y) - (L1.x - P.x)*(L2.y - L1.y)) / lower;
-    else
-        return 0;
+float arcCircleDistance(vec2 P) {
+    float distanceToCenter = distance(P, arc_center);
+
+    return abs(arc_radius - distanceToCenter);
 }
 
-float distanceAroundLine(vec2 P, vec2 L1, vec2 L2) {
-    
-    vec2 aToB = L2 - L1;
-    vec2 aToP = P - L1;
-    vec2 bToP = P - L2;
+float distanceAroundArc(vec2 P) {
 
-    if (aToB.length() == 0)
-        return aToP.length();
+    vec2 centerToPos = P - arc_center;
+    float fragmentAngle = atan(centerToPos.y, -centerToPos.x) + PI;
 
-    if (dot(aToB, aToP) < 0) {
-        return distance(P, L1);
+    if (arc_start_angle < arc_end_angle) {  // Normal case
+        if (fragmentAngle >= arc_start_angle && fragmentAngle <= arc_end_angle) {
+            return arcCircleDistance(P);
+        }
     }
-    else if (dot(-aToB, bToP) < 0) {
-        return distance(P, L2);
+    else {
+        if (fragmentAngle <= arc_end_angle || fragmentAngle >= arc_start_angle) {
+            return arcCircleDistance(P);
+        }
     }
 
-    return lineDistance(P, L1, L2);
+    vec2 p1 = arc_center + vec2(cos(arc_start_angle), -sin(arc_start_angle)) * arc_radius;
+    vec2 p2 = arc_center + vec2(cos(arc_end_angle), -sin(arc_end_angle)) * arc_radius;
+
+    float distance1 = distance(P, p1);
+    float distance2 = distance(P, p2);
+
+    return min(distance1, distance2);
 }
   
 void main()
 {
-    float dist = distanceAroundLine(screenPos, lineP1, lineP2);
+    float dist = distanceAroundArc(screenPos);
+    
+    float a = arc_thickness / 2 - arc_falloff;
+    float b = arc_thickness / 2;
 
-    float a = lineThickness * 0.5;
-    float b = lineOutline * 0.5;
-
-    if (a == b && dist > b)
+    if (dist > b) {
         discard;
-
+        return;
+    }
+    
     FragColor = vec4(color.xyz, 1 / (a - b) * dist + b / (b - a));
 }
+
+/*
+out vec4 FragColor;
+
+uniform sampler2D al_tex;
+
+varying vec2 screenPos;
+varying vec2 uv;
+varying vec4 color;
+
+void main() {
+    
+    FragColor = texture(al_tex, uv) + color;
+
+}*/

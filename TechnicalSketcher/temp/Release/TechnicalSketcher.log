@@ -1,7 +1,13 @@
 ﻿  Application.cpp
   Generating code
-  10 of 209 functions ( 4.8%) were compiled, the rest were copied from previous compilation.
+  6 of 781 functions ( 0.8%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    7 functions had inline decision re-evaluated but remain unchanged
+    12 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
+LINK : warning LNK4286: symbol 'al_get_bitmap_flags' defined in 'BatteryEngine-static.lib(bitmap.obj)' is imported by 'Application.obj'
+LINK : warning LNK4286: symbol 'al_load_bitmap' defined in 'BatteryEngine-static.lib(bitmap_io.obj)' is imported by 'Application.obj'
+LINK : warning LNK4286: symbol 'al_clone_bitmap' defined in 'BatteryEngine-static.lib(bitmap.obj)' is imported by 'Application.obj'
+LINK : warning LNK4286: symbol 'al_destroy_bitmap' defined in 'BatteryEngine-static.lib(bitmap.obj)' is imported by 'Application.obj'
+LINK : warning LNK4286: symbol 'al_set_new_bitmap_flags' defined in 'BatteryEngine-static.lib(tls.obj)' is imported by 'Application.obj'
+BatteryEngine-static.lib(pngwio.obj) : warning LNK4020: a type record in 'f:\users\florian\documents\vs-projects\technicalsketcher\technicalsketcher\temp\release\vc142.pdb' is corrupted; some symbols and types may not be accessible from the debugger
   TechnicalSketcher.vcxproj -> F:\Users\Florian\Documents\VS-Projects\TechnicalSketcher\bin\Release\TechnicalSketcher.exe
