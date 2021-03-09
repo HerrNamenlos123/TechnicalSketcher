@@ -23,11 +23,12 @@ static std::string getVersion(bool dev) {
 }*/
 
 #include "Battery/Battery.h"
+#include "Navigator.h"
 
 class App : public Battery::Application {
 public:
 
-
+	Navigator* navigator = nullptr;
 
 	App();
 
@@ -37,3 +38,5 @@ public:
 	void OnShutdown() override;
 	void OnEvent(Battery::Event* e) override;
 };
+
+App* GetApp();

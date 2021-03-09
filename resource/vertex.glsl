@@ -2,17 +2,20 @@
 #version 400 core
 
 attribute vec4 al_pos;
+attribute vec2 al_texcoord;
 attribute vec4 al_color;
 
 uniform mat4 al_projview_matrix;
 
 varying vec4 color;
+varying vec2 uv;
 varying vec2 screenPos;
 
 void main()
 {
    screenPos = al_pos.xy;
    color = al_color;
+   uv = vec2(al_texcoord.x, -al_texcoord.y);
    gl_Position = al_projview_matrix * al_pos;
 }
 

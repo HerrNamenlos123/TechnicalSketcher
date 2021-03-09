@@ -141,6 +141,7 @@ bool Application::writeRecentFile(std::string content) {
 #include "Layer.h"
 
 Battery::Scene* scene = nullptr;
+Battery::ShaderProgram* shader = nullptr;
 float start = 0;
 float end = 0;
 float count = 0;
@@ -171,10 +172,15 @@ bool App::OnStartup() {
 	window.SetTitle(APPLICATION_NAME);
 
 	PushLayer(new UpdaterLayer());
-	PushLayer(new Navigator());
-	PushOverlay(new GuiLayer());
+	navigator = new Navigator();	// Will be deleted when the layer is popped
+	PushLayer(navigator);
+	PushOverlay(new GUI::GuiLayer());
 
 	scene = new Battery::Scene(&window);
+	//shader = new Battery::ShaderProgram();
+	//shader->Load(window.allegroDisplayPointer, "../resource/vertex.glsl", "../resource/fragment.glsl");
+
+	//scene->textures.push_back(Battery::Texture2D("../resource/bild.jpeg"));
 
 	/*
 	applicationVersion = getVersion(devLaunch);
@@ -225,10 +231,22 @@ void App::OnRender() {
 	//Renderer2D::DrawCircle({ 400, 400 }, 100, 3, { 0, 0, 0, 255 }, { 255, 0, 0, 255 });
 	//Renderer2D::DrawRectangle({ 100, 100 }, { 400, 300 }, 3, { 0, 0, 0, 255 }, { 0, 255, 0, 255 });
 	//Renderer2D::EndScene();
+
+	//Renderer2D::BeginScene(scene);
+	//
+	//VertexData v1 = VertexData({ 300, 100, 0 }, { 0, 0 }, { 255, 0, 0, 255 });
+	//VertexData v2 = VertexData({ 500, 100, 0 }, { 1, 0 }, { 0, 255, 0, 255 });
+	//VertexData v3 = VertexData({ 500, 300, 0 }, { 1, 1 }, { 0, 0, 255, 255 });
+	//VertexData v4 = VertexData({ 300, 300, 0 }, { 0, 1 }, { 255, 0, 255, 255 });
+	//
+	//Renderer2D::DrawQuad(v1, v2, v3, v4, &shader, 0);
+	//
+	//Renderer2D::EndScene();
 }
 
 void App::OnShutdown() {
 	delete scene;
+	//delete shader;
 }
 
 void App::OnEvent(Battery::Event* e) {
@@ -247,6 +265,8 @@ void App::OnEvent(Battery::Event* e) {
 
 		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
 			e->SetHandled();
+			//shader.Unload();
+			//shader.Load(window.allegroDisplayPointer, "../resource/vertex.glsl", "../resource/fragment.glsl");
 		}
 		break;
 
@@ -262,6 +282,10 @@ void App::OnEvent(Battery::Event* e) {
 
 Battery::Application* Battery::CreateApplication() {
 	return new App();
+}
+
+App* GetApp() {
+	return static_cast<App*>(Battery::Application::GetApplicationPointer());
 }
 
 
