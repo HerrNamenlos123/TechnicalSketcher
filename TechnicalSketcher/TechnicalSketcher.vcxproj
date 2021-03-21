@@ -119,6 +119,7 @@
     <ClInclude Include="..\include\Gui.h" />
     <ClInclude Include="..\include\Layer.h" />
     <ClInclude Include="..\include\LayerList.h" />
+    <ClInclude Include="..\include\LayerState.h" />
     <ClInclude Include="..\include\Navigator.h" />
     <ClInclude Include="..\include\pch.h" />
     <ClInclude Include="..\include\PerlinNoise.h" />
