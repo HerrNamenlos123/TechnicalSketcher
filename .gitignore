@@ -41,4 +41,16 @@
 bin/
 Deploy/
 History/
+DeployInstallers/build/
+DeployInstallers/dist/
+DeployInstallers/x64-CompilePython/
+DeployInstallers/x64-Deploy/
+DeployInstallers/uninstall.spec
+DeployInstallers/updater.spec
+Installer-x64/Debug/
+Installer-x64/Release/
+PythonModules/__pycache__/
+TechnicalSketcher/temp/
+TechnicalSketcher/imgui.ini
 64/
+x64/

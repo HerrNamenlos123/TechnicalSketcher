@@ -104,5 +104,7 @@
     <None Include="..\resource\vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\PythonModules\uninstall.py" />
+    <None Include="..\PythonModules\updater.py" />
   </ItemGroup>
 </Project>

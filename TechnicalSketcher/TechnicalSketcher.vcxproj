@@ -140,6 +140,8 @@
     <Image Include="..\icon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\PythonModules\uninstall.py" />
+    <None Include="..\PythonModules\updater.py" />
     <None Include="..\resource\fragment.glsl" />
     <None Include="..\resource\vertex.glsl" />
   </ItemGroup>
