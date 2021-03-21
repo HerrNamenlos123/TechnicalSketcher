@@ -22,13 +22,15 @@ static std::string getVersion(bool dev) {
 	return "";
 }*/
 
-#include "Battery/Battery.h"
+#include "pch.h"
 #include "Navigator.h"
 
 class App : public Battery::Application {
 public:
 
 	Navigator* navigator = nullptr;
+	double lastScreenRefresh = 0;
+	double passiveScreenTime = 5.0;		// Refresh the screen every 2 seconds
 
 	App();
 
@@ -39,4 +41,4 @@ public:
 	void OnEvent(Battery::Event* e) override;
 };
 
-App* GetApp();
+App* GetClientApplication();

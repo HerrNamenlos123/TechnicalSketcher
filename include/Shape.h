@@ -23,7 +23,7 @@ public:
 		this->id = id;
 	}
 
-	static int32_t MakeID() {
+	static ShapeID MakeID() {
 		ShapeID newID(nextID);
 		nextID++;
 		return newID;
@@ -59,10 +59,19 @@ struct Shape {
 	glm::vec2 p1 = { 0, 0 };
 	glm::vec2 p2 = { 0, 0 };
 	float thickness = 0;
+	glm::vec4 color;
 
 	Shape();
-	Shape(enum class ShapeType type, glm::vec2 p1, glm::vec2 p2, float thickness);
+	Shape(enum class ShapeType type, const glm::vec2& p1, const glm::vec2& p2, float thickness, const glm::vec4& color);
 	~Shape();
+
+	std::pair<glm::vec2, glm::vec2> GetBoundingBox();
+	bool IsInSelectionBoundary(const glm::vec2& s1, const glm::vec2& s2);
+
+	float GetNormalDistanceToLine(const glm::vec2& p);
+	float GetDistanceToCursorLine(const glm::vec2& p);
+
+	float GetDistanceToCursor(const glm::vec2& cursor);
 
 };
 

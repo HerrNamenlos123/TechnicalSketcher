@@ -148,25 +148,8 @@ Layer* LayerList::FindLayer(LayerID id) {
 
 
 
-std::vector<Layer*> LayerList::GetLayers() {
-	std::vector<Layer*> pointers;
-
-	for (size_t i = 0; i < layers.size(); i++) {
-		pointers.push_back(&layers[i]);
-	}
-
-	return pointers;
-}
-
-std::vector<Layer*> LayerList::GetLayersReverse() {
-	std::vector<Layer*> pointers;
-
-	// Loop in reverse
-	for (size_t i = layers.size() - 1; i < layers.size(); i--) {
-		pointers.push_back(&layers[i]);
-	}
-
-	return pointers;
+std::vector<Layer>& LayerList::GetLayers() {
+	return layers;
 }
 
 

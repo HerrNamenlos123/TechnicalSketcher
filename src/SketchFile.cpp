@@ -40,21 +40,18 @@ LayerList& SketchFile::GetLayerList() {
 	return layers;
 }
 
-std::vector<Layer*> SketchFile::GetLayers() {
+std::vector<Layer>& SketchFile::GetLayers() {
 	return layers.GetLayers();
 }
 
-std::vector<Layer*> SketchFile::GetLayersReverse() {
-	return layers.GetLayersReverse();
-}
-
 // If invalid, vector is empty
-std::vector<Shape*> SketchFile::GetActiveLayerShapes() {
+std::vector<Shape>& SketchFile::GetActiveLayerShapes() {
 	Layer* currentLayer = GetActiveLayer();
 
 	if (!currentLayer) {		// On failure, return empty vector
 		LOG_WARN(__FUNCTION__ "(): Active layer is invalid!");
-		return std::vector<Shape*>();
+		static std::vector<Shape> dummyVector;
+		return dummyVector;
 	}
 
 	return currentLayer->GetShapes();
@@ -67,9 +64,9 @@ std::vector<Shape*> SketchFile::GetActiveLayerShapes() {
 void SketchFile::AddNewLayer() {
 
 	size_t nextLayerName = 1;
-	for (Layer* layer : layers.GetLayers()) {
-		if (layer->layerID.Get() > nextLayerName) {
-			nextLayerName = layer->layerID.Get();
+	for (Layer& layer : layers.GetLayers()) {
+		if (layer.layerID.Get() > nextLayerName) {
+			nextLayerName = layer.layerID.Get();
 		}
 	}
 
@@ -111,11 +108,11 @@ void SketchFile::SetLayerPreview(LayerID id, const Battery::Texture2D& previewIm
 
 
 
-void SketchFile::AddShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float lineThickness) {
+void SketchFile::AddShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float lineThickness, const glm::vec4& color) {
 	Layer* layer = GetActiveLayer();
 
 	if (layer) {
-		layer->AddShape(type, p1, p2, lineThickness);
+		layer->AddShape(type, p1, p2, lineThickness, color);
 	}
 }
 

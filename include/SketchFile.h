@@ -21,9 +21,8 @@ public:
 	Layer* GetActiveLayer();
 	LayerID GetActiveLayerID();
 	LayerList& GetLayerList();
-	std::vector<Layer*> GetLayers();
-	std::vector<Layer*> GetLayersReverse();
-	std::vector<Shape*> GetActiveLayerShapes();
+	std::vector<Layer>& GetLayers();
+	std::vector<Shape>& GetActiveLayerShapes();
 
 	void AddNewLayer();
 	void AddNewLayer(const std::string& name);
@@ -34,7 +33,7 @@ public:
 
 	void SetLayerPreview(LayerID id, const Battery::Texture2D& previewImage);
 
-	void AddShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float lineThickness);
+	void AddShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float lineThickness, const glm::vec4& color);
 	void FileChanged();
 
 	void CreateNewFile();

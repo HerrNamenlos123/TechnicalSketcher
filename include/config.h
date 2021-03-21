@@ -5,9 +5,12 @@
 #define DEFAULT_FILENAME "Unnamed.tsk"
 
 #define UPDATER_EXE_NAME "updater.exe"
+#define ENABLE_PROFILING true
 
 #define DEFAULT_WINDOW_WIDTH 800
 #define DEFAULT_WINDOW_HEIGHT 600
+
+#define MAX_NUMBER_OF_UNDOS 100
 
 #define BACKGROUND_COLOR glm::vec4(255, 255, 255, 255)
 

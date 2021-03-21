@@ -27,8 +27,7 @@ public:
 
 	Layer* FindLayer(LayerID id);
 
-	std::vector<Layer*> GetLayers();
-	std::vector<Layer*> GetLayersReverse();
+	std::vector<Layer>& GetLayers();
 
 	bool LoadJson(const nlohmann::json& json);
 	nlohmann::json GetJson();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Battery/Battery.h"
+#include "pch.h"
 #include "config.h"
 #include "Navigator.h"
 
@@ -24,7 +24,6 @@ namespace GUI {
 		}
 
 		void OnRender() override {
-
 		}
 	};
 
@@ -86,38 +85,39 @@ namespace GUI {
 
 			bool anyActive = false;
 
-			::App* app = GetApp();	// Get a pointer to the global application class
+			::App* app = GetClientApplication();	// Get a pointer to the global application class
 			SketchFile* file = &app->navigator->file;	// Get reference to the current file
+
+			for (Layer& layer : file->GetLayers()) {
 			
-			for (Layer* layer : file->GetLayers()) {
-
-				std::string name = layer->name + "##" + std::to_string(layer->layerID);
-
+				char name[1024];
+				snprintf(name, 1024, "%s##%u", layer.name.c_str(), layer.layerID.Get());
+			
 				// Draw GUI element and if clicked save flag, which will be read from the main loop event handler
-				if (ImGui::Selectable(name.c_str(), file->GetActiveLayerID() == layer->layerID)) {
-					selectedLayer = layer->layerID;
+				if (ImGui::Selectable(name, file->GetActiveLayerID() == layer.layerID)) {
+					selectedLayer = layer.layerID;
 					layerSelectedFlag = true;
 				}
-
+			
 				// Remember if any selectable is hovered
 				if (ImGui::IsItemHovered())
 					anyActive = true;
-
+			
 				// Drag and drop
 				if (ImGui::IsItemActive() && !ImGui::IsItemHovered() && isMouseOnWindow) {
 					if (ImGui::GetMouseDragDelta(0).y < 0.f)
 					{
-						moveLayerFrontID = layer->layerID;
+						moveLayerFrontID = layer.layerID;
 						moveLayerFrontFlag = true;
 						ImGui::ResetMouseDragDelta();
 					}
 					else {
-						moveLayerBackID = layer->layerID;
+						moveLayerBackID = layer.layerID;
 						moveLayerBackFlag = true;
 						ImGui::ResetMouseDragDelta();
 					}
 				}
-
+			
 				// Draw the preview of the layer
 				if (ImGui::IsItemHovered()) {
 					LOG_WARN("DRAW PREVIEW NOW");
@@ -171,7 +171,7 @@ namespace GUI {
 		void OnRender() override {
 
 			ImGui::PushFont(font);
-			Navigator* nav = GetApp()->navigator;
+			Navigator* nav = GetClientApplication()->navigator;
 
 			if (ImGui::Selectable("Selection mode", nav->selectedTool == CursorTool::SELECT)) {
 				nav->UseTool(CursorTool::SELECT);
@@ -212,23 +212,12 @@ namespace GUI {
 		void OnRender() override {
 
 			ImGui::PushFont(font);
-			Navigator* nav = GetApp()->navigator;
+			Navigator* nav = GetClientApplication()->navigator;
 
-			std::stringstream text;
-			text << std::fixed << std::setprecision(2) << "Mouse: ";
-			if (nav->mousePosition.x >= 0)
-				text << " ";
-			text << nav->mousePosition.x << "|";
-			if (nav->mousePosition.y >= 0)
-				text << " ";
-			text << nav->mousePosition.y << " Snap: " << std::setprecision(0);
-			if (nav->mouseSnapped.x >= 0)
-				text << " ";
-			text << nav->mouseSnapped.x << "|";
-			if (nav->mouseSnapped.y >= 0)
-				text << " ";
-			text << nav->mouseSnapped.y;
-			ImGui::Text(text.str().c_str());
+			char str[1024];
+			snprintf(str, 1024, "Mouse: %f|%f Snap: %f|%f", nav->mousePosition.x,
+				nav->mousePosition.y, nav->mouseSnapped.x, nav->mouseSnapped.y);
+			ImGui::Text(str);
 
 			ImGui::PopFont();
 		}
@@ -243,13 +232,16 @@ namespace GUI {
 		MouseInfoWindow mouseInfo;
 
 		GuiLayer() : Battery::ImGuiLayer("GuiLayer") {
+			enableProfiling = ENABLE_PROFILING;
+			enableImGuiDemoWindow = true;
+			enableImPlotDemoWindow = true;
 		}
 
 		~GuiLayer() {
 		}
 
 		void OnImGuiAttach() override {
-			ImGui::GetIO().IniFilename = NULL;	// Prevent ImGui from saving a .ini file
+			//ImGui::GetIO().IniFilename = NULL;	// Prevent ImGui from saving a .ini file
 
 			ribbon.OnAttach();
 			layers.OnAttach();

@@ -59,10 +59,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/spdlog/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/spdlog/include;../../BatteryEngine/modules/implot</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -80,7 +82,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/spdlog/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/spdlog/include;../../BatteryEngine/modules/implot</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -105,11 +107,13 @@
     <ClCompile Include="..\src\Navigator.cpp" />
     <ClCompile Include="..\src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Shape.cpp" />
     <ClCompile Include="..\src\SketchFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\Action.h" />
     <ClInclude Include="..\include\Application.h" />
     <ClInclude Include="..\include\config.h" />
     <ClInclude Include="..\include\Gui.h" />

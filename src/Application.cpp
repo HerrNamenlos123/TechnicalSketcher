@@ -132,6 +132,7 @@ bool Application::writeRecentFile(std::string content) {
 }
 */
 
+#include "pch.h"
 #include "Application.h"
 #include "Gui.h"
 #include "Updater.h"
@@ -152,6 +153,7 @@ App::App() : Battery::Application(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, A
 }
 
 bool App::OnStartup() {
+	//SetFramerate(10);
 
 	// Setup window
 
@@ -175,12 +177,15 @@ bool App::OnStartup() {
 	navigator = new Navigator();	// Will be deleted when the layer is popped
 	PushLayer(navigator);
 	PushOverlay(new GUI::GuiLayer());
-
-	scene = new Battery::Scene(&window);
+	
 	//shader = new Battery::ShaderProgram();
 	//shader->Load(window.allegroDisplayPointer, "../resource/vertex.glsl", "../resource/fragment.glsl");
 
-	//scene->textures.push_back(Battery::Texture2D("../resource/bild.jpeg"));
+	scene = new Battery::Scene(&window);
+	scene->textures.push_back(Battery::Texture2D("../resource/bild.jpeg"));
+
+	// Force a screen update
+	lastScreenRefresh = 0;
 
 	/*
 	applicationVersion = getVersion(devLaunch);
@@ -213,9 +218,35 @@ bool App::OnStartup() {
 void App::OnUpdate() {
 	using namespace Battery;
 
+	// Only refresh the screen eventually to save cpu power
+	// Allow the first 60 frames to let everything initialize
+	// and only if the program runs in the background
+	if (TimeUtils::GetRuntime() < (lastScreenRefresh + passiveScreenTime) && 
+		framecount > 60 && !window.IsFocused()) 
+	{
+		DiscardFrame();
+		return;
+	}
+	else {
+		lastScreenRefresh = TimeUtils::GetRuntime();
+	}
 
+	//TimeUtils::Sleep(1);
 
-	//std::cout << start << std::endl;
+	//for (int i = 5; i < 6; i++) {
+	//	//ImGui::Text(storage.timestampProfilerComplete.names[i]);
+	//	char str[10];
+	//	f = f * 0.95 + 0.05 * (storage.timestampProfilerComplete.timestamps[i] - storage.timestampProfilerComplete.timestamps[i - 1]) * 1000.f;
+	//	snprintf(str, 10, "%f\n", f);
+	//	//ImGui::Text(str);
+	//	fputs(str, stdout);
+	//}
+
+	//uint8_t* pointer = new uint8_t[10];
+	//delete[] pointer;
+
+	//std::cout << "OnUpdate" << std::endl;
+	//LOG_WARN("OnUpdate");
 
 	//if (start > 360)
 	//	start -= 360;
@@ -225,6 +256,8 @@ void App::OnUpdate() {
 
 void App::OnRender() {
 	using namespace Battery;
+
+	//LOG_WARN("Render");
 
 	//Renderer2D::BeginScene(scene);
 	////Renderer2D::DrawArc({ 400, 400 }, 100, start, end, 30, { 255, 0, 0, 255 }, 10);
@@ -252,6 +285,10 @@ void App::OnShutdown() {
 void App::OnEvent(Battery::Event* e) {
 	using namespace Battery;
 
+	// Force a screen update
+	lastScreenRefresh = 0;
+
+	// Act on the event
 	switch (e->GetType()) {
 
 	case EventType::KeyPressed:
@@ -263,11 +300,11 @@ void App::OnEvent(Battery::Event* e) {
 		}
 #endif
 
-		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
-			e->SetHandled();
-			//shader.Unload();
-			//shader.Load(window.allegroDisplayPointer, "../resource/vertex.glsl", "../resource/fragment.glsl");
-		}
+		//if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
+		//	e->SetHandled();
+		//	//shader.Unload();
+		//	//shader.Load(window.allegroDisplayPointer, "../resource/vertex.glsl", "../resource/fragment.glsl");
+		//}
 		break;
 
 	case EventType::WindowClose:
@@ -284,7 +321,7 @@ Battery::Application* Battery::CreateApplication() {
 	return new App();
 }
 
-App* GetApp() {
+App* GetClientApplication() {
 	return static_cast<App*>(Battery::Application::GetApplicationPointer());
 }
 

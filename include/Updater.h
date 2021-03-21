@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Battery/Battery.h"
+#include "pch.h"
 #include "config.h"
 
 static void RunUpdater() {
