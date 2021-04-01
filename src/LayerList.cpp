@@ -2,157 +2,25 @@
 #include "pch.h"
 #include "LayerList.h"
 
-
-LayerList::LayerList() {
-
-}
-
-
+/*
 
 
 void LayerList::AddLayerFront(const std::string& name) {
 	Layer layer(name);
-	LayerID id = layer.layerID;
+	LayerID id = layer.GetID();
 
-	LOG_TRACE("Added Layer " + name + " to front with id " + std::to_string(id.Get()));
+	LOG_TRACE("Added Layer " + name + " to front with id " + std::to_string(id));
 	layers.insert(layers.begin(), std::move(layer));
-	SelectLayer(id); // Select just created layer
 }
 
 void LayerList::AddLayerBack(const std::string& name) {
 	Layer layer(name);
-	LayerID id = layer.layerID;
+	LayerID id = layer.GetID();
 
 	LOG_TRACE("Added Layer " + name + " to back with id " + std::to_string(id.Get()));
 	layers.push_back(std::move(layer));
 	SelectLayer(id); // Select just created layer
 }
-
-
-
-
-
-
-bool LayerList::MoveLayerFront(LayerID id) {
-
-	size_t layerIndex = __findLayer(id);
-	if (layerIndex == -1 || layerIndex < 1) {
-		LOG_ERROR(__FUNCTION__ "(): Can't move Layer #" + std::to_string(id.Get()));
-		return false;
-	}
-
-	LOG_TRACE("Moving Layer " + layers[layerIndex].name + " #" + std::to_string(layers[layerIndex].layerID.Get()));
-	std::iter_swap(layers.begin() + layerIndex, layers.begin() + layerIndex - 1);
-	return true;
-}
-
-bool LayerList::MoveLayerBack(LayerID id) {
-
-	size_t layerIndex = __findLayer(id);
-	if (layerIndex == -1 || layerIndex >= layers.size() - 1) {
-		LOG_ERROR(__FUNCTION__ "(): Can't move Layer #" + std::to_string(id.Get()));
-		return false;
-	}
-
-	LOG_TRACE("Moving Layer " + layers[layerIndex].name + " #" + std::to_string(layers[layerIndex].layerID.Get()));
-	std::iter_swap(layers.begin() + layerIndex, layers.begin() + layerIndex + 1);
-	return true;
-}
-
-
-
-void LayerList::Clear() {
-	layers.clear();
-	activeLayer = -1;
-}
-
-
-
-
-
-bool LayerList::DeleteLayer(LayerID id) {
-
-	size_t layerIndex = __findLayer(id);
-	if (layerIndex == -1) {
-		LOG_ERROR(__FUNCTION__ "(): Can't move Layer #" + std::to_string(id.Get()));
-		return false;
-	}
-
-	layers.erase(layers.begin() + layerIndex);
-
-	if (activeLayer >= layers.size()) {
-		activeLayer = -1;
-		LOG_WARN(__FUNCTION__ "(): No more layer to choose!");
-	}
-
-	return true;
-}
-
-
-
-
-
-bool LayerList::LayerExists(LayerID id) {
-
-	if (id.Get() == -1)
-		return false;
-
-	for (Layer& layer : layers) {
-		if (layer.layerID == id) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool LayerList::SelectLayer(LayerID id) {
-
-	if (!LayerExists(id)) {
-		LOG_WARN(__FUNCTION__ "(): Can't choose Layer #" + std::to_string(id.Get()) + ": Does not exist!");
-		return false;
-	}
-
-	activeLayer = id;
-	LOG_TRACE("Chose Layer #" + std::to_string(id.Get()));
-	return true;
-}
-
-LayerID LayerList::GetActiveLayerID() {
-	return activeLayer;
-}
-
-Layer* LayerList::GetActiveLayer() {
-	return FindLayer(activeLayer);
-}
-
-
-
-
-
-
-Layer* LayerList::FindLayer(LayerID id) {
-
-	for (Layer& layer : layers) {
-		if (layer.layerID == id) {
-			return &layer;
-		}
-	}
-
-	return nullptr;
-}
-
-
-
-
-
-
-
-std::vector<Layer>& LayerList::GetLayers() {
-	return layers;
-}
-
-
 
 
 
@@ -171,7 +39,7 @@ bool LayerList::LoadJson(const nlohmann::json& json) {
 			layers.push_back(Layer(j));
 		}
 
-		selectedLayer = layerOrder[0];*/
+		selectedLayer = layerOrder[0];
 	}
 	catch (...) {
 		return false;
@@ -211,3 +79,4 @@ int32_t LayerList::__findLayer(LayerID id) {
 
 	return -1;
 }
+*/

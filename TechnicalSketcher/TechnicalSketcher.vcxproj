@@ -101,30 +101,44 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Application.cpp" />
+    <ClCompile Include="..\src\ApplicationRenderer.cpp" />
     <ClCompile Include="..\src\Gui.cpp" />
     <ClCompile Include="..\src\Layer.cpp" />
     <ClCompile Include="..\src\LayerList.cpp" />
+    <ClCompile Include="..\src\LayerState.cpp" />
     <ClCompile Include="..\src\Navigator.cpp" />
     <ClCompile Include="..\src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\Shape.cpp" />
+    <ClCompile Include="..\src\SelectionHandler.cpp" />
+    <ClCompile Include="..\src\Shapes\LineShape.cpp" />
     <ClCompile Include="..\src\SketchFile.cpp" />
+    <ClCompile Include="..\src\Tools\LineStripTool.cpp" />
+    <ClCompile Include="..\src\Tools\LineTool.cpp" />
+    <ClCompile Include="..\src\Tools\SelectionTool.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\Action.h" />
     <ClInclude Include="..\include\Application.h" />
+    <ClInclude Include="..\include\ApplicationRenderer.h" />
     <ClInclude Include="..\include\config.h" />
     <ClInclude Include="..\include\Gui.h" />
     <ClInclude Include="..\include\Layer.h" />
+    <ClInclude Include="..\include\LayerHistory.h" />
     <ClInclude Include="..\include\LayerList.h" />
     <ClInclude Include="..\include\LayerState.h" />
     <ClInclude Include="..\include\Navigator.h" />
+    <ClInclude Include="..\include\NavigatorLayer.h" />
     <ClInclude Include="..\include\pch.h" />
     <ClInclude Include="..\include\PerlinNoise.h" />
-    <ClInclude Include="..\include\Shape.h" />
+    <ClInclude Include="..\include\SelectionHandler.h" />
+    <ClInclude Include="..\include\Shapes\GenericShape.h" />
+    <ClInclude Include="..\include\Shapes\LineShape.h" />
     <ClInclude Include="..\include\SketchFile.h" />
+    <ClInclude Include="..\include\Tools\GenericTool.h" />
+    <ClInclude Include="..\include\Tools\LineStripTool.h" />
+    <ClInclude Include="..\include\Tools\LineTool.h" />
+    <ClInclude Include="..\include\Tools\SelectionTool.h" />
     <ClInclude Include="..\include\Updater.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -140,6 +154,7 @@
     <Image Include="..\icon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.gitignore" />
     <None Include="..\PythonModules\uninstall.py" />
     <None Include="..\PythonModules\updater.py" />
     <None Include="..\resource\fragment.glsl" />

@@ -136,16 +136,17 @@ bool Application::writeRecentFile(std::string content) {
 #include "Application.h"
 #include "Gui.h"
 #include "Updater.h"
-#include "Navigator.h"
+#include "NavigatorLayer.h"
 #include "../TechnicalSketcher/resource.h"	// For the icon
 
 #include "Layer.h"
 
-Battery::Scene* scene = nullptr;
-Battery::ShaderProgram* shader = nullptr;
-float start = 0;
-float end = 0;
-float count = 0;
+void StartNewApplicationInstance() {
+	LOG_INFO("Starting new instance of the application");
+
+	// Execute the first command line argument, which is always the path of the exe
+	system(std::string("start " + GetClientApplication()->args[0] + " new").c_str());
+}
 
 App::App() : Battery::Application(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, APPLICATION_NAME) {
 	//LOG_SET_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
@@ -153,13 +154,10 @@ App::App() : Battery::Application(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, A
 }
 
 bool App::OnStartup() {
-	//SetFramerate(10);
 
-	// Setup window
-
-	// If screen is too small with a little margin, start in fullscreen mode
+	// Set the window size and position
 	glm::vec2 monitorSize = GetPrimaryMonitorSize();
-	float margin = 1.2f;
+	float margin = 1.2f;					// If screen is too small with a little margin, maximize the window
 	if (monitorSize.x / margin < DEFAULT_WINDOW_WIDTH || monitorSize.y / margin < DEFAULT_WINDOW_HEIGHT) {
 		window.SetSize(monitorSize / margin);
 		window.SetScreenPosition({ 0, 0 });
@@ -170,22 +168,17 @@ bool App::OnStartup() {
 		window.SetSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
 	}
 
+	// Initialize the renderer
+	ApplicationRenderer::Load();
+
+	// Various layers
+	PushLayer(new UpdaterLayer());
+	PushLayer(new NavigatorLayer());
+	PushOverlay(new GUI::GuiLayer());
+
+	// Set the icon and title of the window
 	window.SetWindowExecutableIcon();
 	window.SetTitle(APPLICATION_NAME);
-
-	PushLayer(new UpdaterLayer());
-	navigator = new Navigator();	// Will be deleted when the layer is popped
-	PushLayer(navigator);
-	PushOverlay(new GUI::GuiLayer());
-	
-	//shader = new Battery::ShaderProgram();
-	//shader->Load(window.allegroDisplayPointer, "../resource/vertex.glsl", "../resource/fragment.glsl");
-
-	scene = new Battery::Scene(&window);
-	scene->textures.push_back(Battery::Texture2D("../resource/bild.jpeg"));
-
-	// Force a screen update
-	lastScreenRefresh = 0;
 
 	/*
 	applicationVersion = getVersion(devLaunch);
@@ -230,56 +223,15 @@ void App::OnUpdate() {
 	else {
 		lastScreenRefresh = TimeUtils::GetRuntime();
 	}
-
-	//TimeUtils::Sleep(1);
-
-	//for (int i = 5; i < 6; i++) {
-	//	//ImGui::Text(storage.timestampProfilerComplete.names[i]);
-	//	char str[10];
-	//	f = f * 0.95 + 0.05 * (storage.timestampProfilerComplete.timestamps[i] - storage.timestampProfilerComplete.timestamps[i - 1]) * 1000.f;
-	//	snprintf(str, 10, "%f\n", f);
-	//	//ImGui::Text(str);
-	//	fputs(str, stdout);
-	//}
-
-	//uint8_t* pointer = new uint8_t[10];
-	//delete[] pointer;
-
-	//std::cout << "OnUpdate" << std::endl;
-	//LOG_WARN("OnUpdate");
-
-	//if (start > 360)
-	//	start -= 360;
-
-	//std::cout << framerate << std::endl;
 }
 
 void App::OnRender() {
 	using namespace Battery;
-
-	//LOG_WARN("Render");
-
-	//Renderer2D::BeginScene(scene);
-	////Renderer2D::DrawArc({ 400, 400 }, 100, start, end, 30, { 255, 0, 0, 255 }, 10);
-	//Renderer2D::DrawCircle({ 400, 400 }, 100, 3, { 0, 0, 0, 255 }, { 255, 0, 0, 255 });
-	//Renderer2D::DrawRectangle({ 100, 100 }, { 400, 300 }, 3, { 0, 0, 0, 255 }, { 0, 255, 0, 255 });
-	//Renderer2D::EndScene();
-
-	//Renderer2D::BeginScene(scene);
-	//
-	//VertexData v1 = VertexData({ 300, 100, 0 }, { 0, 0 }, { 255, 0, 0, 255 });
-	//VertexData v2 = VertexData({ 500, 100, 0 }, { 1, 0 }, { 0, 255, 0, 255 });
-	//VertexData v3 = VertexData({ 500, 300, 0 }, { 1, 1 }, { 0, 0, 255, 255 });
-	//VertexData v4 = VertexData({ 300, 300, 0 }, { 0, 1 }, { 255, 0, 255, 255 });
-	//
-	//Renderer2D::DrawQuad(v1, v2, v3, v4, &shader, 0);
-	//
-	//Renderer2D::EndScene();
 }
 
 void App::OnShutdown() {
-	delete scene;
-	//delete shader;
+	// Unload the renderer
+	ApplicationRenderer::Unload();
 }
 
 void App::OnEvent(Battery::Event* e) {
@@ -300,11 +252,10 @@ void App::OnEvent(Battery::Event* e) {
 		}
 #endif
 
-		//if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
-		//	e->SetHandled();
-		//	//shader.Unload();
-		//	//shader.Load(window.allegroDisplayPointer, "../resource/vertex.glsl", "../resource/fragment.glsl");
-		//}
+		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
+			e->SetHandled();
+			Navigator::GetInstance()->PrintShapes();
+		}
 		break;
 
 	case EventType::WindowClose:

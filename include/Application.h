@@ -25,10 +25,11 @@ static std::string getVersion(bool dev) {
 #include "pch.h"
 #include "Navigator.h"
 
+void StartNewApplicationInstance();
+
 class App : public Battery::Application {
 public:
 
-	Navigator* navigator = nullptr;
 	double lastScreenRefresh = 0;
 	double passiveScreenTime = 5.0;		// Refresh the screen every 2 seconds
 

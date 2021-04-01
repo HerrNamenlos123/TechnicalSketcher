@@ -2,18 +2,22 @@
 
 #include "pch.h"
 #include "SketchFile.h"
+#include "ApplicationRenderer.h"
+#include "SelectionHandler.h"
 
-enum class CursorTool {
-	SELECT,
-	LINE,
-	LINE_STRIP
-};
+#include "Tools/SelectionTool.h"
 
-class Navigator : public Battery::Layer {
+class Navigator {
+
+	Navigator() {}
+
+	inline static std::unique_ptr<Navigator> instance;
+
 public:
+	Navigator(Navigator const&) = delete;
+	void operator=(Navigator const&) = delete;
 
 	SketchFile file;
-	Battery::Scene* renderScene = nullptr;
 
 	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve once, to be consistent through the update loop
 
@@ -33,23 +37,7 @@ public:
 	std::vector<Battery::MouseMovedEvent> mouseMovedEventBuffer;
 	std::vector<Battery::KeyPressedEvent> keyPressedEventBuffer;
 
-	// Visuals
-	float gridLineColor = 0;	// Grayscale
-	float gridLineWidth = 1;
-	float gridAlphaFactor = 1;
-	float gridAlphaOffset = 0;
-	float gridAlphaMax = 50;
-	//float gridLineFalloff = 0.7;
-	glm::vec4 disabledLineColor = glm::vec4(200, 200, 200, 255);
-	glm::vec4 normalLineColor = glm::vec4(0, 0, 0, 255);
-	glm::vec4 hoveredLineColor = glm::vec4(252, 132, 3, 255);
-	glm::vec4 selectedLineColor = glm::vec4(255, 0, 0, 255);
-	glm::vec4 selectionBoxOutlineColor = glm::vec4(252, 132, 3, 255);
-	float selectionBoxOutlineThickness = 1.f;
-	glm::vec4 selectionBoxFillColor = glm::vec4(200, 20, 0, 15);
-
 	// Controls
-	enum class CursorTool selectedTool = CursorTool::SELECT;
 	glm::vec2 mousePosition = { 0, 0 };			// Those mouse positions are in workspace coordinates
 	glm::vec2 mouseSnapped = { 0, 0 };
 	bool controlKeyPressed = false;
@@ -58,41 +46,35 @@ public:
 	glm::vec2 previewPointPosition = { 0, 0 };
 	bool previewPointShown = false;
 
-	glm::vec2 previewShapePoint1 = { 0, 0 };	// These are temporary for shape previews
-	glm::vec2 previewShapePoint2 = { 0, 0 };
-	glm::vec2 previewShapePoint3 = { 0, 0 };
-	enum class ShapeType previewShape = ShapeType::INVALID;
+	std::unique_ptr<GenericTool> selectedTool = std::make_unique<SelectionTool>();
 
-	glm::vec2 selectionBoxPointA = { 0, 0 };
-	glm::vec2 selectionBoxPointB = { 0, 0 };
-	bool selectionBoxActive = false;
+	static void CreateInstance();
+	static void DestroyInstance();
+	static Navigator* GetInstance();
 
-	std::vector<ShapeID> selectedShapes;
-	std::vector<ShapeID> possiblyHoveredShapes;
-	size_t shapePossiblyChosen = 0;		// This is for tabbing through all possibly selected shapes
-	ShapeID lastHoveredShape = -1;
-
-	Navigator();
-
-	void OnAttach() override;
-	void OnDetach() override;
-	void OnUpdate() override;
-	void OnRender() override;
-	void OnEvent(Battery::Event* e) override;
+	void OnAttach();
+	void OnDetach();
+	void OnUpdate();
+	void OnRender();
+	void OnEvent(Battery::Event* e);
 
 
 	glm::vec2 ConvertScreenToWorkspaceCoords(const glm::vec2& v);
 	glm::vec2 ConvertWorkspaceToScreenCoords(const glm::vec2& v);
+	float ConvertWorkspaceToScreenDistance(float distance);
+	float ConvertScreenToWorkspaceDistance(float distance);
 
-	void SelectShape(ShapeID id);
-	void UnselectShape(ShapeID id);
-	bool IsShapeSelected(ShapeID id);
 	void MouseScrolled(float amount);
 	void UpdateEvents();
 	void CancelShape();
-	void UseTool(enum class CursorTool tool);
-	void UpdateHoveredShapes();
+	void UseTool(enum class ToolType tool);
 	void PrintShapes();
+	void RemoveSelectedShapes();
+	void MoveSelectedShapesLeft();
+	void MoveSelectedShapesRight();
+	void MoveSelectedShapesUp();
+	void MoveSelectedShapesDown();
+	void SelectNextPossibleShape();
 
 	void OnKeyPressed(Battery::KeyPressedEvent* event);
 	void OnMouseLeftClicked(const glm::vec2& position, const glm::vec2& snapped);
@@ -103,12 +85,21 @@ public:
 	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped);
 	void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped);
 	void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped);
-	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped);
+	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape);
 	void OnToolChanged();
+	void OnLayerSelected(LayerID layer);
 
+	void SelectAll();
+	void Print();
+	void CopyClipboard();
+	void CutClipboard();
+	void PasteClipboard();
+	void OpenFile();
+	void SaveFile();
+	void SaveFileAs();
+
+	void AddLayer();
 	void AddLine(const glm::vec2& p1, const glm::vec2& p2);
 
-	void DrawGrid();
 	void RenderShapes();
-	void DrawLine(const glm::vec2& p1, const glm::vec2& p2, float thickness, const glm::vec4 color);
 };

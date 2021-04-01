@@ -2,7 +2,7 @@
 #include "pch.h"
 #include "SketchFile.h"
 
-
+/*
 SketchFile::SketchFile() {
 	CreateNewFile();
 }
@@ -180,4 +180,4 @@ bool SketchFile::LoadFile(const std::string& path, const std::string& displayNam
 
 nlohmann::json SketchFile::GetJson() {
 	return layers.GetJson();
-}
+}*/
