@@ -30,4 +30,8 @@ public:
 		states.pop_back();
 		return pair;
 	}
+
+	void Clear() {
+		states.clear();
+	}
 };

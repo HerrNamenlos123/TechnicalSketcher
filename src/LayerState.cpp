@@ -19,7 +19,7 @@ void LayerState::operator=(const LayerState& state) {
 	}
 }
 
-void LayerState::PushShape(std::unique_ptr<GenericShape>&& shape) {
+void LayerState::PushShape(ShapePTR&& shape) {
 	shapes.push_back(std::move(shape));
 }
 
@@ -34,17 +34,66 @@ bool LayerState::RemoveShape(ShapeID id) {
 	return false;
 }
 
-GenericShape* LayerState::FindShape(ShapeID id) {
+std::optional<std::reference_wrapper<GenericShape>> LayerState::FindShape(ShapeID id) {
 
-	for (std::unique_ptr<GenericShape>& shape : shapes) {
+	for (auto& shape : shapes) {
 		if (shape->GetID() == id) {
-			return shape.get();
+			return std::make_optional<std::reference_wrapper<GenericShape>>(*shape);
 		}
 	}
 
-	return nullptr;
+	return std::nullopt;
 }
 
-const std::vector<std::unique_ptr<GenericShape>>& LayerState::GetShapes() const {
+bool LayerState::ShapeExists(const ShapeID& id) const {
+
+	for (auto& shape : shapes) {
+		if (shape->GetID() == id) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+const std::vector<ShapePTR>& LayerState::GetShapes() const {
 	return shapes;
+}
+
+bool LayerState::LoadJson(nlohmann::json json) {
+	try {
+		// Store all shapes temporarily
+		std::vector<ShapePTR> tempShapes;
+		for (nlohmann::json shapeJson : json) {
+			ShapePTR shape = GenericShape::MakeShape(shapeJson);
+
+			if (!shape) {
+				return false;
+			}
+
+			tempShapes.push_back(std::move(shape));
+		}
+
+		// Now apply all shapes
+		shapes.clear();
+		for (ShapePTR& shape : tempShapes) {
+			shapes.push_back(std::move(shape));
+		}
+		return true;
+	}
+	catch (...) {
+		LOG_ERROR(__FUNCTION__"(): Can't parse JSON: Invalid format!");
+	}
+
+	return false;
+}
+
+nlohmann::json LayerState::GetJson() {
+	nlohmann::json json = nlohmann::json::array();
+
+	for (ShapePTR& shape : shapes) {
+		json.push_back(shape->GetJson());
+	}
+
+	return json;
 }

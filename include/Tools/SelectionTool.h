@@ -26,6 +26,7 @@ public:
 	void CopyClipboard();
 	void CutClipboard();
 	void PasteClipboard();
+	bool StepToolBack();
 
 	void RenderFirstPart();
 	void RenderSecondPart();

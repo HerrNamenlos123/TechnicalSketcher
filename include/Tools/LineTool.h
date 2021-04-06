@@ -8,7 +8,7 @@ class LineTool : public GenericTool {
 
 	LineShape previewLine;
 	bool lineStarted = false;
-
+	
 public:
 	LineTool() : GenericTool(ToolType::LINE), previewLine({ 0, 0 }, { 0, 0 }, 0, { 0, 0, 0, 0 }) {}
 
@@ -25,6 +25,7 @@ public:
 	void CopyClipboard();
 	void CutClipboard();
 	void PasteClipboard();
+	bool StepToolBack();
 
 	void RenderPreview();
 

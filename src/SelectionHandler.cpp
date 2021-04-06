@@ -4,6 +4,19 @@
 #include "Navigator.h"
 
 const std::vector<ShapeID>& SelectionHandler::GetSelectedShapes() {
+
+	std::vector<ShapeID> removeSelection;
+	for (ShapeID id : selectedShapes) {
+		if (!Navigator::GetInstance()->file.GetActiveLayer().ShapeExists(id)) {
+			removeSelection.push_back(id);
+		}
+	}
+
+	// Now remove all non-existing shapes
+	for (ShapeID id : removeSelection) {
+		UnselectShape(id);
+	}
+
 	return selectedShapes;
 }
 
@@ -12,7 +25,7 @@ const std::vector<ShapeID>& SelectionHandler::GetSelectedShapes() {
 ShapeID SelectionHandler::GetHoveredShape(const glm::vec2& mousePosition) {
 	std::vector<ShapeID> possible;
 
-	for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayerShapes()) {
+	for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayer().GetShapes()) {
 		float dist = Navigator::GetInstance()->ConvertScreenToWorkspaceDistance(
 			Navigator::GetInstance()->mouseHighlightThresholdDistance);
 		if (shape->IsShapeHovered(mousePosition, dist)) {
@@ -60,15 +73,13 @@ bool SelectionHandler::IsShapeSelected(ShapeID id) {
 
 bool SelectionHandler::SelectShape(ShapeID id) {
 
-	for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayerShapes()) {
-		if (shape->GetID() == id) {
-			// Shape exists, select it now if it's not already
+	if (Navigator::GetInstance()->file.GetActiveLayer().ShapeExists(id)) {
 
-			if (!IsShapeSelected(id)) {
-				selectedShapes.push_back(id);
-			}
-			return true;
+		// Shape exists, select it now if it's not already
+		if (!IsShapeSelected(id)) {
+			selectedShapes.push_back(id);
 		}
+		return true;
 	}
 
 	return false;
@@ -99,7 +110,7 @@ bool SelectionHandler::ToggleSelection(ShapeID id) {
 void SelectionHandler::SelectAll() {
 	selectedShapes.clear();
 
-	for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayerShapes()) {
+	for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayer().GetShapes()) {
 		selectedShapes.push_back(shape->GetID());
 	}
 }

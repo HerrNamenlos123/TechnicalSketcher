@@ -73,6 +73,15 @@ void LineTool::PasteClipboard() {
 
 }
 
+bool LineTool::StepToolBack() {
+	if (lineStarted) {
+		CancelShape();
+		return true;
+	}
+
+	return false;
+}
+
 void LineTool::RenderPreview() {
 	if (lineStarted) {
 		previewLine.RenderPreview();

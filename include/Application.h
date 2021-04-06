@@ -25,8 +25,6 @@ static std::string getVersion(bool dev) {
 #include "pch.h"
 #include "Navigator.h"
 
-void StartNewApplicationInstance();
-
 class App : public Battery::Application {
 public:
 

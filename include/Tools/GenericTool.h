@@ -35,6 +35,7 @@ public:
 	virtual void CopyClipboard() = 0;
 	virtual void CutClipboard() = 0;
 	virtual void PasteClipboard() = 0;
+	virtual bool StepToolBack() = 0;
 
 	virtual void RenderPreview() = 0;
 

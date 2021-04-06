@@ -45,6 +45,9 @@ void Navigator::OnUpdate() {
 	if (controlKeyPressed) {
 		mouseSnapped = mousePosition;
 	}
+
+	// Update window title
+	file.UpdateWindowTitle();
 	
 	// Handle all queued events
 	UpdateEvents();
@@ -289,7 +292,7 @@ void Navigator::PrintShapes() {
 	
 	// Print all shapes in the currently selected Layer
 	LOG_WARN("Layer #{}: Name '{}'", file.GetActiveLayer().GetID(), file.GetActiveLayer().name);
-	for (const auto& shape : file.GetActiveLayerShapes()) {
+	for (const auto& shape : file.GetActiveLayer().GetShapes()) {
 		LOG_WARN("Shape #{}: ", shape->GetID());
 		LOG_ERROR("Shape JSON Content: \n{}", shape->GetJson().dump(4));
 	}
@@ -384,10 +387,15 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 		MoveSelectedShapesDown();
 		break;
 
+	case ALLEGRO_KEY_ESCAPE:
+		// Reset tools
+		OnEscapePressed();
+		break;
+
 	case ALLEGRO_KEY_Z:
 		// Undo previous action
 		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
-			file.GetActiveLayer().UndoAction();
+			UndoAction();
 		}
 		break;
 
@@ -411,7 +419,7 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 
 	case ALLEGRO_KEY_S:		// Save
 		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL) &&
-			GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {
+			GetClientApplication()->GetKey(ALLEGRO_KEY_LSHIFT)) {
 			SaveFileAs();
 		}
 		else if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {
@@ -533,6 +541,18 @@ void Navigator::OnLayerSelected(LayerID layer) {
 	}
 }
 
+void Navigator::OnEscapePressed() {
+
+	if (selectedTool) {
+		if (!selectedTool->StepToolBack()) {	// If false, it couldn't be stepped back further
+			UseTool(ToolType::SELECT);
+		}
+	}
+	else {
+		UseTool(ToolType::SELECT);
+	}
+}
+
 
 
 
@@ -547,6 +567,10 @@ void Navigator::SelectAll() {
 
 void Navigator::Print() {
 	LOG_ERROR("PRINT NOW");
+}
+
+void Navigator::UndoAction() {
+	file.UndoAction();
 }
 
 void Navigator::CopyClipboard() {
@@ -570,16 +594,104 @@ void Navigator::PasteClipboard() {
 	}
 }
 
-void Navigator::OpenFile() {
-	LOG_ERROR("OPEN FILE NOW");
+bool Navigator::OpenFile() {
+	return file.OpenFile();
 }
 
-void Navigator::SaveFile() {
-	LOG_ERROR("SAVE FILE NOW");
+bool Navigator::SaveFile() {
+	return file.SaveFile();
 }
 
-void Navigator::SaveFileAs() {
-	LOG_ERROR("SAVE FILE AS NOW");
+bool Navigator::SaveFileAs() {
+	return file.SaveFile(true);
+}
+
+
+
+
+
+
+
+
+std::string Navigator::GetMostRecentFile() {
+	auto files = GetRecentFiles();
+
+	if (files.size() > 0) {
+		return files[0];
+	}
+
+	return "";
+}
+
+std::vector<std::string> Navigator::GetRecentFiles() {
+	auto file = Battery::FileUtils::ReadFile(RECENT_FILES_FILENAME);
+
+	if (file.fail()) {
+		LOG_ERROR("Can't read file with recent files!");
+		return std::vector<std::string>();
+	}
+
+	return Battery::StringUtils::SplitString(file.content(), '\n');
+}
+
+bool Navigator::AppendRecentFile(std::string recentFile) {
+	auto files = GetRecentFiles();		// If the file can't be found and vector is empty, doesn't matter
+	files.push_back(recentFile);
+
+	while (files.size() > MAX_NUMBER_OF_RECENT_FILES) {
+		files.erase(files.begin());
+	}
+
+	return SaveRecentFiles(files);
+}
+
+bool Navigator::SaveRecentFiles(std::vector<std::string> recentFiles) {
+	auto file = Battery::StringUtils::JoinStrings(recentFiles, "\n");
+	return Battery::FileUtils::WriteFile(RECENT_FILES_FILENAME, file);
+}
+
+void Navigator::OpenNewWindowFile(const std::string& file) {
+
+	if (Battery::FileUtils::FileExists(file)) {
+		LOG_INFO("Starting new application instance while opening file '{}'", file);
+
+		// Execute the first command line argument, which is always the path of the exe
+		system(std::string("start " + GetClientApplication()->args[0] + " " + file).c_str());
+	}
+	else {
+		LOG_ERROR("File can not be found: '{}'", file);
+		Battery::ShowInfoMessageBox("The file '" + file + "' can not be found!");
+	}
+}
+
+void Navigator::StartNewApplicationInstance() {
+	LOG_INFO("Starting new instance of the application");
+
+	// Execute the first command line argument, which is always the path of the exe
+	system(std::string("start " + GetClientApplication()->args[0] + " new").c_str());
+}
+
+void Navigator::CloseApplication() {
+
+	// Only close application, if file is saved
+
+	if (!file.ContainsChanges()) {
+		GetClientApplication()->CloseApplication();
+		return;
+	}
+
+	bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
+		"Do you want to save the file?", GetClientApplication()->window.allegroDisplayPointer);
+
+	if (!save) {	// Discard changes and close the application
+		GetClientApplication()->CloseApplication();
+		return;
+	}
+
+	if (SaveFile()) {
+		GetClientApplication()->CloseApplication();
+		return;
+	}
 }
 
 
@@ -599,9 +711,7 @@ void Navigator::AddLine(const glm::vec2& p1, const glm::vec2& p2) {
 		return;
 	}
 
-	file.GetActiveLayer().SaveState();
-	file.GetActiveLayer().AddShape(ShapeType::LINE, p1, p2, currentLineThickness, currentShapeColor);
-	file.FileChanged();
+	file.AddShape(ShapeType::LINE, p1, p2, currentLineThickness, currentShapeColor);
 
 	LOG_TRACE(__FUNCTION__"(): Line was added");
 }
@@ -669,6 +779,31 @@ void Navigator::RenderShapes() {
 			}
 			else {
 				LOG_TRACE(__FUNCTION__ "(): Skipping rendering shape #{}: Not on screen", shape->GetID());
+			}
+		}
+	}
+
+	// Now only render all selected shapes again
+	for (const auto& shape : file.GetActiveLayer().GetShapes()) {
+
+		// Skip the shape if it's not on the screen
+		if (shape->ShouldBeRendered(GetClientApplication()->window.GetWidth(),
+			GetClientApplication()->window.GetHeight()))
+		{
+			// Render the shape on top of all others
+			ShapeID id = shape->GetID();
+			bool shapeSelected = false;
+			ShapeID shapeHovered = false;
+
+			if (selectedTool) {
+				if (selectedTool->GetType() == ToolType::SELECT) {
+					shapeSelected = static_cast<SelectionTool*>(selectedTool.get())->selectionHandler.IsShapeSelected(id);
+					shapeHovered = static_cast<SelectionTool*>(selectedTool.get())->selectionHandler.GetLastHoveredShape();
+
+					if (shapeSelected || id == shapeHovered) {
+						shape->Render(true, shapeSelected, id == shapeHovered);
+					}
+				}
 			}
 		}
 	}

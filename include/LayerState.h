@@ -7,16 +7,20 @@ typedef size_t LayerID;
 
 class LayerState {
 
-	std::vector<std::unique_ptr<GenericShape>> shapes;
+	std::vector<ShapePTR> shapes;
 
 public:
 	LayerState();
 	LayerState(const LayerState& state);
 	void operator=(const LayerState& state);
 	
-	void PushShape(std::unique_ptr<GenericShape>&& shape);
+	void PushShape(ShapePTR&& shape);
 	bool RemoveShape(ShapeID id);
-	GenericShape* FindShape(ShapeID id);
+	std::optional<std::reference_wrapper<GenericShape>> FindShape(ShapeID id);
+	bool ShapeExists(const ShapeID& id) const;
 	
-	const std::vector<std::unique_ptr<GenericShape>>& GetShapes() const;
+	const std::vector<ShapePTR>& GetShapes() const;
+
+	bool LoadJson(nlohmann::json json);
+	nlohmann::json GetJson();
 };

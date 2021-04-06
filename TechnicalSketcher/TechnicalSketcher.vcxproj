@@ -112,6 +112,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\SelectionHandler.cpp" />
+    <ClCompile Include="..\src\Shapes\GenericShape.cpp" />
     <ClCompile Include="..\src\Shapes\LineShape.cpp" />
     <ClCompile Include="..\src\SketchFile.cpp" />
     <ClCompile Include="..\src\Tools\LineStripTool.cpp" />
@@ -122,6 +123,7 @@
     <ClInclude Include="..\include\Application.h" />
     <ClInclude Include="..\include\ApplicationRenderer.h" />
     <ClInclude Include="..\include\config.h" />
+    <ClInclude Include="..\include\FileContent.h" />
     <ClInclude Include="..\include\Gui.h" />
     <ClInclude Include="..\include\Layer.h" />
     <ClInclude Include="..\include\LayerHistory.h" />

@@ -18,6 +18,7 @@ public:
 	void operator=(Navigator const&) = delete;
 
 	SketchFile file;
+	bool fileChanged = false;
 
 	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve once, to be consistent through the update loop
 
@@ -88,15 +89,25 @@ public:
 	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape);
 	void OnToolChanged();
 	void OnLayerSelected(LayerID layer);
+	void OnEscapePressed();
 
 	void SelectAll();
 	void Print();
+	void UndoAction();
 	void CopyClipboard();
 	void CutClipboard();
 	void PasteClipboard();
-	void OpenFile();
-	void SaveFile();
-	void SaveFileAs();
+	bool OpenFile();
+	bool SaveFile();
+	bool SaveFileAs();
+
+	std::string GetMostRecentFile();
+	std::vector<std::string> GetRecentFiles();
+	bool AppendRecentFile(std::string recentFile);
+	bool SaveRecentFiles(std::vector<std::string> recentFiles);
+	void OpenNewWindowFile(const std::string& file);
+	void StartNewApplicationInstance();
+	void CloseApplication();
 
 	void AddLayer();
 	void AddLine(const glm::vec2& p1, const glm::vec2& p2);

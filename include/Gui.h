@@ -29,38 +29,58 @@ namespace GUI {
 
 			ImGui::MenuItem("TechnicalSketcher", NULL, false, false);
 			if (ImGui::MenuItem("New")) {
-				StartNewApplicationInstance();
+				Navigator::GetInstance()->StartNewApplicationInstance();
 			}
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
-			
+				Navigator::GetInstance()->OpenFile();
 			}
 			if (ImGui::BeginMenu("Open Recent")) {
-				ImGui::MenuItem("fish_hat.c");
-				ImGui::MenuItem("fish_hat.inl");
-				ImGui::MenuItem("fish_hat.h");
+				std::vector<std::string> recentFiles = Navigator::GetInstance()->GetRecentFiles();
+
+				if (recentFiles.size() == 0) {
+					ImGui::MenuItem("No recent files", NULL, false, false);
+				}
+				else {
+					for (std::string& file : recentFiles) {
+
+						if (ImGui::MenuItem(file.c_str())) {
+							Navigator::GetInstance()->OpenNewWindowFile(file);
+						}
+					}
+				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::MenuItem("Save", "Ctrl+S")) {
-			
+				Navigator::GetInstance()->SaveFile();
 			}
 			if (ImGui::MenuItem("Save As..", "Ctrl+Shift+S")) {
-			
+				Navigator::GetInstance()->SaveFileAs();
 			}
 
 			ImGui::Separator();
 			if (ImGui::MenuItem("Options")) {
-				ImGui::EndMenu();
+				LOG_ERROR("Options not implemented yet!");
 			}
 
-			if (ImGui::MenuItem("Quit", "Alt+F4")) {}
+			if (ImGui::MenuItem("Quit", "Alt+F4")) {
+				Navigator::GetInstance()->CloseApplication();
+			}
 		}
 
 		void EditTab() {
-			if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
+			if (ImGui::MenuItem("Undo", "CTRL+Z")) {
+				Navigator::GetInstance()->UndoAction();
+			}
 			ImGui::Separator();
-			if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-			if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-			if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+			if (ImGui::MenuItem("Cut", "CTRL+X")) {
+				Navigator::GetInstance()->CutClipboard();
+			}
+			if (ImGui::MenuItem("Copy", "CTRL+C")) {
+				Navigator::GetInstance()->CopyClipboard();
+			}
+			if (ImGui::MenuItem("Paste", "CTRL+V")) {
+				Navigator::GetInstance()->PasteClipboard();
+			}
 		}
 
 		void MenuBar() {
@@ -94,8 +114,9 @@ namespace GUI {
 	class LayerWindow : public Battery::StaticImGuiWindow<> {
 
 		bool wasMouseOnWindow = false;	// For the mouse enter event
-		bool renameLayer = false;
 		bool firstContext = true;
+		Layer newLayer;
+		bool duplicateLayer = false;
 
 	public:
 
@@ -119,7 +140,7 @@ namespace GUI {
 
 		LayerWindow() : StaticImGuiWindow("LayerWindow", { 0, GUI_RIBBON_HEIGHT }, 
 			{ GUI_LEFT_BAR_WIDTH, GUI_LAYER_WINDOW_HEIGHT }, 
-			DEFAULT_STATIC_IMGUI_WINDOW_FLAGS | ImGuiWindowFlags_NoBringToFrontOnFocus) {
+			DEFAULT_STATIC_IMGUI_WINDOW_FLAGS | ImGuiWindowFlags_NoBringToFrontOnFocus), newLayer(std::string("")) {
 		}
 
 		void OnAttach() {
@@ -134,7 +155,10 @@ namespace GUI {
 		}
 
 		void OnUpdate() override {
-
+			if (duplicateLayer) {
+				duplicateLayer = false;
+				Navigator::GetInstance()->file.PushLayer(std::move(newLayer));
+			}
 		}
 
 		void OnRender() override {
@@ -163,7 +187,7 @@ namespace GUI {
 
 			SketchFile* file = &Navigator::GetInstance()->file;		// Get a reference to the current file
 
-			for (auto& layer : file->GetLayers()) {
+			for (const auto& layer : file->GetLayers()) {
 			
 				char name[1024];
 				snprintf(name, 1024, "%s##%zu", layer.name.c_str(), (size_t)layer.GetID());
@@ -223,90 +247,96 @@ namespace GUI {
 			ImGui::PopFont();
 		}
 
-		void ContextMenu(Layer& layer) {
+		void ContextMenu(const Layer& layer) {
 
-			if (!renameLayer) {
-				if (ImGui::BeginPopupContextItem()) {
-					char rename[128];
-					char remove[128];
-					snprintf(rename, 128, "Rename##%zu", (size_t)layer.GetID());
-					snprintf(remove, 128, "Delete##%zu", (size_t)layer.GetID());
-
-					ImGui::PushFont(font17);
-					ImGui::PushItemWidth(500); // TODO: Doesn't work
-
-					// Rename layer
-					if (ImGui::Button(rename)) {
-						renameLayer = true;
-					}
-
-					// Delete layer
-					if (ImGui::Button(remove)) {
-						ImGui::OpenPopup("Delete Layer?");
-					}
-
-					// Modal window for deleting a layer
-					ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f);
-					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-					if (ImGui::BeginPopupModal("Delete Layer?", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-						char text[256];
-						snprintf(text, 256, "Are you sure you want to \ndelete the Layer '%s'? "
-							"\nThis can not be undone!\n\n", layer.name.c_str());
-						ImGui::Text(text);
-						ImGui::Separator();
-
-						bool close = false;
-						if (ImGui::Button("OK", ImVec2(120, 0))) {	// Delete the layer now
-							ImGui::CloseCurrentPopup();
-							deleteLayer = layer.GetID();
-							deleteLayerFlag = true;
-						}
-						ImGui::SetItemDefaultFocus();
-						ImGui::SameLine();
-						if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-							ImGui::CloseCurrentPopup();
-							close = true;
-						}
-						ImGui::EndPopup();
-
-						if (close) {
-							ImGui::CloseCurrentPopup();
-						}
-					}
-
-					ImGui::PopItemWidth();
-					ImGui::PopFont();
-					ImGui::EndPopup();
-				}
-			}
-			else {
-				static char tempName[64];
-
-				if (firstContext) {
-					strncpy_s(tempName, layer.name.c_str(), 64);
-					firstContext = false;
-				}
+			if (ImGui::BeginPopupContextItem()) {
 
 				ImGui::PushFont(font17);
-				if (ImGui::BeginPopupContextItem()) {
+				ImGui::PushItemWidth(500); // TODO: Doesn't work
+
+				// Duplicate layer
+				char duplicate[32];
+				snprintf(duplicate, 32, "Duplicate##%zu", (size_t)layer.GetID());
+				if (ImGui::Button(duplicate)) {
+					// Duplicate the layer now
+					newLayer = Navigator::GetInstance()->file.DuplicateActiveLayer();
+					duplicateLayer = true;
+					ImGui::CloseCurrentPopup();
+				}
+
+				// Rename layer
+				char rename[32];
+				snprintf(rename, 32, "Rename##%zu", (size_t)layer.GetID());
+				if (ImGui::Button(rename)) {
+					ImGui::OpenPopup("Rename Layer");
+				}
+
+				// Delete layer
+				char remove[32];
+				snprintf(remove, 32, "Delete##%zu", (size_t)layer.GetID());
+				if (ImGui::Button(remove)) {
+					ImGui::OpenPopup("Delete Layer?");
+				}
+
+				// Modal window for deleting a layer
+				ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f);
+				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+				if (ImGui::BeginPopupModal("Delete Layer?", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+					char text[256];
+					snprintf(text, 256, "Are you sure you want to \ndelete the Layer '%s'? "
+						"\nThis can not be undone!\n\n", layer.name.c_str());
+					ImGui::Text(text);
+					ImGui::Separator();
+
+					bool close = false;
+					if (ImGui::Button("OK", ImVec2(120, 0))) {	// Delete the layer now
+						ImGui::CloseCurrentPopup();
+						deleteLayer = layer.GetID();
+						deleteLayerFlag = true;
+					}
+					ImGui::SetItemDefaultFocus();
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+						ImGui::CloseCurrentPopup();
+						close = true;
+					}
+					ImGui::EndPopup();
+
+					if (close) {
+						ImGui::CloseCurrentPopup();
+					}
+				}
+
+				if (ImGui::BeginPopup("Rename Layer")) {
+					static char tempName[64];
+
+					if (firstContext) {
+						strncpy_s(tempName, layer.name.c_str(), 64);
+						firstContext = false;
+					}
+
+					ImGui::PushFont(font17);
 					ImGui::Text("Edit name:");
 
 					if (ImGui::InputText("##edit", tempName, IM_ARRAYSIZE(tempName), ImGuiInputTextFlags_EnterReturnsTrue)) {
 						ImGui::CloseCurrentPopup();
-						layer.name = tempName;
+						Navigator::GetInstance()->file.SetLayerName(layer.GetID(), tempName);
 					}
 
 					if (ImGui::Button("OK")) {
 						ImGui::CloseCurrentPopup();
-						layer.name = tempName;
+						Navigator::GetInstance()->file.SetLayerName(layer.GetID(), tempName);
 					}
+					ImGui::PopFont();
 					ImGui::EndPopup();
 				}
 				else {
-					renameLayer = false;
 					firstContext = true;
 				}
+
+				ImGui::PopItemWidth();
 				ImGui::PopFont();
+				ImGui::EndPopup();
 			}
 		}
 	};

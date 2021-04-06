@@ -19,6 +19,16 @@ void Layer::LoadState(const LayerState& state) {
 	this->state = state;
 }
 
+Layer Layer::Duplicate() {
+	Layer layer(name);
+
+	layer.LoadState(state);
+	layer.layerChanged = true;
+	layer.history = history;
+
+	return layer;
+}
+
 LayerID Layer::GetID() const {
 	return id;
 }
@@ -27,46 +37,86 @@ void Layer::SetID(LayerID id) {
 	this->id = id;
 }
 
-const std::vector<std::unique_ptr<GenericShape>>& Layer::GetShapes() const {
+const std::vector<ShapePTR>& Layer::GetShapes() const {
 	return state.GetShapes();
 }
 
-std::unique_ptr<GenericShape> Layer::MakeShape(enum class ShapeType type, glm::vec2 p1,
-	glm::vec2 p2, float thickness, const glm::vec4& color) {
-	
-	switch (type) {
-	
-	case ShapeType::NONE:
-		LOG_WARN(__FUNCTION__"(): Can't add shape of type 'NONE'");
-		return std::unique_ptr<GenericShape>();
-	
-	case ShapeType::LINE:
-		return std::make_unique<LineShape>(p1, p2, thickness, color);
-	
-	default:
-		LOG_WARN(__FUNCTION__"(): Unsupported shape type");
-		return std::unique_ptr<GenericShape>();
+bool Layer::AddShape(const nlohmann::json& json) {
+	SaveState();
+	ShapePTR shape = GenericShape::MakeShape(json);
+	if (shape) {
+		LOG_TRACE("Shape added to layer {} with id ", shape->GetID());
+		state.PushShape(std::move(shape));
+		return true;
 	}
+	return false;
 }
 
 void Layer::AddShape(enum class ShapeType type, glm::vec2 p1, glm::vec2 p2, float thickness, const glm::vec4& color) {
-	std::unique_ptr<GenericShape> shape = MakeShape(type, p1, p2, thickness, color);
+	SaveState();
+	ShapePTR shape = GenericShape::MakeShape(type, p1, p2, thickness, color);
 	if (shape) {
 		LOG_TRACE("Shape added to layer {} with id ", shape->GetID());
 		state.PushShape(std::move(shape));
 	}
 }
 
+bool Layer::AddShapes(const std::vector<nlohmann::json>& jsonArray) {
+
+	// Store shapes and only push if all are valid
+	std::vector<ShapePTR> shapes;
+	for (const auto& json : jsonArray) {
+		shapes.push_back(GenericShape::MakeShape(json));
+
+		if (!shapes[shapes.size() - 1]) {
+			LOG_TRACE(__FUNCTION__"(): Failed to parse Shape");
+			return false;
+		}
+	}
+
+	// Now apply the shapes
+	SaveState();
+	for (auto& shape : shapes) {
+		state.PushShape(std::move(shape));
+	}
+	return true;
+}
+
+void Layer::AddShapes(std::vector<ShapePTR>&& shapes) {
+	// Apply the shapes
+	SaveState();
+	for (auto& shape : shapes) {
+		state.PushShape(std::move(shape));
+	}
+}
+
 bool Layer::RemoveShape(const ShapeID& id) {
+	SaveState();
 	LOG_TRACE("Removing shape #{}", id);
 	return state.RemoveShape(id);
 }
 
-bool Layer::MoveShapeLeft(const ShapeID& id, float amount) {
-	GenericShape* shape = FindShape(id);
+bool Layer::RemoveShapes(const std::vector<ShapeID>& ids) {
+	bool failed = false;
+	SaveState();
 
-	if (shape) {
-		shape->MoveLeft(amount);
+	for (auto shape : ids) {
+		LOG_TRACE("Removing shape #{}", shape);
+
+		if (!state.RemoveShape(shape)) {
+			failed = true;
+		}
+	}
+
+	return !failed;
+}
+
+bool Layer::MoveShapeLeft(const ShapeID& id, float amount) {
+	SaveState();
+	auto shape = FindShape(id);
+
+	if (shape.has_value()) {
+		shape.value().get().MoveLeft(amount);
 		return true;
 	}
 
@@ -74,10 +124,11 @@ bool Layer::MoveShapeLeft(const ShapeID& id, float amount) {
 }
 
 bool Layer::MoveShapeRight(const ShapeID& id, float amount) {
-	GenericShape* shape = FindShape(id);
+	SaveState();
+	auto shape = FindShape(id);
 
 	if (shape) {
-		shape->MoveRight(amount);
+		shape.value().get().MoveRight(amount);
 		return true;
 	}
 
@@ -85,10 +136,11 @@ bool Layer::MoveShapeRight(const ShapeID& id, float amount) {
 }
 
 bool Layer::MoveShapeUp(const ShapeID& id, float amount) {
-	GenericShape* shape = FindShape(id);
+	SaveState();
+	auto shape = FindShape(id);
 
 	if (shape) {
-		shape->MoveUp(amount);
+		shape.value().get().MoveUp(amount);
 		return true;
 	}
 
@@ -96,14 +148,105 @@ bool Layer::MoveShapeUp(const ShapeID& id, float amount) {
 }
 
 bool Layer::MoveShapeDown(const ShapeID& id, float amount) {
-	GenericShape* shape = FindShape(id);
+	SaveState();
+	auto shape = FindShape(id);
 
 	if (shape) {
-		shape->MoveDown(amount);
+		shape.value().get().MoveDown(amount);
 		return true;
 	}
 
 	return false;
+}
+
+bool Layer::MoveShapesLeft(const std::vector<ShapeID>& ids, float amount) {
+	SaveState();
+
+	bool failed = false;
+	for (auto id : ids) {
+		auto shape = FindShape(id);
+
+		if (shape) {
+			shape.value().get().MoveLeft(amount);
+		}
+		else {
+			failed = true;
+		}
+	}
+
+	return !failed;
+}
+
+bool Layer::MoveShapesRight(const std::vector<ShapeID>& ids, float amount) {
+	SaveState();
+
+	bool failed = false;
+	for (auto id : ids) {
+		auto shape = FindShape(id);
+
+		if (shape) {
+			shape.value().get().MoveRight(amount);
+		}
+		else {
+			failed = true;
+		}
+	}
+
+	return !failed;
+}
+
+bool Layer::MoveShapesUp(const std::vector<ShapeID>& ids, float amount) {
+	SaveState();
+
+	bool failed = false;
+	for (auto id : ids) {
+		auto shape = FindShape(id);
+
+		if (shape) {
+			shape.value().get().MoveUp(amount);
+		}
+		else {
+			failed = true;
+		}
+	}
+
+	return !failed;
+}
+
+bool Layer::MoveShapesDown(const std::vector<ShapeID>& ids, float amount) {
+	SaveState();
+
+	bool failed = false;
+	for (auto id : ids) {
+		auto shape = FindShape(id);
+
+		if (shape) {
+			shape.value().get().MoveDown(amount);
+		}
+		else {
+			failed = true;
+		}
+	}
+	
+	return !failed;
+}
+
+bool Layer::MoveShapes(const std::vector<ShapeID>& ids, glm::vec2 amount) {
+	SaveState();
+
+	bool failed = false;
+	for (auto id : ids) {
+		auto shape = FindShape(id);
+
+		if (shape) {
+			shape.value().get().Move(amount);
+		}
+		else {
+			failed = true;
+		}
+	}
+
+	return !failed;
 }
 
 void Layer::SaveState() {
@@ -112,7 +255,7 @@ void Layer::SaveState() {
 }
 
 void Layer::UndoAction() {
-	
+
 	auto pair = history.PopState();
 
 	if (pair.second) {
@@ -134,8 +277,12 @@ void Layer::GeneratePreview() {
 	RenderLayerToBitmap(previewImage.GetAllegroBitmap());
 }
 
-GenericShape* Layer::FindShape(const ShapeID& shape) {
+std::optional<std::reference_wrapper<GenericShape>> Layer::FindShape(const ShapeID& shape) {
 	return state.FindShape(shape);
+}
+
+bool Layer::ShapeExists(const ShapeID& id) const {
+	return state.ShapeExists(id);
 }
 
 float Layer::MapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
@@ -256,6 +403,32 @@ void Layer::RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap) {
 	al_set_target_bitmap(previousBuffer);
 }
 
+bool Layer::LoadJson(nlohmann::json json) {
+
+	try {
+		std::string name = json["name"];
+		LayerState state;
+		if (state.LoadJson(json["shapes"])) {
+			this->name = name;
+			this->state = state;
+			history.Clear();
+			previewImage = Battery::Texture2D();
+			layerChanged = false;
+			return true;
+		}
+	}
+	catch (...) {
+		LOG_ERROR("Can't parse json: Invalid format!");
+	}
+
+	return false;
+}
+
 nlohmann::json Layer::GetJson() {
-	return nlohmann::json();
+	nlohmann::json j = nlohmann::json();
+
+	j["shapes"] = state.GetJson();
+	j["name"] = name;
+
+	return j;
 }

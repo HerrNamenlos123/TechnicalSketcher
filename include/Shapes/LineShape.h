@@ -12,36 +12,39 @@ class LineShape : public GenericShape {
 	glm::vec4 color;
 
 public:
+	LineShape();
 	LineShape(const glm::vec2& p1, const glm::vec2& p2, float thickness, const glm::vec4& color);
 	LineShape(const nlohmann::json& j);
-	std::unique_ptr<GenericShape> Duplicate();
+	ShapePTR Duplicate();
 
-	std::pair<glm::vec2, glm::vec2> GetBoundingBox();
-	bool IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2);
-	bool ShouldBeRendered(float screenWidth, float screenHeight);
+	std::pair<glm::vec2, glm::vec2> GetBoundingBox() const;
+	bool IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) const;
+	bool ShouldBeRendered(float screenWidth, float screenHeight) const;
 
-	float GetDistanceToCursor(const glm::vec2& p);
-	bool IsShapeHovered(const glm::vec2& cursor, float thresholdDistance);
+	float GetDistanceToCursor(const glm::vec2& p) const;
+	bool IsShapeHovered(const glm::vec2& cursor, float thresholdDistance) const;
 
 	void SetPoint1(const glm::vec2& position);
 	void SetPoint2(const glm::vec2& position);
 	void SetThickness(float thickness);
 	void SetColor(const glm::vec4& color);
-	glm::vec2 GetPoint1();
-	glm::vec2 GetPoint2();
-	float GetThickness();
-	glm::vec4 GetColor();
+	glm::vec2 GetPoint1() const;
+	glm::vec2 GetPoint2() const;
+	float GetThickness() const;
+	glm::vec4 GetColor() const;
+	glm::vec2 GetCenterPosition() const;
 
 	void MoveLeft(float amount);
 	void MoveRight(float amount);
 	void MoveUp(float amount);
 	void MoveDown(float amount);
+	void Move(glm::vec2 amount);
 
 	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped);
-	void RenderPreview();
-	void Render(bool layerSelected, bool shapeSelected, bool shapeHovered);
+	void RenderPreview() const;
+	void Render(bool layerSelected, bool shapeSelected, bool shapeHovered) const;
 
-	nlohmann::json GetJson();
+	nlohmann::json GetJson() const;
 	bool LoadJson(const nlohmann::json& j);
 
 
@@ -59,7 +62,7 @@ public:
 		return dist(v2 - v1);
 	}
 
-	inline float GetNormalDistanceToLine(const glm::vec2& p) {
+	inline float GetNormalDistanceToLine(const glm::vec2& p) const {
 		float d = dist(p1, p2);
 
 		if (d == 0)

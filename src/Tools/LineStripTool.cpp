@@ -75,6 +75,15 @@ void LineStripTool::PasteClipboard() {
 
 }
 
+bool LineStripTool::StepToolBack() {
+	if (lineStarted) {
+		CancelShape();
+		return true;
+	}
+
+	return false;
+}
+
 void LineStripTool::RenderPreview() {
 	if (lineStarted) {
 		previewLine.RenderPreview();

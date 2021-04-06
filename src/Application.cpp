@@ -132,6 +132,10 @@ bool Application::writeRecentFile(std::string content) {
 }
 */
 
+
+
+
+
 #include "pch.h"
 #include "Application.h"
 #include "Gui.h"
@@ -140,13 +144,6 @@ bool Application::writeRecentFile(std::string content) {
 #include "../TechnicalSketcher/resource.h"	// For the icon
 
 #include "Layer.h"
-
-void StartNewApplicationInstance() {
-	LOG_INFO("Starting new instance of the application");
-
-	// Execute the first command line argument, which is always the path of the exe
-	system(std::string("start " + GetClientApplication()->args[0] + " new").c_str());
-}
 
 App::App() : Battery::Application(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, APPLICATION_NAME) {
 	//LOG_SET_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
@@ -245,21 +242,16 @@ void App::OnEvent(Battery::Event* e) {
 
 	case EventType::KeyPressed:
 
-#ifdef BATTERY_DEBUG
-		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_ESCAPE) {
-			CloseApplication();
-			e->SetHandled();
-		}
-#endif
-
 		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
 			e->SetHandled();
-			Navigator::GetInstance()->PrintShapes();
+			//Navigator::GetInstance()->PrintShapes();
+			//LOG_ERROR("{}", Navigator::GetInstance()->file.GetJson().dump(4));
+			//Battery::FileUtils::LoadFileWithDialog("txt", window);
 		}
 		break;
 
 	case EventType::WindowClose:
-		CloseApplication();
+		Navigator::GetInstance()->CloseApplication();
 		e->SetHandled();
 		break;
 
