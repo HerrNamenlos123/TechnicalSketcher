@@ -27,6 +27,9 @@ Navigator* Navigator::GetInstance() {
 
 void Navigator::OnAttach() {
 	UseTool(ToolType::SELECT);
+
+	// Get the version of the application
+	applicationVersion = GetApplicationVersion();
 }
 
 void Navigator::OnDetach() {
@@ -598,6 +601,10 @@ bool Navigator::OpenFile() {
 	return file.OpenFile();
 }
 
+bool Navigator::OpenFile(const std::string& path) {
+	return file.OpenFile(path);
+}
+
 bool Navigator::SaveFile() {
 	return file.SaveFile();
 }
@@ -617,17 +624,17 @@ std::string Navigator::GetMostRecentFile() {
 	auto files = GetRecentFiles();
 
 	if (files.size() > 0) {
-		return files[0];
+		return files[files.size() - 1];
 	}
 
 	return "";
 }
 
 std::vector<std::string> Navigator::GetRecentFiles() {
-	auto file = Battery::FileUtils::ReadFile(RECENT_FILES_FILENAME);
+	auto file = Battery::FileUtils::ReadFile(GetSettingsDirectory() + RECENT_FILES_FILENAME);
 
 	if (file.fail()) {
-		LOG_ERROR("Can't read file with recent files!");
+		LOG_ERROR("Can't read file with recent files: '{}'!", file.path());
 		return std::vector<std::string>();
 	}
 
@@ -636,8 +643,17 @@ std::vector<std::string> Navigator::GetRecentFiles() {
 
 bool Navigator::AppendRecentFile(std::string recentFile) {
 	auto files = GetRecentFiles();		// If the file can't be found and vector is empty, doesn't matter
+
+	// If it's already there, delete and append again
+	for (size_t i = 0; i < files.size(); i++) {
+		if (files[i] == recentFile) {
+			files.erase(files.begin() + i);
+			break;
+		}
+	}
 	files.push_back(recentFile);
 
+	// Delete first one, if there's too many
 	while (files.size() > MAX_NUMBER_OF_RECENT_FILES) {
 		files.erase(files.begin());
 	}
@@ -647,7 +663,25 @@ bool Navigator::AppendRecentFile(std::string recentFile) {
 
 bool Navigator::SaveRecentFiles(std::vector<std::string> recentFiles) {
 	auto file = Battery::StringUtils::JoinStrings(recentFiles, "\n");
-	return Battery::FileUtils::WriteFile(RECENT_FILES_FILENAME, file);
+	return Battery::FileUtils::WriteFile(GetSettingsDirectory() + RECENT_FILES_FILENAME, file);
+}
+
+std::string Navigator::GetSettingsDirectory() {
+	return Battery::FileUtils::GetAllegroStandardPath(ALLEGRO_USER_SETTINGS_PATH);
+}
+
+std::string Navigator::GetApplicationVersion() {
+#ifdef BATTERY_DEBUG
+	auto file = Battery::FileUtils::ReadFile(Battery::FileUtils::GetExecutableDirectory() + "../../version");
+#else
+	auto file = Battery::FileUtils::ReadFile(Battery::FileUtils::GetExecutableDirectory() + "../version");
+#endif
+
+	if (file.fail()) {
+		return "";
+	}
+
+	return file.content();
 }
 
 void Navigator::OpenNewWindowFile(const std::string& file) {

@@ -8,6 +8,9 @@
 namespace GUI {
 
 	class RibbonWindow : public Battery::StaticImGuiWindow<> {
+
+		std::string fileToOpen = "";
+
 	public:
 
 		RibbonWindow() : StaticImGuiWindow("RibbonWindow", { 0, 0 }, { 0, 0 }, 
@@ -23,6 +26,11 @@ namespace GUI {
 		void OnUpdate() override {
 			windowSize.x = applicationPointer->window.GetWidth();
 			windowSize.y = GUI_RIBBON_HEIGHT;
+
+			if (fileToOpen != "") {
+				Navigator::GetInstance()->OpenFile(fileToOpen);
+				fileToOpen = "";
+			}
 		}
 
 		void MenuTab() {
@@ -41,10 +49,12 @@ namespace GUI {
 					ImGui::MenuItem("No recent files", NULL, false, false);
 				}
 				else {
-					for (std::string& file : recentFiles) {
+					// Loop in reverse order, so the most recent is on top
+					for (size_t i = recentFiles.size() - 1; i < recentFiles.size(); i--) {
+						std::string& file = recentFiles[i];
 
 						if (ImGui::MenuItem(file.c_str())) {
-							Navigator::GetInstance()->OpenNewWindowFile(file);
+							fileToOpen = file;
 						}
 					}
 				}

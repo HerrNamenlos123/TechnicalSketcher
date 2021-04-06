@@ -1,183 +1,189 @@
 
 #include "pch.h"
 #include "SketchFile.h"
+#include "Navigator.h"
 
-/*
-SketchFile::SketchFile() {
-	CreateNewFile();
-}
+void SketchFile::UpdateWindowTitle() {
+	std::string file = Battery::FileUtils::GetBasenameFromPath(filename);
+	std::string version = Navigator::GetInstance()->GetApplicationVersion();
 
-
-
-
-
-
-Layer* SketchFile::GetActiveLayer() {
-	Layer* layer = layers.GetActiveLayer();
-
-	// Checking if layer is valid
-	if (layer == nullptr) {
-		LOG_WARN("Active Layer does not exists: Returning nullptr");
-		return nullptr;
+	if (fileChanged) {
+		Battery::GetApplication()->window.SetTitle("*" + file + " - " APPLICATION_NAME + " - " + version);
 	}
-
-	return layer;
-}
-
-LayerID SketchFile::GetActiveLayerID() {
-	LayerID id = layers.GetActiveLayerID();
-
-	// Checking if layer is valid
-	if (!layers.LayerExists(id)) {
-		LOG_WARN("Active Layer does not exists: Returning id -1");
-		return -1;
+	else {
+		Battery::GetApplication()->window.SetTitle(file + " - " APPLICATION_NAME + " - " + version);
 	}
-
-	return id;
 }
 
-LayerList& SketchFile::GetLayerList() {
-	return layers;
-}
+bool SketchFile::SaveFile(bool saveAs) {
 
-std::vector<Layer>& SketchFile::GetLayers() {
-	return layers.GetLayers();
-}
+	// First get the file content
+	std::string content = GetJson().dump(4);
+	std::string tempLocation = fileLocation;
 
-// If invalid, vector is empty
-std::vector<Shape>& SketchFile::GetActiveLayerShapes() {
-	Layer* currentLayer = GetActiveLayer();
+	// Get file location if not known already
+	if (tempLocation == "" || saveAs) {
+		while (true) {
+			tempLocation = Battery::FileUtils::PromptFileSaveDialog({ "*.*", "*.tsk" },
+				Battery::Application::GetApplicationPointer()->window);
 
-	if (!currentLayer) {		// On failure, return empty vector
-		LOG_WARN(__FUNCTION__ "(): Active layer is invalid!");
-		static std::vector<Shape> dummyVector;
-		return dummyVector;
-	}
+			// If location is still invalid, abort
+			if (tempLocation == "") {
+				return false;
+			}
 
-	return currentLayer->GetShapes();
-}
+			// Append the extension
+			if (Battery::FileUtils::GetExtensionFromPath(tempLocation) != ".tsk") {
+				tempLocation += ".tsk";
+			}
 
+			// Warn and repeat if the file already exists
+			if (Battery::FileUtils::FileExists(tempLocation)) {
+				if (!Battery::ShowWarningMessageBoxYesNo("The file '" +
+					Battery::FileUtils::GetFilenameFromPath(tempLocation) +
+					"' already exists, are you sure you want to overwrite it?",
+					Battery::GetApplication()->window.allegroDisplayPointer))
+				{
+					continue;	// Repeat from top
+				}
+			}
 
-
-
-
-void SketchFile::AddNewLayer() {
-
-	size_t nextLayerName = 1;
-	for (Layer& layer : layers.GetLayers()) {
-		if (layer.layerID.Get() > nextLayerName) {
-			nextLayerName = layer.layerID.Get();
+			break;
 		}
 	}
 
-	AddNewLayer("Layer #" + std::to_string(nextLayerName));
-}
-
-void SketchFile::AddNewLayer(const std::string& name) {
-	layers.AddLayerFront(name);
-	regeneratePreviewImages = true;		// Set flag to regenerate previews
-	FileChanged();
-}
-
-void SketchFile::DeleteLayer(LayerID id) {
-	layers.DeleteLayer(id);
-	regeneratePreviewImages = true;		// Set flag to regenerate previews
-	FileChanged();
-}
-
-
-
-void SketchFile::MoveLayerFront(LayerID id) {
-	layers.MoveLayerFront(id);
-	regeneratePreviewImages = true;		// Set flag to regenerate previews
-	FileChanged();
-}
-
-void SketchFile::MoveLayerBack(LayerID id) {
-	layers.MoveLayerBack(id);
-	regeneratePreviewImages = true;		// Set flag to regenerate previews
-	FileChanged();
-}
-
-
-
-void SketchFile::SetLayerPreview(LayerID id, const Battery::Texture2D& previewImage) {
-	Layer* layer = layers.FindLayer(id);
-	layer->SetPreviewImage(previewImage);
-}
-
-
-
-void SketchFile::AddShape(enum ShapeType type, glm::vec2 p1, glm::vec2 p2, float lineThickness, const glm::vec4& color) {
-	Layer* layer = GetActiveLayer();
-
-	if (layer) {
-		layer->AddShape(type, p1, p2, lineThickness, color);
+	// Simply append the extension
+	if (Battery::FileUtils::GetExtensionFromPath(tempLocation) != ".tsk") {
+		tempLocation += ".tsk";
 	}
-}
 
-void SketchFile::FileChanged() {
-	if (!fileChanged) {
-		fileChanged = true;
-		fileChangedEventFlag = true;
-	}
-}
-
-void SketchFile::CreateNewFile() {
-
-	layers.Clear();
-	regeneratePreviewImages = true;
-	filename = DEFAULT_FILENAME;
-	fileLocation = "";
-	knownLocation = false;
-
-	AddNewLayer();
-
-	fileChanged = false;
-	fileChangedEventFlag = false;
-}
-
-bool SketchFile::LoadFile(const std::string& path, const std::string& displayName) {
-	using namespace Battery;
-
-	// Temporary containers
-	LayerList tempLayers;
-
-	// Parse the file content
-	try {
-		auto file = FileUtils::ReadFile(path);
-
-		if (file.fail()) {
-			LOG_ERROR("Failed to load file '" + path + "'");
-			return false;
-		}
-
-		nlohmann::json data = nlohmann::json::parse(file.content());
-
-		if (!tempLayers.LoadJson(data)) {
-			LOG_ERROR("Failed to parse json file '" + path + "'");
-			return false;
-		}
-	}
-	catch (...) {
-		LOG_ERROR("Failed to parse json file '" + path + "'");
+	// Now save the file
+	if (!Battery::FileUtils::WriteFile(tempLocation, content)) {
+		Battery::ShowErrorMessageBox("The file '" + tempLocation + "' could not be saved!",
+			Battery::GetApplication()->window.allegroDisplayPointer);
 		return false;
 	}
 
-	// File was successfully parsed, load to memory now
-	layers.Clear();
-	layers = tempLayers;
-	regeneratePreviewImages = true;
-	filename = displayName;
-
+	// Saving was successful
 	fileChanged = false;
-	fileChangedEventFlag = false;
-	fileLocation = path;
-	knownLocation = true;
+	fileLocation = tempLocation;
+	filename = Battery::FileUtils::GetFilenameFromPath(fileLocation);
+
+	UpdateWindowTitle();
+	Navigator::GetInstance()->AppendRecentFile(fileLocation);
 
 	return true;
 }
 
-nlohmann::json SketchFile::GetJson() {
-	return layers.GetJson();
-}*/
+bool SketchFile::OpenFile() {
+
+	// First save the file
+	if (ContainsChanges()) {
+
+		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
+			"Do you want to save the file?", Battery::GetApplication()->window.allegroDisplayPointer);
+
+		if (save) {	// File needs to be saved
+			if (!SaveFile()) {	// Saving was not successful
+				return false;
+			}
+		}
+	}
+
+	UpdateWindowTitle();
+
+	// Now open a new one
+	std::string path = Battery::FileUtils::PromptFileOpenDialog({ "*.*", "*.tsk" },
+		Battery::Application::GetApplicationPointer()->window);
+
+	if (path == "") {
+		return false;
+	}
+
+	return OpenFile(path);
+}
+
+bool SketchFile::OpenFile(const std::string& path) {
+
+	if (Battery::FileUtils::GetExtensionFromPath(path) != ".tsk") {
+		Battery::ShowErrorMessageBox("Can't load file '" + path + "': Unsupported file format, only .tsk files are supported",
+			Battery::GetApplication()->window.allegroDisplayPointer);
+		return false;
+	}
+
+	UpdateWindowTitle();
+
+	// First save the file
+	if (ContainsChanges()) {
+
+		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
+			"Do you want to save the file?", Battery::GetApplication()->window.allegroDisplayPointer);
+
+		if (save) {	// File needs to be saved
+			if (!SaveFile()) {	// Saving was not successful
+				return false;
+			}
+		}
+	}
+
+	UpdateWindowTitle();
+
+	// Now load the new file
+	auto file = Battery::FileUtils::ReadFile(path);
+	if (file.fail()) {
+		Battery::ShowErrorMessageBox("Can't load file '" + path + "': File not found",
+			Battery::GetApplication()->window.allegroDisplayPointer);
+		return false;
+	}
+
+	try {
+		nlohmann::json j = nlohmann::json::parse(file.content());
+
+		if (j["file_type"] != JSON_FILE_TYPE) {
+			Battery::ShowErrorMessageBox("Can't load file: File type is unknown!",
+				Battery::GetApplication()->window.allegroDisplayPointer);
+			return false;
+		}
+
+		if (j["file_version"] != JSON_FILE_VERSION) {
+			Battery::ShowErrorMessageBox("Can't load file: File version is unsupported!",
+				Battery::GetApplication()->window.allegroDisplayPointer);
+			return false;
+		}
+
+		// Now file seems to be loaded and supported, parse layers now
+		std::vector<Layer> layers;
+		for (nlohmann::json layerJson : j["layers"]) {
+			Layer layer("");
+
+			if (!layer.LoadJson(layerJson)) {
+				Battery::ShowErrorMessageBox("Can't load file: File can't be parsed!",
+					Battery::GetApplication()->window.allegroDisplayPointer);
+				return false;
+			}
+
+			layers.push_back(std::move(layer));
+		}
+
+		// Json is parsed, now load the content
+		this->content = FileContent(false);				// Clean everything
+		for (Layer& layer : layers) {
+			content.PushLayer(std::move(layer));
+		}
+
+		fileChanged = false;
+		fileLocation = path;
+		filename = Battery::FileUtils::GetFilenameFromPath(path);
+
+		UpdateWindowTitle();
+		Navigator::GetInstance()->AppendRecentFile(fileLocation);
+
+		return true;
+	}
+	catch (...) {
+		Battery::ShowErrorMessageBox("Can't load file: JSON format is invalid!",
+			Battery::GetApplication()->window.allegroDisplayPointer);
+	}
+
+	return false;
+}

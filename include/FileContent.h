@@ -10,9 +10,11 @@ class FileContent {
 	size_t activeLayer = -1;	// This is the std::vector index!!!
 
 public:
-	FileContent() {
-		PushLayer();
-		p_CorrectLayers();
+	FileContent(bool init = true) {
+		if (init) {
+			PushLayer();
+			p_CorrectLayers();
+		}
 	}
 
 	Layer& GetActiveLayer() {

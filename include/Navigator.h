@@ -19,6 +19,7 @@ public:
 
 	SketchFile file;
 	bool fileChanged = false;
+	std::string applicationVersion;
 
 	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve once, to be consistent through the update loop
 
@@ -98,6 +99,7 @@ public:
 	void CutClipboard();
 	void PasteClipboard();
 	bool OpenFile();
+	bool OpenFile(const std::string& path);
 	bool SaveFile();
 	bool SaveFileAs();
 
@@ -105,6 +107,8 @@ public:
 	std::vector<std::string> GetRecentFiles();
 	bool AppendRecentFile(std::string recentFile);
 	bool SaveRecentFiles(std::vector<std::string> recentFiles);
+	std::string GetSettingsDirectory();
+	std::string GetApplicationVersion();
 	void OpenNewWindowFile(const std::string& file);
 	void StartNewApplicationInstance();
 	void CloseApplication();
