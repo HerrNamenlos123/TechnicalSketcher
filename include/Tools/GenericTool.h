@@ -23,11 +23,11 @@ public:
 	}
 
 	virtual void OnToolChanged() = 0;
-	virtual void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped) = 0;
-	virtual void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape) = 0;
-	virtual void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped) = 0;
-	virtual void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped) = 0;
-	virtual void OnMouseReleased(const glm::vec2& position) = 0;
+	virtual void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) = 0;
+	virtual void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) = 0;
+	virtual void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) = 0;
+	virtual void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) = 0;
+	virtual void OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) = 0;
 	virtual void OnLayerSelected(LayerID layer) = 0;
 	virtual void CancelShape() = 0;
 

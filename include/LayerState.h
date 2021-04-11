@@ -18,6 +18,7 @@ public:
 	bool RemoveShape(ShapeID id);
 	std::optional<std::reference_wrapper<GenericShape>> FindShape(ShapeID id);
 	bool ShapeExists(const ShapeID& id) const;
+	std::pair<glm::vec2, glm::vec2> GetBoundingBox() const;
 	
 	const std::vector<ShapePTR>& GetShapes() const;
 

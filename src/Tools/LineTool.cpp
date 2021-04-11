@@ -9,28 +9,33 @@ void LineTool::OnToolChanged() {
 	Navigator::GetInstance()->previewPointPosition = Navigator::GetInstance()->mouseSnapped;
 }
 
-void LineTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped) {
-	if (!lineStarted) {				// Start a line
-		float thickness = Navigator::GetInstance()->currentLineThickness;
-		auto color = Navigator::GetInstance()->currentShapeColor;
-		previewLine.SetPoint1(snapped);
-		previewLine.SetPoint2(snapped);
-		previewLine.SetThickness(thickness);
-		previewLine.SetColor(color);
-		Navigator::GetInstance()->previewPointShown = false;
-		lineStarted = true;
+void LineTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
+	if (left) {
+		if (!lineStarted) {				// Start a line
+			float thickness = Navigator::GetInstance()->currentLineThickness;
+			auto color = Navigator::GetInstance()->currentShapeColor;
+			previewLine.SetPoint1(snapped);
+			previewLine.SetPoint2(snapped);
+			previewLine.SetThickness(thickness);
+			previewLine.SetColor(color);
+			Navigator::GetInstance()->previewPointShown = false;
+			lineStarted = true;
+		}
+		else {						// Finish a line
+			Navigator::GetInstance()->AddLine(previewLine.GetPoint1(), snapped);
+			CancelShape();
+		}
 	}
-	else {						// Finish a line
-		Navigator::GetInstance()->AddLine(previewLine.GetPoint1(), snapped);
+	else {
 		CancelShape();
 	}
 }
 
-void LineTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape) {
+void LineTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
 
 }
 
-void LineTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped) {
+void LineTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	if (lineStarted) {
 		previewLine.SetPoint2(snapped);
 	}
@@ -39,11 +44,11 @@ void LineTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snappe
 	}
 }
 
-void LineTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped) {
+void LineTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 
 }
 
-void LineTool::OnMouseReleased(const glm::vec2& position) {
+void LineTool::OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) {
 
 }
 

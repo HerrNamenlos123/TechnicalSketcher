@@ -285,6 +285,10 @@ bool Layer::ShapeExists(const ShapeID& id) const {
 	return state.ShapeExists(id);
 }
 
+std::pair<glm::vec2, glm::vec2> Layer::GetBoundingBox() const {
+	return state.GetBoundingBox();
+}
+
 float Layer::MapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -303,7 +307,7 @@ void Layer::RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap) {
 	// If no shapes, just render white
 	if (shapes.size() == 0) {
 		al_set_target_bitmap(bitmap);
-		al_clear_to_color(Battery::Graphics::ConvertAllegroColor({ 255, 255, 255, 255 }));
+		al_clear_to_color(Battery::Graphics::ConvertAllegroColor(glm::vec4(255, 255, 255, 255)));
 		ApplicationRenderer::EndFrame();
 		al_set_target_bitmap(previousBuffer);
 		return;
@@ -366,7 +370,7 @@ void Layer::RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap) {
 	}
 	else {	// Both are NAN
 		al_set_target_bitmap(bitmap);
-		al_clear_to_color(Battery::Graphics::ConvertAllegroColor({ 255, 255, 255, 255 }));
+		al_clear_to_color(Battery::Graphics::ConvertAllegroColor(glm::vec4(255, 255, 255, 255)));
 		ApplicationRenderer::EndFrame();
 		al_set_target_bitmap(previousBuffer);
 		return;
@@ -384,7 +388,7 @@ void Layer::RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap) {
 	mappedTop = mappedCenterY + mappedHeight / 2.f * brim;
 
 	al_set_target_bitmap(bitmap);
-	al_clear_to_color(Battery::Graphics::ConvertAllegroColor({ 255, 255, 255, 255 }));
+	al_clear_to_color(Battery::Graphics::ConvertAllegroColor(glm::vec4(255, 255, 255, 255)));
 
 	for (const auto& s : shapes) {
 

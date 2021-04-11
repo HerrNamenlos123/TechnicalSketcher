@@ -30,6 +30,12 @@ void Navigator::OnAttach() {
 
 	// Get the version of the application
 	applicationVersion = GetApplicationVersion();
+
+	// Register the clipboard format
+	clipboardShapeFormat = GetClientApplication()->window.RegisterClipboardFormat(CLIPBOARD_FORMAT);
+
+	// Load the location of the ImGui .ini file
+	imguiFileLocation = Battery::FileUtils::GetExecutableDirectory() + IMGUI_FILENAME;
 }
 
 void Navigator::OnDetach() {
@@ -71,7 +77,7 @@ void Navigator::OnRender() {
 	}
 	
 	// Main elements of the application
-	ApplicationRenderer::DrawGrid();
+	ApplicationRenderer::DrawGrid(infiniteSheet);
 	RenderShapes();
 	
 	// Draw shape preview
@@ -205,15 +211,10 @@ void Navigator::UpdateEvents() {
 		}
 
 		// Call all event functions
-		if (event.button & 0x01) {
-			OnMouseLeftClicked(position, snapped);
-		}
-		else if (event.button & 0x02) {
-			OnMouseRightClicked(position, snapped);
-		}
-		else if(event.button & 0x04) {
-			OnMouseWheelClicked(position, snapped);
-		}
+		bool left = event.button == 1;
+		bool right = event.button == 2;
+		bool wheel = event.button == 3;
+		OnMouseClicked(position, snapped, left, right, wheel);
 	}
 	mousePressedEventBuffer.clear();
 
@@ -227,7 +228,11 @@ void Navigator::UpdateEvents() {
 			snapped = position;
 		}
 
-		OnMouseReleased(position);
+		// Call all event functions
+		bool left = event.button == 1;
+		bool right = event.button == 2;
+		bool wheel = event.button == 3;
+		OnMouseReleased(position, left, right, wheel);
 	}
 	mouseReleasedEventBuffer.clear();
 
@@ -240,8 +245,8 @@ void Navigator::UpdateEvents() {
 		if (controlKeyPressed) {
 			snapped = position;
 		}
-
-		OnMouseMoved(position, snapped);
+		
+		OnMouseMoved(position, snapped, event.dx, event.dy);
 	}
 	mouseMovedEventBuffer.clear();
 
@@ -408,12 +413,6 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 		}
 		break;
 
-	case ALLEGRO_KEY_P:		// Print
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
-			Print();
-		}
-		break;
-
 	case ALLEGRO_KEY_O:		// Open
 		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
 			OpenFile();
@@ -454,7 +453,7 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 	}
 }
 
-void Navigator::OnMouseLeftClicked(const glm::vec2& position, const glm::vec2& snapped) {
+void Navigator::OnMouseClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
 
 	ShapeID shapeClicked = -1;
 
@@ -465,63 +464,55 @@ void Navigator::OnMouseLeftClicked(const glm::vec2& position, const glm::vec2& s
 	}
 
 	if (shapeClicked == -1) {
-		OnSpaceClicked(position, snapped);
+		OnSpaceClicked(position, snapped, left, right, wheel);
 	}
 	else {
-		OnShapeClicked(position, snapped, shapeClicked);
+		OnShapeClicked(position, snapped, left, right, wheel, shapeClicked);
 	}
 }
 
-void Navigator::OnMouseRightClicked(const glm::vec2& position, const glm::vec2& snapped) {
-
-	CancelShape();
-}
-
-void Navigator::OnMouseWheelClicked(const glm::vec2& position, const glm::vec2& snapped) {
-
-	LOG_WARN("MOUSE WHEEL CLICKED");
-
-}
-
-void Navigator::OnMouseReleased(const glm::vec2& position) {
+void Navigator::OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) {
 	if (selectedTool) {
-		selectedTool->OnMouseReleased(position);
+		selectedTool->OnMouseReleased(position, left, right, wheel);
 	}
 }
 
-void Navigator::OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped) {
+void Navigator::OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	using namespace Battery;
 
-	if (GetClientApplication()->window.GetLeftMouseButton()) {
-		OnMouseDragged(position, snapped);
+	if (GetClientApplication()->window.GetLeftMouseButton() || 
+		GetClientApplication()->window.GetRightMouseButton() || 
+		GetClientApplication()->window.GetMouseWheel())
+	{
+		OnMouseDragged(position, snapped, dx, dy);
 	}
 	else {
-		OnMouseHovered(position, snapped);
+		OnMouseHovered(position, snapped, dx, dy);
 	}
 
 }
 
-void Navigator::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped) {
+void Navigator::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	if (selectedTool) {
-		selectedTool->OnMouseHovered(position, snapped);
+		selectedTool->OnMouseHovered(position, snapped, dx, dy);
 	}
 }
 
-void Navigator::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped) {
+void Navigator::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	if (selectedTool) {
-		selectedTool->OnMouseDragged(position, snapped);
+		selectedTool->OnMouseDragged(position, snapped, dx, dy);
 	}
 }
 
-void Navigator::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped) {
+void Navigator::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
 	if (selectedTool) {
-		selectedTool->OnSpaceClicked(position, snapped);
+		selectedTool->OnSpaceClicked(position, snapped, left, right, wheel);
 	}
 }
 
-void Navigator::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape) {
+void Navigator::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
 	if (selectedTool) {
-		selectedTool->OnShapeClicked(position, snapped, shape);
+		selectedTool->OnShapeClicked(position, snapped, left, right, wheel, shape);
 	}
 }
 
@@ -568,10 +559,6 @@ void Navigator::SelectAll() {
 	}
 }
 
-void Navigator::Print() {
-	LOG_ERROR("PRINT NOW");
-}
-
 void Navigator::UndoAction() {
 	file.UndoAction();
 }
@@ -601,6 +588,10 @@ bool Navigator::OpenFile() {
 	return file.OpenFile();
 }
 
+bool Navigator::OpenEmptyFile() {
+	return file.OpenEmptyFile();
+}
+
 bool Navigator::OpenFile(const std::string& path) {
 	return file.OpenFile(path);
 }
@@ -611,6 +602,26 @@ bool Navigator::SaveFile() {
 
 bool Navigator::SaveFileAs() {
 	return file.SaveFile(true);
+}
+
+void Navigator::ResetGui() {
+
+	// Simply delete the .ini file
+	if (Battery::FileUtils::FileExists(imguiFileLocation)) {
+		Battery::FileUtils::RemoveFile(imguiFileLocation);
+	}
+}
+
+bool Navigator::ExportClipboardRendering(bool transparent, float dpi) {
+	GetClientApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
+	auto image = file.ExportImage(transparent, dpi);
+
+	if (!image.IsValid())
+		return false;
+
+	bool success = GetClientApplication()->window.SetClipboardImage(image);
+	GetClientApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+	return success;
 }
 
 
@@ -790,7 +801,7 @@ void Navigator::RenderShapes() {
 	for (size_t layerIndex = layers.size() - 1; layerIndex < layers.size(); layerIndex--) {
 		auto& layer = layers[layerIndex];
 
-		for (const auto& shape : layer.GetShapes()) {
+		for (auto& shape : layer.GetShapes()) {
 
 			// Skip the shape if it's not on the screen
 			if (shape->ShouldBeRendered(GetClientApplication()->window.GetWidth(), 

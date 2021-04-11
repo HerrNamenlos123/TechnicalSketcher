@@ -8,32 +8,26 @@
 
 #include "Layer.h"
 
-App::App() : Battery::Application(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, APPLICATION_NAME) {
+App::App() : Battery::Application(SPLASH_SCREEN_WIDTH, SPLASH_SCREEN_HEIGHT, APPLICATION_NAME) {
 	//LOG_SET_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
-	SetWindowFlags(ALLEGRO_RESIZABLE);
+	SetWindowFlags(ALLEGRO_RESIZABLE | ALLEGRO_FRAMELESS);
 }
 
 bool App::OnStartup() {
 
-	// Set the window size and position
-	glm::vec2 monitorSize = GetPrimaryMonitorSize();
-	float margin = 1.2f;					// If screen is too small with a little margin, maximize the window
-	if (monitorSize.x / margin < DEFAULT_WINDOW_WIDTH || monitorSize.y / margin < DEFAULT_WINDOW_HEIGHT) {
-		window.SetSize(monitorSize / margin);
-		window.SetScreenPosition({ 0, 0 });
-		window.Maximize();
-	}
-	else {	// Set up window normally
-		window.SetScreenPosition((monitorSize - glm::vec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)) / 2.f);
-		window.SetSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
+	// Show splash screen
+	Battery::Texture2D splash("../embed/SplashScreen.png");
+	if (splash.IsValid()) {
+		al_draw_bitmap(splash.GetAllegroBitmap(), 0, 0, 0);
+		al_flip_display();
 	}
 
 	// Initialize the renderer
 	ApplicationRenderer::Load();
 
 	// Various layers
-	PushLayer(new UpdaterLayer());
 	PushLayer(new NavigatorLayer());
+	PushLayer(new UpdaterLayer());
 	PushOverlay(new GUI::GuiLayer());
 
 	// Set the icon and title of the window
@@ -42,9 +36,10 @@ bool App::OnStartup() {
 
 	// Check if file to open was supplied
 	std::string openFile = "";
+	bool newFile = false;
 	if (args.size() >= 2) {
 		if (args[1] == "new") {
-			return true;
+			newFile = true;
 		}
 
 		openFile = args[1];
@@ -56,9 +51,28 @@ bool App::OnStartup() {
 	}
 
 	// Now open it
-	if (openFile != "") {
+	if (openFile != "" && !newFile) {
 		Navigator::GetInstance()->OpenFile(openFile);
 	}
+
+	// Set the window size and position
+	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
+	al_flip_display();
+	glm::vec2 monitorSize = GetPrimaryMonitorSize();	// If screen is too small with a little margin, maximize the window				
+	if (monitorSize.x / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_WIDTH || monitorSize.y / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_HEIGHT) {
+		window.SetSize(monitorSize / SCREEN_SIZE_MARGIN);
+		window.SetScreenPosition((monitorSize - glm::vec2(window.GetSize())) / 2.f + glm::vec2(0, -30));
+		window.Maximize();
+	}
+	else {	// Set up window normally
+		window.SetScreenPosition((monitorSize - glm::vec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)) / 2.f + glm::vec2(0, -30));
+		window.SetSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
+	}
+
+	// Setup display
+	al_set_display_flag(window.allegroDisplayPointer, ALLEGRO_FRAMELESS, false);
+	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
+	al_flip_display();
 
 	return true;
 }
@@ -102,7 +116,16 @@ void App::OnEvent(Battery::Event* e) {
 
 		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
 			e->SetHandled();
-			//LOG_ERROR("{}", Battery::FileUtils::GetAllegroStandardPath(ALLEGRO_USER_SETTINGS_PATH));
+			//Battery::Texture2D image = Navigator::GetInstance()->file.ExportImage();
+			//window.SetClipboardImage(image);
+			//image.SaveImage("test.png");
+			//system("start mspaint.exe test.png");
+
+			//Battery::Texture2D image = Navigator::GetInstance()->file.ExportImage();
+			//window.SetClipboardImage(image);
+			//image.SaveImage("test.png");
+
+			//system("start \"C:\\Program Files\\GIMP 2\\bin\\gimp-2.10.exe\" test.png");
 		}
 		break;
 

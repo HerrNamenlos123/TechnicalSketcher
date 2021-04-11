@@ -11,51 +11,69 @@ void SelectionTool::OnToolChanged() {
 	selectionBoxActive = false;
 }
 
-void SelectionTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped) {
-	// Start a selection box
-	selectionBoxActive = true;
-	selectionBoxPointA = position;
-	selectionBoxPointB = position;
+void SelectionTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
+	
+	if (left) {
+		// Start a selection box
+		selectionBoxActive = true;
+		selectionBoxPointA = position;
+		selectionBoxPointB = position;
 
-	if (!Navigator::GetInstance()->controlKeyPressed) {
-		selectionHandler.ClearSelection();
+		if (!Navigator::GetInstance()->controlKeyPressed) {
+			selectionHandler.ClearSelection();
+		}
+	}
+	else if (right) {
+		if (!Navigator::GetInstance()->controlKeyPressed) {
+			selectionHandler.ClearSelection();
+		}
 	}
 }
 
-void SelectionTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape) {
-	if (Navigator::GetInstance()->controlKeyPressed) {
-		selectionHandler.ToggleSelection(shape);
-	}
-	else {
-		selectionHandler.ClearSelection();
-		selectionHandler.SelectShape(shape);
+void SelectionTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
+	if (left) {
+		if (Navigator::GetInstance()->controlKeyPressed) {
+			selectionHandler.ToggleSelection(shape);
+		}
+		else {
+			selectionHandler.ClearSelection();
+			selectionHandler.SelectShape(shape);
+		}
 	}
 }
 
-void SelectionTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped) {
+void SelectionTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	selectionBoxActive = false;
 	selectionHandler.GetHoveredShape(position);
 }
 
-void SelectionTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped) {
+void SelectionTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	// Move selection box
-	selectionBoxPointB = position;
+	if (Battery::GetApplication()->window.GetLeftMouseButton()) {
+		selectionBoxPointB = position;
+	} 
+	else if (Battery::GetApplication()->window.GetMouseWheel()) {
+		Navigator::GetInstance()->panOffset += glm::vec2(dx, dy);
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
+	}
 }
 
-void SelectionTool::OnMouseReleased(const glm::vec2& position) {
+void SelectionTool::OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) {
 	// Finish selection box
-	if (selectionBoxActive) {
-		selectionBoxActive = false;
+	if (left) {
+		if (selectionBoxActive) {
+			selectionBoxActive = false;
 
-		// If CTRL key is pressed, don't delete previously selected shapes
-		if (!Navigator::GetInstance()->controlKeyPressed) {
-			selectionHandler.ClearSelection();
-		}
+			// If CTRL key is pressed, don't delete previously selected shapes
+			if (!Navigator::GetInstance()->controlKeyPressed) {
+				selectionHandler.ClearSelection();
+			}
 
-		// Select all shapes inside the selection box
-		for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayer().GetShapes()) {
-			if (shape->IsInSelectionBox(selectionBoxPointA, selectionBoxPointB)) {
-				selectionHandler.SelectShape(shape->GetID());
+			// Select all shapes inside the selection box
+			for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayer().GetShapes()) {
+				if (shape->IsInSelectionBox(selectionBoxPointA, selectionBoxPointB)) {
+					selectionHandler.SelectShape(shape->GetID());
+				}
 			}
 		}
 	}
@@ -78,7 +96,7 @@ void SelectionTool::CopyClipboard() {
 	if (selectionHandler.GetSelectedShapes().size() != 0) {
 		LOG_INFO("Copying selected shapes to clipboard");
 		nlohmann::json j = Navigator::GetInstance()->file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
-		GetClientApplication()->window.SetClipboardContent(j.dump(4));
+		GetClientApplication()->window.SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
 	}
 	else {
 		LOG_WARN("Nothing copied to clipboard: No shapes selected");
@@ -90,7 +108,7 @@ void SelectionTool::CutClipboard() {
 	if (selectionHandler.GetSelectedShapes().size() != 0) {
 		LOG_INFO("Cutting selected shapes to clipboard");
 		nlohmann::json j = Navigator::GetInstance()->file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
-		GetClientApplication()->window.SetClipboardContent(j.dump(4));
+		GetClientApplication()->window.SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
 		Navigator::GetInstance()->file.RemoveShapes(selectionHandler.GetSelectedShapes());
 		selectionHandler.ClearSelection();
 	}
@@ -101,12 +119,19 @@ void SelectionTool::CutClipboard() {
 
 void SelectionTool::PasteClipboard() {
 
+	auto opt = GetClientApplication()->window.GetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat);
+
+	if (!opt.has_value()) {
+		LOG_WARN("Nothing usable on the clipboard");
+		return;
+	}
+
 	LOG_INFO("Pasting clipboard to active Layer");
 	
 	// First create all shapes
 	std::vector<ShapePTR> shapes;
 	try {
-		nlohmann::json j = nlohmann::json::parse(GetClientApplication()->window.GetClipboardContent());
+		nlohmann::json j = nlohmann::json::parse(opt.value());
 	
 		for (nlohmann::json shapeData : j) {
 			shapes.push_back(GenericShape::MakeShape(shapeData));
@@ -116,7 +141,7 @@ void SelectionTool::PasteClipboard() {
 		LOG_ERROR("Can't paste clipboard shapes: JSON format is invalid!");
 		return;
 	}
-
+	
 	// Calculate the average center position as long as they're here
 	glm::vec2 averagePos = { 0, 0 };
 	for (ShapePTR& shape : shapes) {
@@ -129,7 +154,7 @@ void SelectionTool::PasteClipboard() {
 	for (ShapePTR& shape : shapes) {
 		ids.push_back(shape->GetID());
 	}
-
+	
 	// Move the shapes to the mouse position
 	glm::vec2 moveAmount = Navigator::GetInstance()->mousePosition - averagePos;
 	float snap = Navigator::GetInstance()->snapSize;

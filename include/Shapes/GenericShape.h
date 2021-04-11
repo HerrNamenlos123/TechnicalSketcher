@@ -64,6 +64,7 @@ public:
 
 	virtual void RenderPreview() const = 0;
 	virtual void Render(bool layerSelected, bool shapeSelected, bool shapeHovered) const = 0;
+	virtual void RenderExport(glm::vec2 min, glm::vec2 max, float width, float height) const = 0;
 
 	virtual nlohmann::json GetJson() const = 0;
 	virtual bool LoadJson(const nlohmann::json& j) = 0;

@@ -87,13 +87,13 @@ BEGIN
     BEGIN
         BLOCK "0c0704b0"
         BEGIN
-            VALUE "CompanyName", "TODO: <Company name>"
-            VALUE "FileDescription", "TODO: <File description>"
+            VALUE "CompanyName", "Florian Zachs"
+            VALUE "FileDescription", "TechnicalSketcher"
             VALUE "FileVersion", "1.0.0.1"
-            VALUE "InternalName", "Technica.exe"
+            VALUE "InternalName", "TechnicalSketcher.exe"
             VALUE "LegalCopyright", "Copyright (C) 2021"
-            VALUE "OriginalFilename", "Technica.exe"
-            VALUE "ProductName", "TODO: <Product name>"
+            VALUE "OriginalFilename", "TechnicalSketcher.exe"
+            VALUE "ProductName", "TechnicalSketcher"
             VALUE "ProductVersion", "1.0.0.1"
         END
     END

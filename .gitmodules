@@ -1,3 +1,6 @@
 [submodule "TechnicalSketcher-Allegro/imgui"]
 	path = TechnicalSketcher-Allegro/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "modules/IconFontCppHeaders"]
+	path = modules/IconFontCppHeaders
+	url = https://github.com/juliettef/IconFontCppHeaders.git

@@ -14,11 +14,11 @@ public:
 	SelectionTool() : GenericTool(ToolType::SELECT) {}
 
 	void OnToolChanged();
-	void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped);
-	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape);
-	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped);
-	void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped);
-	void OnMouseReleased(const glm::vec2& position);
+	void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);
+	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape);
+	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
+	void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
+	void OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel);
 	void OnLayerSelected(LayerID layer);
 	void CancelShape();
 

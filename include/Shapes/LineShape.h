@@ -43,6 +43,7 @@ public:
 	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped);
 	void RenderPreview() const;
 	void Render(bool layerSelected, bool shapeSelected, bool shapeHovered) const;
+	void RenderExport(glm::vec2 min, glm::vec2 max, float width, float height) const;
 
 	nlohmann::json GetJson() const;
 	bool LoadJson(const nlohmann::json& j);

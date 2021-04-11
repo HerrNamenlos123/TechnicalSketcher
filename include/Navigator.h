@@ -4,6 +4,7 @@
 #include "SketchFile.h"
 #include "ApplicationRenderer.h"
 #include "SelectionHandler.h"
+#include "config.h"
 
 #include "Tools/SelectionTool.h"
 
@@ -20,16 +21,19 @@ public:
 	SketchFile file;
 	bool fileChanged = false;
 	std::string applicationVersion;
+	std::string imguiFileLocation;
 
 	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve once, to be consistent through the update loop
+	Battery::ClipboardFormatID clipboardShapeFormat;
 
 	// User interface
 	glm::vec2 panOffset = { 0, 0 };
 	float scrollFactor = 0.2f;
-	float scale = 50;
-	float snapSize = 1;
+	float scale = 7;
+	float snapSize = 5;
 	float mouseHighlightThresholdDistance = 8;
-	float currentLineThickness = 0.1;
+	float currentLineThickness = 0.75;
+	bool infiniteSheet = false;
 	glm::vec4 currentShapeColor = glm::vec4(0, 0, 0, 255);
 
 	// Buffers to store event data
@@ -79,29 +83,29 @@ public:
 	void SelectNextPossibleShape();
 
 	void OnKeyPressed(Battery::KeyPressedEvent* event);
-	void OnMouseLeftClicked(const glm::vec2& position, const glm::vec2& snapped);
-	void OnMouseRightClicked(const glm::vec2& position, const glm::vec2& snapped);
-	void OnMouseWheelClicked(const glm::vec2& position, const glm::vec2& snapped);
-	void OnMouseReleased(const glm::vec2& position);
-	void OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped);
-	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped);
-	void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped);
-	void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped);
-	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape);
+	void OnMouseClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);
+	void OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel);
+	void OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
+	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
+	void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
+	void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);
+	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape);
 	void OnToolChanged();
 	void OnLayerSelected(LayerID layer);
 	void OnEscapePressed();
 
 	void SelectAll();
-	void Print();
 	void UndoAction();
 	void CopyClipboard();
 	void CutClipboard();
 	void PasteClipboard();
 	bool OpenFile();
+	bool OpenEmptyFile();
 	bool OpenFile(const std::string& path);
 	bool SaveFile();
 	bool SaveFileAs();
+	void ResetGui();
+	bool ExportClipboardRendering(bool transparent = true, float dpi = 300);
 
 	std::string GetMostRecentFile();
 	std::vector<std::string> GetRecentFiles();

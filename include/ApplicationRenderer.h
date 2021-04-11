@@ -12,7 +12,7 @@ public:
     // Visuals
     float gridLineColor = 0;	// Grayscale
     float gridLineWidth = 1;
-    float gridAlphaFactor = 1;
+    float gridAlphaFactor = 10;
     float gridAlphaOffset = 0;
     float gridAlphaMax = 50;
     //float gridLineFalloff = 0.7;
@@ -36,6 +36,8 @@ public:
         const glm::vec4& color, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);
     static void DrawLineScreenspace(const glm::vec2& point1, const glm::vec2& point2, float thickness, 
         const glm::vec4& color, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);
+    static void DrawLineExport(const glm::vec2& point1, const glm::vec2& point2, float thickness, 
+        const glm::vec4& color, glm::vec2 min, glm::vec2 max, float width, float height);
 
     static void DrawRectangleWorkspace(const glm::vec2& point1, const glm::vec2& point2, float outlineThickness,
         const glm::vec4& outlineColor, const glm::vec4& fillColor, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);
@@ -48,14 +50,13 @@ public:
    static void DrawSelectionBoxOutlineRectangle(const glm::vec2& point1, const glm::vec2& point2);
 
    static void DrawPreviewPoint(const glm::vec2& position);
-   static void DrawGrid();
+   static void DrawGrid(bool infinite = false);
 
     static ApplicationRenderer& GetInstance() {
         static ApplicationRenderer instance;
         return instance;
     }
 
-private:
     ApplicationRenderer(ApplicationRenderer const&) = delete;
     void operator=(ApplicationRenderer const&) = delete;
 

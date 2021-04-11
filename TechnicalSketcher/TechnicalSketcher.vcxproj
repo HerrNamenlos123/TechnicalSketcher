@@ -59,7 +59,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/spdlog/include;../../BatteryEngine/modules/implot</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../modules/IconFontCppHeaders;../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/clip;../../BatteryEngine/modules/spdlog/include;../../BatteryEngine/modules/implot</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -82,7 +82,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/spdlog/include;../../BatteryEngine/modules/implot</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../modules/IconFontCppHeaders;../../BatteryEngine\packages\Allegro.5.2.6\build\native\include;../../BatteryEngine/modules/imgui/backends;../../BatteryEngine/modules;../../BatteryEngine/modules/imgui;../../BatteryEngine/include;../include;../../BatteryEngine/modules/clip;../../BatteryEngine/modules/spdlog/include;../../BatteryEngine/modules/implot</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -102,6 +102,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\Application.cpp" />
     <ClCompile Include="..\src\ApplicationRenderer.cpp" />
+    <ClCompile Include="..\src\Fonts\FontLoader.cpp" />
     <ClCompile Include="..\src\Gui.cpp" />
     <ClCompile Include="..\src\Layer.cpp" />
     <ClCompile Include="..\src\LayerList.cpp" />
@@ -124,7 +125,12 @@
     <ClInclude Include="..\include\ApplicationRenderer.h" />
     <ClInclude Include="..\include\config.h" />
     <ClInclude Include="..\include\FileContent.h" />
+    <ClInclude Include="..\include\Fonts\FontLoader.h" />
+    <ClInclude Include="..\include\Fonts\MaterialIconFontData.h" />
+    <ClInclude Include="..\include\Fonts\OpenSansFontData.h" />
+    <ClInclude Include="..\include\Fonts\SegoeMDL2FontData.h" />
     <ClInclude Include="..\include\Gui.h" />
+    <ClInclude Include="..\include\GuiTheme.h" />
     <ClInclude Include="..\include\Layer.h" />
     <ClInclude Include="..\include\LayerHistory.h" />
     <ClInclude Include="..\include\LayerList.h" />

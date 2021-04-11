@@ -8,8 +8,8 @@ void LineStripTool::OnToolChanged() {
 	Navigator::GetInstance()->previewPointPosition = Navigator::GetInstance()->mouseSnapped;
 }
 
-void LineStripTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped) {
-	if (!lineStarted) {				// Start a line
+void LineStripTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
+	if (!lineStarted && left) {				// Start a line
 		float thickness = Navigator::GetInstance()->currentLineThickness;
 		auto color = Navigator::GetInstance()->currentShapeColor;
 		previewLine.SetPoint1(snapped);
@@ -19,7 +19,7 @@ void LineStripTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& s
 		Navigator::GetInstance()->previewPointShown = false;
 		lineStarted = true;
 	}
-	else {						// Continue the line
+	else if (left) {						// Continue the line
 		Navigator::GetInstance()->AddLine(previewLine.GetPoint1(), snapped);
 		float thickness = Navigator::GetInstance()->currentLineThickness;
 		auto color = Navigator::GetInstance()->currentShapeColor;
@@ -28,13 +28,16 @@ void LineStripTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& s
 		previewLine.SetThickness(thickness);
 		previewLine.SetColor(color);
 		Navigator::GetInstance()->previewPointShown = false;
+	} 
+	else {
+		CancelShape();
 	}
 }
 
-void LineStripTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, ShapeID shape) {
+void LineStripTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
 }
 
-void LineStripTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped) {
+void LineStripTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	if (lineStarted) {
 		previewLine.SetPoint2(snapped);
 	}
@@ -43,10 +46,10 @@ void LineStripTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& s
 	}
 }
 
-void LineStripTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped) {
+void LineStripTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 }
 
-void LineStripTool::OnMouseReleased(const glm::vec2& position) {
+void LineStripTool::OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) {
 }
 
 void LineStripTool::OnLayerSelected(LayerID layer) {

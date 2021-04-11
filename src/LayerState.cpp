@@ -3,6 +3,9 @@
 #include "pch.h"
 #include "LayerState.h"
 
+#undef max
+#undef min
+
 LayerState::LayerState() {
 }
 
@@ -54,6 +57,21 @@ bool LayerState::ShapeExists(const ShapeID& id) const {
 	}
 
 	return false;
+}
+
+std::pair<glm::vec2, glm::vec2> LayerState::GetBoundingBox() const {
+
+	glm::vec2 min = { 0, 0 };
+	glm::vec2 max = { 0, 0 };
+
+	for (auto& shape : shapes) {
+		auto bound = shape->GetBoundingBox();
+
+		min = glm::min(min, bound.first);
+		max = glm::max(max, bound.second);
+	}
+
+	return std::make_pair(min, max);
 }
 
 const std::vector<ShapePTR>& LayerState::GetShapes() const {

@@ -19,7 +19,7 @@ ApplicationRenderer::~ApplicationRenderer() {
 
 void ApplicationRenderer::Load() {
 	if (!GetInstance().scene) {
-		GetInstance().scene = std::make_unique<Battery::Scene>(&App::GetApplicationPointer()->window);
+		GetInstance().scene = std::make_unique<Battery::Scene>(App::GetApplicationPointer()->window);
 	}
 	else {
 		throw Battery::Exception(__FUNCTION__"(): Can't load renderer: Is already loaded!");
@@ -64,6 +64,15 @@ void ApplicationRenderer::DrawLineScreenspace(const glm::vec2& point1, const glm
 	Battery::Renderer2D::DrawLine(point1, point2, thickness, color, falloff);
 }
 
+void ApplicationRenderer::DrawLineExport(const glm::vec2& point1, const glm::vec2& point2, float thickness,
+	const glm::vec4& color, glm::vec2 min, glm::vec2 max, float width, float height) {
+
+	glm::vec2 p1 = Battery::MathUtils::MapVector(point1, min, max, { 0, 0 }, { width, height });
+	glm::vec2 p2 = Battery::MathUtils::MapVector(point2, min, max, { 0, 0 }, { width, height });
+	float thick = Battery::MathUtils::MapFloat(thickness, 0, max.x - min.x, 0, width);
+	Battery::Renderer2D::DrawLine(p1, p2, thick, color, 0);
+}
+
 void ApplicationRenderer::DrawRectangleWorkspace(const glm::vec2& point1, const glm::vec2& point2, float outlineThickness,
 	const glm::vec4& outlineColor, const glm::vec4& fillColor, float falloff) {
 	glm::vec2 p1 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point1);
@@ -97,7 +106,7 @@ void ApplicationRenderer::DrawPreviewPoint(const glm::vec2& position) {
 		1, { 0, 0, 0, 255 }, { 255, 255, 255, 255 }, 0);
 }
 
-void ApplicationRenderer::DrawGrid() {
+void ApplicationRenderer::DrawGrid(bool infinite) {
 	using namespace Battery;
 	auto nav = Navigator::GetInstance();
 
@@ -108,19 +117,51 @@ void ApplicationRenderer::DrawGrid() {
 	int w = GetClientApplication()->window.GetWidth();
 	int h = GetClientApplication()->window.GetHeight();
 
-	// Sub grid lines
-	//if (scale * snapSize > 3) {
-	for (float x = nav->panOffset.x + w / 2; x < w; x += nav->scale * nav->snapSize) {
-		Renderer2D::DrawPrimitiveLine({ x, 0 }, { x, h }, thickness, color);
+	float right = w;
+	float left = 0;
+	float top = h;
+	float bottom = 0;
+
+	if (!infinite) {	// Draw an A4-sheet
+		glm::vec2 sheetSize = { 210, 297 };
+		right  = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords( sheetSize / 2.f).x;
+		left   = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(-sheetSize / 2.f).x;
+		top    = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords( sheetSize / 2.f).y;
+		bottom = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(-sheetSize / 2.f).y;
+
+		for (float x = nav->panOffset.x + w / 2; x < right; x += nav->scale * nav->snapSize) {
+			Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
+		}
+		for (float x = nav->panOffset.x + w / 2 - nav->scale * nav->snapSize; x > left; x -= nav->scale * nav->snapSize) {
+			Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
+		}
+		for (float y = nav->panOffset.y + h / 2; y < top; y += nav->scale * nav->snapSize) {
+			Renderer2D::DrawPrimitiveLine({ left, y }, { right, y }, thickness, color);
+		}
+		for (float y = nav->panOffset.y + h / 2 - nav->scale * nav->snapSize; y > bottom; y -= nav->scale * nav->snapSize) {
+			Renderer2D::DrawPrimitiveLine({ left, y }, { right, y }, thickness, color);
+		}
 	}
-	for (float x = nav->panOffset.x + w / 2; x > 0; x -= nav->scale * nav->snapSize) {
-		Renderer2D::DrawPrimitiveLine({ x, 0 }, { x, h }, thickness, color);
+	else {
+
+		for (float x = nav->panOffset.x + w / 2; x < right; x += nav->scale * nav->snapSize) {
+			Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
+		}
+		for (float x = nav->panOffset.x + w / 2; x > left; x -= nav->scale * nav->snapSize) {
+			Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
+		}
+		for (float y = nav->panOffset.y + h / 2; y < top; y += nav->scale * nav->snapSize) {
+			Renderer2D::DrawPrimitiveLine({ left, y }, { right, y }, thickness, color);
+		}
+		for (float y = nav->panOffset.y + h / 2; y > bottom; y -= nav->scale * nav->snapSize) {
+			Renderer2D::DrawPrimitiveLine({ left, y }, { right, y }, thickness, color);
+		}
 	}
-	for (float y = nav->panOffset.y + h / 2; y < h; y += nav->scale * nav->snapSize) {
-		Renderer2D::DrawPrimitiveLine({ 0, y }, { w, y }, thickness, color);
+
+	if (!infinite) {	// Draw sheet outline
+		Renderer2D::DrawPrimitiveLine({ left,  bottom }, { right, bottom }, thickness * 2, color);
+		Renderer2D::DrawPrimitiveLine({ right, bottom }, { right, top }, thickness * 2, color);
+		Renderer2D::DrawPrimitiveLine({ right, top},     { left,  top }, thickness * 2, color);
+		Renderer2D::DrawPrimitiveLine({ left,  top },    { left, bottom }, thickness * 2, color);
 	}
-	for (float y = nav->panOffset.y + h / 2; y > 0; y -= nav->scale * nav->snapSize) {
-		Renderer2D::DrawPrimitiveLine({ 0, y }, { w, y }, thickness, color);
-	}
-	//}
 }

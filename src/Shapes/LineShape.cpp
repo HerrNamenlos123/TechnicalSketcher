@@ -28,10 +28,10 @@ ShapePTR LineShape::Duplicate() {
 std::pair<glm::vec2, glm::vec2> LineShape::GetBoundingBox() const {
 
 	float u = thickness / 2.f;
-	glm::vec2 min = { min(p1.x, p2.x) - u, min(p1.y, p2.y) - u };
-	glm::vec2 max = { max(p1.x, p2.x) + u, max(p1.y, p2.y) + u };
+	glm::vec2 _min = { min(p1.x, p2.x) - u, min(p1.y, p2.y) - u };
+	glm::vec2 _max = { max(p1.x, p2.x) + u, max(p1.y, p2.y) + u };
 
-	return std::make_pair(min, max);
+	return std::make_pair(_min, _max);
 }
 
 bool LineShape::IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) const {
@@ -170,6 +170,10 @@ void LineShape::Render(bool layerSelected, bool shapeSelected, bool shapeHovered
 
 	ApplicationRenderer::DrawLineWorkspace(p1, p2, thickness, color);
 
+}
+
+void LineShape::RenderExport(glm::vec2 min, glm::vec2 max, float width, float height) const {
+	ApplicationRenderer::DrawLineExport(p1, p2, thickness, color, min, max, width, height);
 }
 
 nlohmann::json LineShape::GetJson() const {

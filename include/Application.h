@@ -31,6 +31,8 @@ public:
 	double lastScreenRefresh = 0;
 	double passiveScreenTime = 5.0;		// Refresh the screen every 2 seconds
 
+	std::string loadingMessage = "";
+
 	App();
 
 	bool OnStartup() override;

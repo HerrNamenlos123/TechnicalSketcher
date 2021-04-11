@@ -25,6 +25,12 @@
     <Filter Include="Source Files\Tools">
       <UniqueIdentifier>{cf180464-63a9-4dc6-9ac7-9cd69d2ca9d1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Fonts">
+      <UniqueIdentifier>{4ccbaf88-1098-46e2-85fd-726f09832ebb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Fonts">
+      <UniqueIdentifier>{88d58d7b-c6ba-4441-80f7-c856346a0868}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Application.cpp">
@@ -71,6 +77,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Shapes\GenericShape.cpp">
       <Filter>Source Files\Shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Fonts\FontLoader.cpp">
+      <Filter>Source Files\Fonts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +151,21 @@
     </ClInclude>
     <ClInclude Include="..\include\FileContent.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GuiTheme.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Fonts\FontLoader.h">
+      <Filter>Header Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Fonts\MaterialIconFontData.h">
+      <Filter>Header Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Fonts\OpenSansFontData.h">
+      <Filter>Header Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Fonts\SegoeMDL2FontData.h">
+      <Filter>Header Files\Fonts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

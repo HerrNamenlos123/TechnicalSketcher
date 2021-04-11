@@ -58,6 +58,7 @@ public:
 
 	std::optional<std::reference_wrapper<GenericShape>> FindShape(const ShapeID& shape);
 	bool ShapeExists(const ShapeID& id) const;
+	std::pair<glm::vec2, glm::vec2> GetBoundingBox() const;
 
 	float MapFloat(float x, float in_min, float in_max, float out_min, float out_max);
 	void RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap);

@@ -180,7 +180,10 @@ public:
 
 	bool SaveFile(bool saveAs = false);
 	bool OpenFile();
+	bool OpenEmptyFile();
 	bool OpenFile(const std::string& path);
+	
+	Battery::Texture2D ExportImage(bool transparent = true, float dpi = 300);
 
 	nlohmann::json GetJson() {
 		nlohmann::json j = nlohmann::json();
