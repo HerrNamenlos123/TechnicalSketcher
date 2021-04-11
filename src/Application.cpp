@@ -16,7 +16,8 @@ App::App() : Battery::Application(SPLASH_SCREEN_WIDTH, SPLASH_SCREEN_HEIGHT, APP
 bool App::OnStartup() {
 
 	// Show splash screen
-	Battery::Texture2D splash("../embed/SplashScreen.png");
+	Battery::Texture2D splash;
+	splash.LoadEmbeddedResource(IDB_PNG1);
 	if (splash.IsValid()) {
 		al_draw_bitmap(splash.GetAllegroBitmap(), 0, 0, 0);
 		al_flip_display();

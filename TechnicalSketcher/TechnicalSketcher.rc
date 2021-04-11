@@ -103,6 +103,14 @@ BEGIN
     END
 END
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_PNG1                PNG                     "F:\\Users\\Florian\\Documents\\VS-Projects\\TechnicalSketcher\\embed\\SplashScreen.png"
+
 #endif    // German (Germany) resources
 /////////////////////////////////////////////////////////////////////////////
 

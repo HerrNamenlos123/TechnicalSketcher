@@ -159,6 +159,7 @@
     <ResourceCompile Include="TechnicalSketcher.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\embed\SplashScreen.png" />
     <Image Include="..\icon.ico" />
   </ItemGroup>
   <ItemGroup>
