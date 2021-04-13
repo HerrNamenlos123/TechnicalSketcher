@@ -1,12 +1,16 @@
 #pragma once
 
 #define APPLICATION_NAME "TechnicalSketcher"
-#define RECENT_FILES_FILENAME "recent"
 #define DEFAULT_FILENAME "Unnamed.tsk"
 #define CLIPBOARD_FORMAT "com.TechnicalSketcher.Shapes"
 
+#define RECENT_FILES_FILENAME "recent.json"
+#define SETTINGS_FILENAME "settings.json"
+
 #define JSON_FILE_TYPE "technicalsketcher"
 #define JSON_FILE_VERSION 1
+#define JSON_SETTINGS_TYPE "technicalsketcher"
+#define JSON_SETTINGS_VERSION 1
 
 #define IMGUI_FILENAME "imgui.ini"
 

@@ -21,13 +21,13 @@
 #define GUI_PROPERTIES_WINDOW_HEIGHT 200
 
 static const ImWchar icons_ranges[] = { 0xe005, 0xf8ff, 0 };
-static ImFont* materialFont35;
-static ImFont* segoeFont35;
-static ImFont* materialFont22;
-static ImFont* segoeFont22;
-static ImFont* sansFont22;
-static ImFont* sansFont17;
-static ImFont* sansFont9;
+extern ImFont* materialFont35;
+extern ImFont* materialFont22;
+extern ImFont* segoeFont22;
+extern ImFont* sansFont22;
+extern ImFont* sansFont17;
+extern ImFont* sansFont14;
+extern ImFont* sansFont9;
 
 static void HelpMarker(const char* desc, ImFont* font)
 {
@@ -59,10 +59,13 @@ namespace GUI {
 	class RibbonWindow : public Battery::StaticImGuiWindow<> {
 
 		std::string fileToOpen = "";
+		int snap = 0;
+		bool openOptions = false;
 
 	public:
 		RibbonWindow() : StaticImGuiWindow("RibbonWindow", { 0, 0 }, { 0, 0 }, 
-			DEFAULT_STATIC_IMGUI_WINDOW_FLAGS | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoBringToFrontOnFocus) {
+			DEFAULT_STATIC_IMGUI_WINDOW_FLAGS | ImGuiWindowFlags_MenuBar |
+			ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse) {
 		}
 
 		void OnAttach() {
@@ -84,7 +87,10 @@ namespace GUI {
 		void MenuTab() {
 
 			ImGui::MenuItem("TechnicalSketcher", NULL, false, false);
-			if (ImGui::MenuItem("New")) {
+			if (ImGui::MenuItem("New File")) {
+				Navigator::GetInstance()->OpenEmptyFile();
+			}
+			if (ImGui::MenuItem("New Window")) {
 				Navigator::GetInstance()->StartNewApplicationInstance();
 			}
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
@@ -117,12 +123,67 @@ namespace GUI {
 
 			ImGui::Separator();
 			if (ImGui::MenuItem("Options")) {
-				LOG_ERROR("Options not implemented yet!");
+				openOptions = true;
 			}
 
 			if (ImGui::MenuItem("Quit", "Alt+F4")) {
 				Navigator::GetInstance()->CloseApplication();
 			}
+		}
+
+		void OptionsPopup() {
+
+			if (openOptions) {
+				ImGui::OpenPopup("Options##Window");
+				openOptions = false;
+			}
+
+			bool exp = false;
+			Navigator::GetInstance()->popupSettingsOpen = false;
+			ImGui::PushFont(sansFont17);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+			if (ImGui::BeginPopupModal("Options##Window", NULL,
+				ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+
+				Navigator::GetInstance()->popupSettingsOpen = true;
+
+				ImGui::Checkbox("Transparent background", &Navigator::GetInstance()->exportTransparent);
+				ToolTip("Un-tick this for MathCAD", sansFont17);
+				ImGui::Separator();
+
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
+				ImGui::Text("DPI");
+				ImGui::SameLine();
+				ImGui::PushItemWidth(210);
+				ImGui::InputFloat("##DPIField", &Navigator::GetInstance()->exportDPI);
+				ImGui::PopItemWidth();
+				ImGui::PushItemWidth(240);
+				ImGui::SliderFloat("##DPISlider", &Navigator::GetInstance()->exportDPI, 50, 1000);
+				ImGui::PopItemWidth();
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
+				ImGui::Separator();
+
+				if (ImGui::Button("Reset User interface")) {
+					GetClientApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
+					Navigator::GetInstance()->ResetGui();
+					Battery::TimeUtils::Sleep(0.03);
+					GetClientApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+				}
+				ToolTip("Reset the layout of the user interface, if something gets lost", sansFont17);
+				ImGui::Separator();
+
+				ImGui::Checkbox("Keep Application up-to-date", &Navigator::GetInstance()->keepUpToDate);
+				ToolTip("If ticked, the application will receive fully automatic updates", sansFont17);
+				ImGui::Separator();
+
+				if (ImGui::Button("Close", ImVec2(240, 0))) {
+					ImGui::CloseCurrentPopup();
+					Navigator::GetInstance()->SaveSettings();
+				}
+				ImGui::EndPopup();
+			}
+			ImGui::PopStyleVar();
+			ImGui::PopFont();
 		}
 
 		void EditTab() {
@@ -159,17 +220,28 @@ namespace GUI {
 
 				ImGui::EndMainMenuBar();
 			}
+
+			OptionsPopup();
 		}
 
 		void MainButtons() {
 
-			ImGui::PushFont(segoeFont35);
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
+			Navigator::GetInstance()->popupExportOpen = false;
+
+			ImGui::PushFont(segoeFont22);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
 
 			if (ImGui::Button("\uE7C3##NewFile")) {
 				Navigator::GetInstance()->OpenEmptyFile();
 			}
 			ToolTip("Create an empty file", sansFont17);
+			ImGui::SameLine();
+
+			if (ImGui::Button("\uEC50##Open")) {
+				Navigator::GetInstance()->OpenFile();
+			}
+			ToolTip("Open an existing file", sansFont17);
 			ImGui::SameLine();
 
 			if (ImGui::Button("\uE74E##Save")) {
@@ -185,12 +257,174 @@ namespace GUI {
 			ImGui::SameLine();
 
 			if (ImGui::Button("\uE77F##Export")) {
-				Navigator::GetInstance()->ExportClipboardRendering();
+				ImGui::OpenPopup("Export rendering");
 			}
 			ToolTip("Copy a rendering of the file to the clipboard", sansFont17);
 			ImGui::SameLine();
 
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 35);
+
+			if (ImGui::Button("\uE7A7##Undo")) {
+				Navigator::GetInstance()->UndoAction();
+			}
+			ToolTip("Undo the last action", sansFont17);
+			ImGui::SameLine();
+
+
+
+
+			// Export popup
+			bool exp = false;
+			ImGui::PushFont(sansFont17);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+			if (ImGui::BeginPopupModal("Export rendering", NULL, 
+				ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+
+				Navigator::GetInstance()->popupExportOpen = true;
+
+				ImGui::Checkbox("Transparent background", &Navigator::GetInstance()->exportTransparent);
+				ImGui::Text("Don't choose this for MathCAD");
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
+				ImGui::Separator();
+
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
+				ImGui::Text("DPI");
+				ImGui::SameLine();
+				ImGui::PushItemWidth(210);
+				ImGui::InputFloat("##DPIField", &Navigator::GetInstance()->exportDPI);
+				ImGui::PopItemWidth();
+				ImGui::PushItemWidth(240);
+				ImGui::SliderFloat("##DPISlider", &Navigator::GetInstance()->exportDPI, 50, 1000);
+				ImGui::PopItemWidth();
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
+				ImGui::Separator();
+
+				Navigator::GetInstance()->exportDPI = min(max(Navigator::GetInstance()->exportDPI, 50), 1000);
+
+				if (ImGui::Button("OK", ImVec2(120, 0))) {	// Delete the layer now
+					ImGui::CloseCurrentPopup();
+					exp = true;
+				}
+				ImGui::SetItemDefaultFocus();
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
+			ImGui::PopStyleVar();
 			ImGui::PopFont();
+
+			if (exp) {
+				Navigator::GetInstance()->ExportClipboardRendering();
+			}
+
+
+			ImGui::SetCursorPosX(GetClientApplication()->window.GetWidth() - 600);
+
+
+
+			if (ImGui::Button("\uE7AD##ResetViewport")) {
+				Navigator::GetInstance()->ResetViewport();
+			}
+			ToolTip("Reset the camera to the origin", sansFont17);
+			ImGui::SameLine();
+
+
+			bool pop = false;
+			if (!Navigator::GetInstance()->gridShown) {
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+				pop = true;
+			}
+			if (ImGui::Button("\uE80A##ToggleGrid")) {
+				Navigator::GetInstance()->gridShown = !Navigator::GetInstance()->gridShown;
+			}
+			ToolTip("Show or hide the grid", sansFont17);
+			ImGui::SameLine();
+			if (pop) {
+				ImGui::PopStyleColor();
+			}
+
+
+			pop = false;
+			bool pop2 = false;
+			if (Navigator::GetInstance()->infiniteSheet || !Navigator::GetInstance()->gridShown) {
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+				pop = true;
+			}
+			if (!Navigator::GetInstance()->gridShown) {
+				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+				pop2 = true;
+			}
+			if (ImGui::Button("\uE14E##ToggleInfiniteGrid")) {
+				Navigator::GetInstance()->infiniteSheet = !Navigator::GetInstance()->infiniteSheet;
+			}
+			ToolTip("Toggle A4/infinite grid", sansFont17);
+			ImGui::SameLine();
+			if (pop) {
+				ImGui::PopStyleColor();
+			}
+			if (pop2) {
+				ImGui::PopItemFlag();
+			}
+
+			ImGui::PopStyleVar();
+
+			// Background color
+			ImGui::PushFont(sansFont17);
+			ImGui::Text("Background");
+			ImGui::SameLine();
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10);
+			Navigator::GetInstance()->backgroundColor /= 255;
+			ImGui::ColorEdit4("##BackgroundColor", (float*)&Navigator::GetInstance()->backgroundColor,
+				ImGuiColorEditFlags_NoInputs);
+			Navigator::GetInstance()->backgroundColor *= 255;
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 10);
+			ImGui::PopFont();
+
+			ImGui::SameLine();
+
+
+
+
+			// SnapSize slider
+			ImGui::PushFont(sansFont17);
+
+			float xpos = 660;
+			float ypos = 15;
+			ImGui::SetCursorPosX(GetClientApplication()->window.GetWidth() - 1000 + xpos);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 25 + ypos);
+			ImGui::Text("Snap size");
+			ImGui::SameLine();
+
+			ImGui::PushItemWidth(150);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 7);
+			int oldSnap = snap;
+			ImGui::PushFont(sansFont17);
+			ImGui::SliderInt("##SnapSizeSlider", &snap, -4, 4, "");
+			ImGui::SameLine();
+			ImGui::PopFont();
+
+			ImGui::PushItemWidth(50);
+			ImGui::InputFloat("##SnapSizeField", &Navigator::GetInstance()->snapSize, 0, 0, "%.03f");
+			ImGui::SameLine();
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 7);
+			ImGui::Text("mm");
+			ImGui::PopItemWidth();
+			ImGui::SameLine();
+
+			ImGui::PopFont();
+			ImGui::PopFont();
+
+			//ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 155);
+
+			if (snap != oldSnap) {	// Slider was changed
+				Navigator::GetInstance()->snapSize = Navigator::GetInstance()->defaultSnapSize * pow(2, snap);
+			}
+
+			Navigator::GetInstance()->snapSize = max(Navigator::GetInstance()->snapSize, 0.125);
+
+			ImGui::PopItemWidth();
 			
 		}
 
@@ -285,6 +519,7 @@ namespace GUI {
 			bool anyActive = false;
 
 			SketchFile* file = &Navigator::GetInstance()->file;		// Get a reference to the current file
+			Navigator::GetInstance()->popupDeleteLayerOpen = false;
 
 			for (const auto& layer : file->GetLayers()) {
 			
@@ -404,6 +639,8 @@ namespace GUI {
 					if (close) {
 						ImGui::CloseCurrentPopup();
 					}
+
+					Navigator::GetInstance()->popupDeleteLayerOpen = true;
 				}
 
 				if (ImGui::BeginPopup("Rename Layer")) {
@@ -524,7 +761,9 @@ namespace GUI {
 
 			ImGui::PushFont(sansFont17);
 
-
+			if (Navigator::GetInstance()->selectedTool) {
+				Navigator::GetInstance()->selectedTool->ShowPropertiesWindow();
+			}
 
 			ImGui::PopFont();
 		}
@@ -593,10 +832,10 @@ namespace GUI {
 				ImGui::GetIO().IniFilename = NULL;
 
 			sansFont9 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 9);
+			sansFont14 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 14);
 			sansFont17 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 17);
 			sansFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 22);
 			materialFont35 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_MATERIAL_ICONS, 35, nullptr, icons_ranges);
-			segoeFont35 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_SEGOE_MDL2, 35, nullptr, icons_ranges);
 			materialFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_MATERIAL_ICONS, 22, nullptr, icons_ranges);
 			segoeFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_SEGOE_MDL2, 22, nullptr, icons_ranges);
 
@@ -629,7 +868,12 @@ namespace GUI {
 			layers.Render();
 			toolbox.Render();
 			mouseInfo.Render();
-			propertiesWindow.Render();
+
+			if (Navigator::GetInstance()->selectedTool) {
+				if (Navigator::GetInstance()->selectedTool->IsPropertiesWindowShown()) {
+					propertiesWindow.Render();
+				}
+			}
 
 			if (showThemeEditor) {
 				ThemeEditorWindow();

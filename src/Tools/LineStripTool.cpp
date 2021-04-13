@@ -87,6 +87,26 @@ bool LineStripTool::StepToolBack() {
 	return false;
 }
 
+bool LineStripTool::IsPropertiesWindowShown() {
+	if (!lineStarted) {
+		return true;
+	}
+
+	return false;
+}
+
+void LineStripTool::ShowPropertiesWindow() {
+	if (!lineStarted) {
+		previewLine.SetThickness(Navigator::GetInstance()->currentLineThickness);
+		previewLine.SetColor(Navigator::GetInstance()->currentShapeColor);
+
+		previewLine.ShowPropertiesWindow();
+
+		Navigator::GetInstance()->currentLineThickness = previewLine.GetThickness();
+		Navigator::GetInstance()->currentShapeColor = previewLine.GetColor();
+	}
+}
+
 void LineStripTool::RenderPreview() {
 	if (lineStarted) {
 		previewLine.RenderPreview();

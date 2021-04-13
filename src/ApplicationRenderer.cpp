@@ -35,11 +35,8 @@ void ApplicationRenderer::Unload() {
 	}
 }
 
-void ApplicationRenderer::BeginFrame(bool background) {
+void ApplicationRenderer::BeginFrame() {
 	Battery::Renderer2D::BeginScene(GetInstance().scene.get());
-
-	if (background)
-		Battery::Renderer2D::DrawBackground(BACKGROUND_COLOR);
 }
 
 void ApplicationRenderer::EndFrame() {

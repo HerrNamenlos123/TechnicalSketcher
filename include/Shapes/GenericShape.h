@@ -54,6 +54,8 @@ public:
 	virtual glm::vec4 GetColor() const = 0;
 	virtual glm::vec2 GetCenterPosition() const = 0;
 
+	virtual bool ShowPropertiesWindow() = 0;
+
 	virtual void MoveLeft(float amount) = 0;
 	virtual void MoveRight(float amount) = 0;
 	virtual void MoveUp(float amount) = 0;

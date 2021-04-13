@@ -3,6 +3,14 @@
 #include "pch.h"
 #include "Shapes/LineShape.h"
 
+extern ImFont* materialFont35;
+extern ImFont* segoeFont35;
+extern ImFont* materialFont22;
+extern ImFont* segoeFont22;
+extern ImFont* sansFont22;
+extern ImFont* sansFont17;
+extern ImFont* sansFont9;
+
 LineShape::LineShape() {
 
 }
@@ -111,6 +119,33 @@ glm::vec2 LineShape::GetCenterPosition() const {
 	return (p1 + p2) / 2.f;
 }
 
+bool LineShape::ShowPropertiesWindow() {
+	// Return true if a parameter changed, false if everything stays the same
+	ImGui::PushFont(sansFont22);
+
+	ImGui::Text("Shape type: Line");
+	ImGui::Separator();
+	ImGui::PushFont(sansFont17);
+
+	auto oldColor = color;
+	auto oldThickness = thickness;
+
+	color /= 255;
+	ImGui::ColorEdit4("Line color", (float*)&color[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::DragFloat("Line thickness", &thickness, 0.1f, 0.f, 10.f);
+	color *= 255;
+
+	ImGui::PopFont();
+	ImGui::PopFont();
+
+	// Something has changed here
+	if (oldColor != color || oldThickness != thickness) {
+		return true;
+	}
+
+	return false;
+}
+
 void LineShape::MoveLeft(float amount) {
 	p1.x -= amount;
 	p2.x -= amount;
@@ -147,28 +182,28 @@ void LineShape::RenderPreview() const {
 void LineShape::Render(bool layerSelected, bool shapeSelected, bool shapeHovered) const {
 
 	auto& ref = ApplicationRenderer::GetInstance();
-	glm::vec4 color = ref.disabledLineColor;
+	glm::vec4 col = ref.disabledLineColor;
 
 	if (layerSelected) { // Shape is selected
 		if (shapeSelected) {
 			if (shapeHovered) {	// Shape is selected and hovered
-				color = (ref.hoveredLineColor + ref.selectedLineColor) / 2.f;
+				col = (ref.hoveredLineColor + ref.selectedLineColor) / 2.f;
 			}
 			else {
-				color = ref.selectedLineColor;
+				col = ref.selectedLineColor;
 			}
 		}
 		else {			// Shape is simply hovered
 			if (shapeHovered) {
-				color = ref.hoveredLineColor;
+				col = ref.hoveredLineColor;
 			}
 			else {
-				color = ref.normalLineColor;
+				col = color;
 			}
 		}
 	}
 
-	ApplicationRenderer::DrawLineWorkspace(p1, p2, thickness, color);
+	ApplicationRenderer::DrawLineWorkspace(p1, p2, thickness, col);
 
 }
 

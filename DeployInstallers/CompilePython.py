@@ -24,7 +24,7 @@ def checkPyInstallerVersion():
 
 def compilePythonFile(file):
     print("Compiling file " + file)
-    process = subprocess.Popen(["pyinstaller", "--onefile", file], shell=True, 
+    process = subprocess.Popen(["pyinstaller", "--onefile", "--noconsole", file], shell=True, 
                                 universal_newlines = False, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     output = process.communicate()[0].decode()
     returnCode = process.returncode

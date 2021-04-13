@@ -154,6 +154,16 @@ public:
 		return false;
 	}
 
+	void ShowPropertiesWindow(ShapeID id) {
+		auto opt = content.GetActiveLayer().FindShape(id);
+
+		if (opt.has_value()) {
+			if (opt.value().get().ShowPropertiesWindow()) {
+				fileChanged = true;
+			}
+		}
+	}
+
 	std::optional<std::reference_wrapper<const GenericShape>> FindShape(const ShapeID& id) {
 		return content.GetActiveLayer().FindShape(id);
 	}

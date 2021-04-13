@@ -30,11 +30,21 @@ public:
 	glm::vec2 panOffset = { 0, 0 };
 	float scrollFactor = 0.2f;
 	float scale = 7;
-	float snapSize = 5;
+	float defaultSnapSize = 5;
+	float snapSize = defaultSnapSize;
 	float mouseHighlightThresholdDistance = 8;
 	float currentLineThickness = 0.75;
 	bool infiniteSheet = false;
+	bool gridShown = true;
 	glm::vec4 currentShapeColor = glm::vec4(0, 0, 0, 255);
+	glm::vec4 backgroundColor = glm::vec4(255, 255, 255, 255);
+
+	float exportDPI = 300;
+	bool exportTransparent = true;
+	bool popupExportOpen = false;
+	bool popupDeleteLayerOpen = false;
+	bool popupSettingsOpen = false;
+	bool keepUpToDate = true;
 
 	// Buffers to store event data
 	float scrollBuffer = 0;
@@ -105,7 +115,10 @@ public:
 	bool SaveFile();
 	bool SaveFileAs();
 	void ResetGui();
-	bool ExportClipboardRendering(bool transparent = true, float dpi = 300);
+	void ResetViewport();
+	bool ExportClipboardRendering();
+	bool LoadSettings();
+	bool SaveSettings();
 
 	std::string GetMostRecentFile();
 	std::vector<std::string> GetRecentFiles();

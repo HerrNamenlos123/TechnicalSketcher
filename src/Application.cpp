@@ -28,8 +28,15 @@ bool App::OnStartup() {
 
 	// Various layers
 	PushLayer(new NavigatorLayer());
-	PushLayer(new UpdaterLayer());
 	PushOverlay(new GUI::GuiLayer());
+
+	// Load the settings
+	if (!Navigator::GetInstance()->LoadSettings()) {
+		Navigator::GetInstance()->SaveSettings();	// If settings can't be loaded, save the default settings
+	}
+
+	// Now that settings are loaded, start updater
+	PushLayer(new UpdaterLayer());
 
 	// Set the icon and title of the window
 	window.SetWindowExecutableIcon();

@@ -177,6 +177,22 @@ bool SelectionTool::StepToolBack() {
 	return false;	// false: can't step back further
 }
 
+bool SelectionTool::IsPropertiesWindowShown() {
+	// Show properties window if exactly 1 shape is selected
+	if (selectionHandler.GetSelectedShapes().size() == 1) {
+		return true;
+	}
+
+	return false;
+}
+
+void SelectionTool::ShowPropertiesWindow() {
+	if (selectionHandler.GetSelectedShapes().size() == 1) {
+		ShapeID id = selectionHandler.GetSelectedShapes()[0];
+		Navigator::GetInstance()->file.ShowPropertiesWindow(id);
+	}
+}
+
 void SelectionTool::RenderFirstPart() {
 	if (selectionBoxActive) {			// Fill should be in the back
 		ApplicationRenderer::DrawSelectionBoxInfillRectangle(selectionBoxPointA, selectionBoxPointB);

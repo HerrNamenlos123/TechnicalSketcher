@@ -37,6 +37,9 @@ public:
 	virtual void PasteClipboard() = 0;
 	virtual bool StepToolBack() = 0;
 
+	virtual bool IsPropertiesWindowShown() = 0;
+	virtual void ShowPropertiesWindow() = 0;
+
 	virtual void RenderPreview() = 0;
 
 };

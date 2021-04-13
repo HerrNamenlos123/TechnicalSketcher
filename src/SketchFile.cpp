@@ -172,6 +172,16 @@ bool SketchFile::OpenFile(const std::string& path) {
 		return false;
 	}
 
+	// Now it's valid, check if it is empty
+	if (file.content().length() == 0) {
+		// Create an empty file
+		content = FileContent();
+		fileChanged = false;
+		fileLocation = path;
+		filename = Battery::FileUtils::GetFilenameFromPath(path);
+		return true;
+	}
+
 	try {
 		nlohmann::json j = nlohmann::json::parse(file.content());
 
@@ -276,15 +286,8 @@ Battery::Texture2D SketchFile::ExportImage(bool transparent, float dpi) {
 
 		for (auto& shape : layer.GetShapes()) {
 
-			// Skip the shape if it's not on the screen
-			if (shape->ShouldBeRendered(width, height)) {
-
-				// Render the shape
-				shape->RenderExport(min, max, width, height);
-			}
-			else {
-				LOG_TRACE(__FUNCTION__ "(): Skipping rendering shape #{}: Not on screen", shape->GetID());
-			}
+			// Render the shape
+			shape->RenderExport(min, max, width, height);
 		}
 	}
 

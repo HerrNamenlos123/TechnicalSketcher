@@ -299,7 +299,7 @@ void Layer::RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap) {
 	// Save current draw buffer to return to later
 	ALLEGRO_BITMAP* previousBuffer = al_get_target_bitmap();
 
-	ApplicationRenderer::BeginFrame(false);
+	ApplicationRenderer::BeginFrame();
 
 	int sizeX = al_get_bitmap_width(bitmap);
 	int sizeY = al_get_bitmap_height(bitmap);
@@ -307,7 +307,7 @@ void Layer::RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap) {
 	// If no shapes, just render white
 	if (shapes.size() == 0) {
 		al_set_target_bitmap(bitmap);
-		al_clear_to_color(Battery::Graphics::ConvertAllegroColor(glm::vec4(255, 255, 255, 255)));
+		Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
 		ApplicationRenderer::EndFrame();
 		al_set_target_bitmap(previousBuffer);
 		return;
@@ -370,7 +370,7 @@ void Layer::RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap) {
 	}
 	else {	// Both are NAN
 		al_set_target_bitmap(bitmap);
-		al_clear_to_color(Battery::Graphics::ConvertAllegroColor(glm::vec4(255, 255, 255, 255)));
+		Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
 		ApplicationRenderer::EndFrame();
 		al_set_target_bitmap(previousBuffer);
 		return;
@@ -388,7 +388,7 @@ void Layer::RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap) {
 	mappedTop = mappedCenterY + mappedHeight / 2.f * brim;
 
 	al_set_target_bitmap(bitmap);
-	al_clear_to_color(Battery::Graphics::ConvertAllegroColor(glm::vec4(255, 255, 255, 255)));
+	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
 
 	for (const auto& s : shapes) {
 

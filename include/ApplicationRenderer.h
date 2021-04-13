@@ -29,7 +29,7 @@ public:
     static void Load();
     static void Unload();
 
-    static void BeginFrame(bool background = true);
+    static void BeginFrame();
     static void EndFrame();
 
     static void DrawLineWorkspace(const glm::vec2& point1, const glm::vec2& point2, float thickness, 

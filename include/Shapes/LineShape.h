@@ -34,6 +34,8 @@ public:
 	glm::vec4 GetColor() const;
 	glm::vec2 GetCenterPosition() const;
 
+	bool ShowPropertiesWindow();
+
 	void MoveLeft(float amount);
 	void MoveRight(float amount);
 	void MoveUp(float amount);

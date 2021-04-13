@@ -35,7 +35,7 @@ void Navigator::OnAttach() {
 	clipboardShapeFormat = GetClientApplication()->window.RegisterClipboardFormat(CLIPBOARD_FORMAT);
 
 	// Load the location of the ImGui .ini file
-	imguiFileLocation = Battery::FileUtils::GetExecutableDirectory() + IMGUI_FILENAME;
+	imguiFileLocation = GetSettingsDirectory() + IMGUI_FILENAME;
 }
 
 void Navigator::OnDetach() {
@@ -69,6 +69,8 @@ void Navigator::OnRender() {
 
 	ApplicationRenderer::BeginFrame();
 
+	Battery::Renderer2D::DrawBackground(backgroundColor);
+
 	// Draw first part of the selection box
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
@@ -77,7 +79,9 @@ void Navigator::OnRender() {
 	}
 	
 	// Main elements of the application
-	ApplicationRenderer::DrawGrid(infiniteSheet);
+	if (gridShown) {
+		ApplicationRenderer::DrawGrid(infiniteSheet);
+	}
 	RenderShapes();
 	
 	// Draw shape preview
@@ -612,9 +616,16 @@ void Navigator::ResetGui() {
 	}
 }
 
-bool Navigator::ExportClipboardRendering(bool transparent, float dpi) {
+void Navigator::ResetViewport() {
+
+	panOffset = { 0, 0 };
+	scale = 7;
+
+}
+
+bool Navigator::ExportClipboardRendering() {
 	GetClientApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
-	auto image = file.ExportImage(transparent, dpi);
+	auto image = file.ExportImage(exportTransparent, exportDPI);
 
 	if (!image.IsValid())
 		return false;
@@ -622,6 +633,63 @@ bool Navigator::ExportClipboardRendering(bool transparent, float dpi) {
 	bool success = GetClientApplication()->window.SetClipboardImage(image);
 	GetClientApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 	return success;
+}
+
+bool Navigator::LoadSettings() {
+
+	try {
+		std::string path = GetSettingsDirectory() + SETTINGS_FILENAME;
+		auto file = Battery::FileUtils::ReadFile(path);
+
+		if (file.fail()) {
+			LOG_ERROR("Failed to load settings file!");
+			return false;
+		}
+
+		nlohmann::json json = nlohmann::json::parse(file.content());
+
+		if (json["settings_type"] != JSON_SETTINGS_TYPE) {
+			LOG_ERROR("Can't load settings file: Invalid settings type!");
+			return false;
+		}
+		if (json["settings_version"] != JSON_SETTINGS_VERSION) {
+			LOG_ERROR("Can't load settings file: Invalid settings type!");
+			return false;
+		}
+
+		exportDPI = json["export_dpi"];
+		exportTransparent = json["export_transparent"];
+		keepUpToDate = json["keep_up_to_date"];
+
+		return true;
+	}
+	catch (...) {
+		LOG_WARN("Failed to load settings file!");
+	}
+
+	return false;
+}
+
+bool Navigator::SaveSettings() {
+
+	try {
+		nlohmann::json json = nlohmann::json();
+
+		json["settings_type"] = JSON_SETTINGS_TYPE;
+		json["settings_version"] = JSON_SETTINGS_VERSION;
+
+		json["export_dpi"] = exportDPI;
+		json["export_transparent"] = exportTransparent;
+		json["keep_up_to_date"] = keepUpToDate;
+
+		std::string file = GetSettingsDirectory() + SETTINGS_FILENAME;
+		return Battery::FileUtils::WriteFile(file, json.dump(4));
+	}
+	catch (...) {
+		LOG_WARN("Failed to save settings file!");
+	}
+
+	return false;
 }
 
 
@@ -717,6 +785,13 @@ void Navigator::StartNewApplicationInstance() {
 }
 
 void Navigator::CloseApplication() {
+
+	// Skip if a popup is open
+
+	if (popupDeleteLayerOpen || popupExportOpen || popupSettingsOpen) {
+		LOG_WARN("Can't exit: A popup is still open!");
+		return;
+	}
 
 	// Only close application, if file is saved
 

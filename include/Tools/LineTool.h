@@ -27,6 +27,9 @@ public:
 	void PasteClipboard();
 	bool StepToolBack();
 
+	bool IsPropertiesWindowShown();
+	void ShowPropertiesWindow();
+
 	void RenderPreview();
 
 };

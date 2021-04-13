@@ -28,6 +28,9 @@ public:
 	void PasteClipboard();
 	bool StepToolBack();
 
+	bool IsPropertiesWindowShown();
+	void ShowPropertiesWindow();
+
 	void RenderFirstPart();
 	void RenderSecondPart();
 	void RemoveSelectedShapes();
