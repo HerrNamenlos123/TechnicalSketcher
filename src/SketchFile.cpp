@@ -8,13 +8,18 @@
 
 void SketchFile::UpdateWindowTitle() {
 	std::string file = Battery::FileUtils::GetBasenameFromPath(filename);
-	std::string version = Navigator::GetInstance()->GetApplicationVersion();
+	const std::string& version = Navigator::GetInstance()->applicationVersion;
 
-	if (fileChanged) {
-		Battery::GetApplication()->window.SetTitle("*" + file + " - " APPLICATION_NAME + " - " + version);
+	if (version.length() > 0) {
+		if (fileChanged) {
+			Battery::GetApplication()->window.SetTitle("*" + file + " - " APPLICATION_NAME + " - " + version);
+		}
+		else {
+			Battery::GetApplication()->window.SetTitle(file + " - " APPLICATION_NAME + " - " + version);
+		}
 	}
 	else {
-		Battery::GetApplication()->window.SetTitle(file + " - " APPLICATION_NAME + " - " + version);
+		Battery::GetApplication()->window.SetTitle(file + " - " APPLICATION_NAME);
 	}
 }
 
