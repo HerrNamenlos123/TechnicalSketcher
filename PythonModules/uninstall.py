@@ -105,26 +105,32 @@ def testModule(module):
 
 
 
+def main():
+    # First, set the working directory
+    os.chdir(os.path.dirname(sys.executable))
+    
+    # If the first command line argument is "test", only perform tests and then exit
+    if (len(sys.argv) >= 2):
+        if sys.argv[1] == "test":
+    
+            # Perform test of all modules
+    
+            testModule("os")
+            testModule("shutil")
+            testModule("win32com.client")
+            testModule("signal")
+            testModule("time")
+            testModule("sys")
+    
+            sys.exit(0)
+    
+    try:
+        # Delete all files from the local appdata location
+        deleteAppdata()
+        deleteLocalAppdata()
+    except:
+        print("Failed to delete files")
 
 
-# If the first command line argument is "test", only perform tests and then exit
-if (len(sys.argv) >= 2):
-    if sys.argv[1] == "test":
-
-        # Perform test of all modules
-
-        testModule("os")
-        testModule("shutil")
-        testModule("win32com.client")
-        testModule("signal")
-        testModule("time")
-        testModule("sys")
-
-        sys.exit(0)
-
-try:
-    # Delete all files from the local appdata location
-    deleteAppdata()
-    deleteLocalAppdata()
-except:
-    print("Failed to delete files")
+if __name__ == "__main__":
+    main()

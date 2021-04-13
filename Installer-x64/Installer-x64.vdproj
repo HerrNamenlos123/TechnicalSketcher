@@ -393,7 +393,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TechnicalSketcher"
         "ProductCode" = "8:{D34BC77E-0726-4010-8A46-20D77147DAF6}"
-        "PackageCode" = "8:{3CAD9D63-8563-428F-A96E-472CC232AFF0}"
+        "PackageCode" = "8:{6B257755-D842-4302-849A-3FF25FD313AF}"
         "UpgradeCode" = "8:{26A7B0AC-EEB7-4CD3-BDE6-CC94686D4590}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"

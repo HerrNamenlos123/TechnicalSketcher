@@ -229,87 +229,102 @@ def testModule(module):
 
 
 
-# If the first command line argument is "test", only perform tests and then exit
-if (len(sys.argv) >= 2):
-    if sys.argv[1] == "test":
-
-        # Perform test of all modules
-
-        testModule("requests")
-        testModule("json")
-        testModule("zipfile")
-        testModule("os")
-        testModule("shutil")
-        testModule("time")
-        testModule("sys")
-        testModule("zc.lockfile")
-
-        sys.exit(0)
-
-# Make sure program is only running once
-try:
-    lock = zc.lockfile.LockFile('lock')
-except:
-    print("Can't check for updates: Another process is still running...")
-    sys.exit(-1)
-
-deleteOutdatedFiles()
-
-# Find installed version
-versionInstalled = ""
-try:
-    with open("version", "r") as versionFile:
-        versionInstalled = versionFile.readlines()[0]
-except:
-    print("Failed to read installed version")
 
 
-try:
-    release = getLatestGithubRelease("HerrNamenlos123", "TechnicalSketcher")
-    if (release.ok):
 
-        j = json.loads(release.content)
-        latestVersion = j["tag_name"]
 
-        if (latestVersion != versionInstalled): # Latest version is different from the installed one, update now
-            try:
-                if (versionInstalled != ""):
-                    print("Updating from " + versionInstalled + " to " + latestVersion)
-                else:
-                    print("Updating to " + latestVersion)
-                print("")
-
-                if not downloadUpdate(j):
-                    raise ""
-                
-                if not unzipUpdate():
-                    raise ""
-                
-                if not updateApplication():
-                    raise ""
-                
-                deleteFiles()
-                if (versionInstalled != ""):
-                    print("\nSuccessfully updated from " + versionInstalled + " to " + latestVersion)
-                else:
-                    print("\nSuccessfully updated to " + latestVersion)
-                print("")
-                try:
-                    file = open("version","w")
-                    file.write(latestVersion) 
-                    file.close() 
-                except:
-                    print("Failed to save installed version string, application may be updated again")
-            except:
-                print("Update failed, cleaning files...")
-                deleteFiles()
-                sys.exit(-1)
-        else:
-            print("Up to date: Version " + versionInstalled)
-
-    else:
-        print("Failed to access Github release")
+def main():
+    # First, set the working directory
+    os.chdir(os.path.dirname(sys.executable))
+    
+    # If the first command line argument is "test", only perform tests and then exit
+    if (len(sys.argv) >= 2):
+        if sys.argv[1] == "test":
+    
+            # Perform test of all modules
+    
+            testModule("requests")
+            testModule("json")
+            testModule("zipfile")
+            testModule("os")
+            testModule("shutil")
+            testModule("time")
+            testModule("sys")
+            testModule("zc.lockfile")
+    
+            sys.exit(0)
+    
+    
+    
+    # Make sure program is only running once
+    try:
+        lock = zc.lockfile.LockFile('lock')
+    except:
+        print("Can't check for updates: Another process is still running...")
         sys.exit(-1)
-except:
-    print("Failed to parse Github response")
-    sys.exit(-1)
+    
+    deleteOutdatedFiles()
+    
+    
+    
+    # Find installed version
+    versionInstalled = ""
+    try:
+        with open("version", "r") as versionFile:
+            versionInstalled = versionFile.readlines()[0]
+    except:
+        print("Failed to read installed version")
+    
+    
+    try:
+        release = getLatestGithubRelease("HerrNamenlos123", "TechnicalSketcher")
+        if (release.ok):
+    
+            j = json.loads(release.content)
+            latestVersion = j["tag_name"]
+    
+            if (latestVersion != versionInstalled): # Latest version is different from the installed one, update now
+                try:
+                    if (versionInstalled != ""):
+                        print("Updating from " + versionInstalled + " to " + latestVersion)
+                    else:
+                        print("Updating to " + latestVersion)
+                    print("")
+    
+                    if not downloadUpdate(j):
+                        raise ""
+                    
+                    if not unzipUpdate():
+                        raise ""
+                    
+                    if not updateApplication():
+                        raise ""
+                    
+                    deleteFiles()
+                    if (versionInstalled != ""):
+                        print("\nSuccessfully updated from " + versionInstalled + " to " + latestVersion)
+                    else:
+                        print("\nSuccessfully updated to " + latestVersion)
+                    print("")
+                    try:
+                        file = open("version","w")
+                        file.write(latestVersion) 
+                        file.close() 
+                    except:
+                        print("Failed to save installed version string, application may be updated again")
+                except:
+                    print("Update failed, cleaning files...")
+                    deleteFiles()
+                    sys.exit(-1)
+            else:
+                print("Up to date: Version " + versionInstalled)
+    
+        else:
+            print("Failed to access Github release")
+            sys.exit(-1)
+    except:
+        print("Failed to parse Github response")
+        sys.exit(-1)
+
+if __name__ == "__main__":
+    main()
