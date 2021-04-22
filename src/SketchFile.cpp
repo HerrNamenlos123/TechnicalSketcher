@@ -272,6 +272,7 @@ Battery::Texture2D SketchFile::ExportImage(bool transparent, float dpi) {
 	// Initialize texture image to render on
 	Battery::Texture2D image(width, height);
 	std::unique_ptr<Battery::Scene> scene = std::make_unique<Battery::Scene>(Battery::GetApplication()->window, image);
+	//LOG_WARN("Created Battery::Texture2D");
 
 	// Initialize the renderer
 	Battery::Renderer2D::BeginScene(scene.get());
@@ -279,9 +280,12 @@ Battery::Texture2D SketchFile::ExportImage(bool transparent, float dpi) {
 	if (transparent) {
 		al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
 		Battery::Renderer2D::DrawBackground(COLOR_TRANSPARENT);
+		//LOG_WARN("Transparent mode");
 	}
 	else {
 		Battery::Renderer2D::DrawBackground(EXPORT_BACKGROUND_COLOR);
+		//Battery::Renderer2D::DrawBackground(glm::vec4(255, 0, 255, 255));
+		//LOG_WARN("Non-transparent mode");
 	}
 
 	// Render layers in reverse order
@@ -293,9 +297,11 @@ Battery::Texture2D SketchFile::ExportImage(bool transparent, float dpi) {
 
 			// Render the shape
 			shape->RenderExport(min, max, width, height);
+			//LOG_ERROR("Rendering shape #{}", shape->GetID());
 		}
 	}
 
 	Battery::Renderer2D::EndScene();
+	//LOG_WARN("Export finished");
 	return image;
 }

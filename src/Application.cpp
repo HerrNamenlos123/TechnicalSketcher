@@ -77,10 +77,17 @@ bool App::OnStartup() {
 		window.SetSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
 	}
 
+	// Show the window in the taskbar
+	long style = GetWindowLong(window.GetWinHandle(), GWL_STYLE);
+	style |= WS_VISIBLE;
+	ShowWindow(window.GetWinHandle(), SW_HIDE);
+	SetWindowLong(window.GetWinHandle(), GWL_STYLE, style);
+
 	// Setup display
 	al_set_display_flag(window.allegroDisplayPointer, ALLEGRO_FRAMELESS, false);
 	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
 	al_flip_display();
+	ShowWindow(window.GetWinHandle(), SW_SHOW);
 
 	return true;
 }
@@ -122,18 +129,39 @@ void App::OnEvent(Battery::Event* e) {
 
 	case EventType::KeyPressed:
 
-		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
+		//if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
+		//	e->SetHandled();
+		//	//Battery::Texture2D image = Navigator::GetInstance()->file.ExportImage();
+		//	//window.SetClipboardImage(image);
+		//	//image.SaveImage("test.png");
+		//	//system("start mspaint.exe test.png");
+		//
+		//	//Battery::Texture2D image = Navigator::GetInstance()->file.ExportImage();
+		//	//window.SetClipboardImage(image);
+		//	//image.SaveImage("test.png");
+		//
+		//	//system("start \"C:\\Program Files\\GIMP 2\\bin\\gimp-2.10.exe\" test.png");
+		//}
+
+		if (static_cast<KeyPressedEvent*>(e)->keycode == 'h') {
 			e->SetHandled();
-			//Battery::Texture2D image = Navigator::GetInstance()->file.ExportImage();
-			//window.SetClipboardImage(image);
-			//image.SaveImage("test.png");
-			//system("start mspaint.exe test.png");
 
-			//Battery::Texture2D image = Navigator::GetInstance()->file.ExportImage();
-			//window.SetClipboardImage(image);
-			//image.SaveImage("test.png");
 
-			//system("start \"C:\\Program Files\\GIMP 2\\bin\\gimp-2.10.exe\" test.png");
+		}
+
+		if (static_cast<KeyPressedEvent*>(e)->keycode == 'j') {
+			e->SetHandled();
+
+			//long style = GetWindowLong(hWnd, GWL_STYLE);
+			//style &= ~(WS_VISIBLE);    // this works - window become invisible 
+			//
+			//style |= WS_EX_TOOLWINDOW;   // flags don't work - windows remains in taskbar
+			//style &= ~(WS_EX_APPWINDOW);
+			//
+			//ShowWindow(hWnd, SW_HIDE); // hide the window
+			//SetWindowLong(hWnd, GWL_STYLE, style); // set the style
+			//ShowWindow(hWnd, SW_SHOW); // show the window for the new style to come into effect
+			//ShowWindow(hWnd, SW_HIDE); // hide the window so we can't see it
 		}
 		break;
 

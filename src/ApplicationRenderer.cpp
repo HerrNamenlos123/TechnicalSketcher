@@ -67,7 +67,8 @@ void ApplicationRenderer::DrawLineExport(const glm::vec2& point1, const glm::vec
 	glm::vec2 p1 = Battery::MathUtils::MapVector(point1, min, max, { 0, 0 }, { width, height });
 	glm::vec2 p2 = Battery::MathUtils::MapVector(point2, min, max, { 0, 0 }, { width, height });
 	float thick = Battery::MathUtils::MapFloat(thickness, 0, max.x - min.x, 0, width);
-	Battery::Renderer2D::DrawLine(p1, p2, thick, color, 0);
+
+	Battery::Renderer2D::DrawLine(p1, p2, thick, color, 1);
 }
 
 void ApplicationRenderer::DrawRectangleWorkspace(const glm::vec2& point1, const glm::vec2& point2, float outlineThickness,

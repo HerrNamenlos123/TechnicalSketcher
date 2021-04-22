@@ -305,6 +305,7 @@ namespace GUI {
 					ImGui::CloseCurrentPopup();
 					exp = true;
 				}
+				ToolTip("The image will be copied directly to your clipboard", sansFont17);
 				ImGui::SetItemDefaultFocus();
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel", ImVec2(120, 0))) {
