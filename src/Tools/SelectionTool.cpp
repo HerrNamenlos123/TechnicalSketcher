@@ -9,6 +9,7 @@
 void SelectionTool::OnToolChanged() {
 	Navigator::GetInstance()->previewPointShown = false;
 	selectionBoxActive = false;
+	selectionHandler.ClearSelection();
 }
 
 void SelectionTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
