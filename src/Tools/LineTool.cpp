@@ -18,6 +18,7 @@ void LineTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snappe
 			lineStarted = true;
 		}
 		else {						// Finish a line
+			previewLine.SetPoint2(snapped);
 			Navigator::GetInstance()->AddLine(previewLine);
 			CancelShape();
 		}

@@ -16,9 +16,9 @@ void LineStripTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& s
 		lineStarted = true;
 	}
 	else if (left) {						// Continue the line
+		previewLine.SetPoint2(snapped);
 		Navigator::GetInstance()->AddLine(previewLine);
 		previewLine.SetPoint1(snapped);
-		previewLine.SetPoint2(snapped);
 		Navigator::GetInstance()->previewPointShown = false;
 	} 
 	else {
