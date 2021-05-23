@@ -926,10 +926,14 @@ void Navigator::AddArc(const ArcShape& arc) {
 void Navigator::RenderShapes() {
 	using namespace Battery;
 	
-	// Render in reverse order
+	// Render in reverse order, except for the active layer
 	auto& layers = file.GetLayers();
 	for (size_t layerIndex = layers.size() - 1; layerIndex < layers.size(); layerIndex--) {
 		auto& layer = layers[layerIndex];
+
+		if (file.GetActiveLayer().GetID() == layer.GetID()) {	// Layer is the active one, skip
+			continue;
+		}
 
 		for (auto& shape : layer.GetShapes()) {
 
@@ -949,8 +953,7 @@ void Navigator::RenderShapes() {
 					}
 				}
 
-				shape->Render(layer.GetID() == file.GetActiveLayer().GetID(),
-					shapeSelected, id == shapeHovered);
+				shape->Render(false, shapeSelected, id == shapeHovered);
 			}
 			else {
 				LOG_TRACE(__FUNCTION__ "(): Skipping rendering shape #{}: Not on screen", shape->GetID());
@@ -958,7 +961,33 @@ void Navigator::RenderShapes() {
 		}
 	}
 
-	// Now only render all selected shapes again
+	// Now render the active layer
+	for (auto& shape : file.GetActiveLayer().GetShapes()) {
+
+		// Skip the shape if it's not on the screen
+		if (shape->ShouldBeRendered(GetClientApplication()->window.GetWidth(),
+			GetClientApplication()->window.GetHeight()))
+		{
+			// Render the shape
+			ShapeID id = shape->GetID();
+			bool shapeSelected = false;
+			ShapeID shapeHovered = false;
+
+			if (selectedTool) {
+				if (selectedTool->GetType() == ToolType::SELECT) {
+					shapeSelected = static_cast<SelectionTool*>(selectedTool)->selectionHandler.IsShapeSelected(id);
+					shapeHovered = static_cast<SelectionTool*>(selectedTool)->selectionHandler.GetLastHoveredShape();
+				}
+			}
+
+			shape->Render(true, shapeSelected, id == shapeHovered);
+		}
+		else {
+			LOG_TRACE(__FUNCTION__ "(): Skipping rendering shape #{}: Not on screen", shape->GetID());
+		}
+	}
+
+	// Now render all selected shapes again, so the highlighted ones are on top
 	for (const auto& shape : file.GetActiveLayer().GetShapes()) {
 
 		// Skip the shape if it's not on the screen
