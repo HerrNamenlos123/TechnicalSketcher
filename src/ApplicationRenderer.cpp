@@ -68,7 +68,53 @@ void ApplicationRenderer::DrawLineExport(const glm::vec2& point1, const glm::vec
 	glm::vec2 p2 = Battery::MathUtils::MapVector(point2, min, max, { 0, 0 }, { width, height });
 	float thick = Battery::MathUtils::MapFloat(thickness, 0, max.x - min.x, 0, width);
 
-	Battery::Renderer2D::DrawLine(p1, p2, thick, color, 1);
+	Battery::Renderer2D::DrawLine(p1, p2, thick, color, EXPORT_FALLOFF);
+}
+
+void ApplicationRenderer::DrawCircleWorkspace(const glm::vec2& center, float radius, float thickness, 
+	const glm::vec4& color, float falloff) {
+	glm::vec2 c = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(center);
+	float r     = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(radius);
+	float t     = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(thickness);
+	Battery::Renderer2D::DrawCircle(c, r, t, color, { 0, 0, 0, 0 }, falloff);
+}
+
+void ApplicationRenderer::DrawCircleScreenspace(const glm::vec2& center, float radius, float thickness,
+	const glm::vec4& color, float falloff) {
+	Battery::Renderer2D::DrawCircle(center, radius, thickness, color, { 0, 0, 0, 0 }, falloff);
+}
+
+void ApplicationRenderer::DrawCircleExport(const glm::vec2& center, float radius, float thickness,
+	const glm::vec4& color, glm::vec2 min, glm::vec2 max, float width, float height) {
+
+	glm::vec2 c = Battery::MathUtils::MapVector(center, min, max, { 0, 0 }, { width, height });
+	float r	    = Battery::MathUtils::MapFloat(radius, 0, max.x - min.x, 0, width);
+	float t     = Battery::MathUtils::MapFloat(thickness, 0, max.x - min.x, 0, width);
+
+	Battery::Renderer2D::DrawCircle(c, r, t, color, { 0, 0, 0, 0 }, EXPORT_FALLOFF);
+}
+
+void ApplicationRenderer::DrawArcWorkspace(const glm::vec2& center, float radius, float startAngle, float endAngle, float thickness,
+	const glm::vec4& color, float falloff) {
+	glm::vec2 c = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(center);
+	float r     = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(radius);
+	float t     = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(thickness);
+	Battery::Renderer2D::DrawArc(c, r, startAngle, endAngle, t, color, falloff);
+}
+
+void ApplicationRenderer::DrawArcScreenspace(const glm::vec2& center, float radius, float startAngle, float endAngle, float thickness,
+	const glm::vec4& color, float falloff) {
+	Battery::Renderer2D::DrawArc(center, radius, startAngle, endAngle, thickness, color, falloff);
+}
+
+void ApplicationRenderer::DrawArcExport(const glm::vec2& center, float radius, float startAngle, float endAngle, float thickness,
+	const glm::vec4& color, glm::vec2 min, glm::vec2 max, float width, float height) {
+
+	glm::vec2 c = Battery::MathUtils::MapVector(center, min, max, { 0, 0 }, { width, height });
+	float r	    = Battery::MathUtils::MapFloat(radius, 0, max.x - min.x, 0, width);
+	float t     = Battery::MathUtils::MapFloat(thickness, 0, max.x - min.x, 0, width);
+
+	Battery::Renderer2D::DrawArc(c, r, startAngle, endAngle, t, color, EXPORT_FALLOFF);
 }
 
 void ApplicationRenderer::DrawRectangleWorkspace(const glm::vec2& point1, const glm::vec2& point2, float outlineThickness,

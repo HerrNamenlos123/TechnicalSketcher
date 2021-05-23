@@ -87,10 +87,10 @@ namespace GUI {
 		void MenuTab() {
 
 			ImGui::MenuItem("TechnicalSketcher", NULL, false, false);
-			if (ImGui::MenuItem("New File")) {
+			if (ImGui::MenuItem("New File", "Ctrl+N")) {
 				Navigator::GetInstance()->OpenEmptyFile();
 			}
-			if (ImGui::MenuItem("New Window")) {
+			if (ImGui::MenuItem("New Window", "Ctrl+Shift+N")) {
 				Navigator::GetInstance()->StartNewApplicationInstance();
 			}
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
@@ -222,6 +222,17 @@ namespace GUI {
 			}
 
 			OptionsPopup();
+		}
+
+		bool IsItemActiveLastFrame() {
+			ImGuiContext& g = *GImGui;
+			if (g.ActiveIdPreviousFrame)
+				return g.ActiveIdPreviousFrame == g.CurrentWindow->DC.LastItemId;
+			return false;
+		}
+
+		bool IsItemReleased() {
+			return IsItemActiveLastFrame() && !ImGui::IsItemActive();
 		}
 
 		void MainButtons() {
@@ -376,10 +387,17 @@ namespace GUI {
 			ImGui::Text("Background");
 			ImGui::SameLine();
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10);
-			Navigator::GetInstance()->backgroundColor /= 255;
-			ImGui::ColorEdit4("##BackgroundColor", (float*)&Navigator::GetInstance()->backgroundColor,
-				ImGuiColorEditFlags_NoInputs);
-			Navigator::GetInstance()->backgroundColor *= 255;
+
+			glm::vec4 color = Navigator::GetInstance()->file.backgroundColor;
+			color /= 255;
+			ImGui::ColorEdit4("##BackgroundColor", (float*)&color.x, ImGuiColorEditFlags_NoInputs);
+			color *= 255;
+
+			if (color != Navigator::GetInstance()->file.backgroundColor) {
+				Navigator::GetInstance()->file.FileChanged();
+				Navigator::GetInstance()->file.backgroundColor = color;
+			}
+
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 10);
 			ImGui::PopFont();
 
@@ -719,7 +737,7 @@ namespace GUI {
 
 			// Line tool
 			ImVec2 pos2 = ImGui::GetCursorPos();
-			if (ImGui::Selectable("\uE23F##LineTool", toolType == ToolType::LINE, 0, buttonSize)) {
+			if (ImGui::Selectable("\uF108##LineTool", toolType == ToolType::LINE, 0, buttonSize)) {
 				Navigator::GetInstance()->UseTool(ToolType::LINE);
 			}
 			ToolTip("Line tool", sansFont17);
@@ -735,6 +753,28 @@ namespace GUI {
 			ToolTip("Line strip tool", sansFont17);
 			ImGui::SetCursorPos(pos3);
 			ImGui::SameLine();
+			ImGui::SetCursorPosX(pos1.x);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + buttonDistance * 2 + buttonSize.y);
+
+			// Circle tool
+			ImVec2 pos4 = ImGui::GetCursorPos();
+			if (ImGui::Selectable("\uE3FA##CircleTool", toolType == ToolType::CIRCLE, 0, buttonSize)) {
+				Navigator::GetInstance()->UseTool(ToolType::CIRCLE);
+			}
+			ToolTip("Circle tool", sansFont17);
+			ImGui::SetCursorPos(pos4);
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonDistance);
+
+			// Arc tool
+			ImVec2 pos5 = ImGui::GetCursorPos();
+			if (ImGui::Selectable("\uE3FC##ArcTool", toolType == ToolType::ARC, 0, buttonSize)) {
+				Navigator::GetInstance()->UseTool(ToolType::ARC);
+			}
+			ToolTip("Arc tool", sansFont17);
+			ImGui::SetCursorPos(pos5);
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonDistance);
 
 			ImGui::PopFont();
 		}
@@ -876,6 +916,8 @@ namespace GUI {
 				}
 			}
 
+			DrawTabInfoBox();
+
 			if (showThemeEditor) {
 				ThemeEditorWindow();
 			}
@@ -908,6 +950,24 @@ namespace GUI {
 				layers.deleteLayerFlag = false;
 				LOG_TRACE("Deleting layer {}", layers.deleteLayer);
 				Navigator::GetInstance()->file.RemoveLayer(layers.deleteLayer);
+			}
+		}
+
+		void DrawTabInfoBox() {
+			if (Navigator::GetInstance()->tabbedShapeInfo) {
+				if (Navigator::GetInstance()->selectedTool) {
+					ShapeID hovered = static_cast<SelectionTool*>
+						(Navigator::GetInstance()->selectedTool)->selectionHandler.GetLastHoveredShape();
+					auto opt = Navigator::GetInstance()->file.FindShape(hovered);
+
+					if (hovered != -1 && opt.has_value()) {
+						ImGui::PushFont(sansFont14);
+						ImGui::BeginTooltip();
+						ImGui::Text("Shape #%d, Type: %s", opt.value().get().GetID(), opt.value().get().GetTypeString().c_str());
+						ImGui::EndTooltip();
+						ImGui::PopFont();
+					}
+				}
 			}
 		}
 

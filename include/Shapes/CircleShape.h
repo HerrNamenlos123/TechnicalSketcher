@@ -1,18 +1,19 @@
 #pragma once
 
 #include "Shapes/GenericShape.h"
+#include "ApplicationRenderer.h"
 
-class LineShape : public GenericShape {
+class CircleShape : public GenericShape {
 
-	glm::vec2 p1 = { 0, 0 };
-	glm::vec2 p2 = { 0, 0 };
+	glm::vec2 center = { 0, 0 };
+	float radius = 0;
 	float thickness = 0;
 	glm::vec4 color;
 
 public:
-	LineShape();
-	LineShape(const glm::vec2& p1, const glm::vec2& p2, float thickness, const glm::vec4& color);
-	LineShape(const nlohmann::json& j);
+	CircleShape();
+	CircleShape(const glm::vec2& center, float radius, float thickness, const glm::vec4& color);
+	CircleShape(const nlohmann::json& j);
 	ShapePTR Duplicate();
 	std::string GetTypeString() const;
 
@@ -23,12 +24,12 @@ public:
 	float GetDistanceToCursor(const glm::vec2& p) const;
 	bool IsShapeHovered(const glm::vec2& cursor, float thresholdDistance) const;
 
-	void SetPoint1(const glm::vec2& position);
-	void SetPoint2(const glm::vec2& position);
+	void SetCenter(const glm::vec2& position);
+	void SetRadius(float radius);
 	void SetThickness(float thickness);
 	void SetColor(const glm::vec4& color);
-	glm::vec2 GetPoint1() const;
-	glm::vec2 GetPoint2() const;
+	glm::vec2 GetCenter() const;
+	float GetRadius() const;
 	float GetThickness() const;
 	glm::vec4 GetColor() const;
 	glm::vec2 GetCenterPosition() const;
@@ -63,14 +64,4 @@ public:
 	static inline float dist(const glm::vec2& v1, const glm::vec2& v2) {
 		return dist(v2 - v1);
 	}
-
-	inline float GetNormalDistanceToLine(const glm::vec2& p) const {
-		float d = dist(p1, p2);
-
-		if (d == 0)
-			return dist(p1, p);
-
-		return abs((p2.y - p1.y) * p.x - (p2.x - p1.x) * p.y + p2.x * p1.y - p2.y * p1.x) / d;
-	}
-
 };

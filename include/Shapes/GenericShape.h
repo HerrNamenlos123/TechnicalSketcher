@@ -8,7 +8,9 @@ typedef std::shared_ptr<GenericShape> ShapePTR;
 
 enum class ShapeType {
 	NONE,
-	LINE
+	LINE,
+	CIRCLE,
+	ARC
 };
 
 class GenericShape {
@@ -34,24 +36,21 @@ public:
 	}
 
 	static ShapePTR MakeShape(enum class ShapeType type, glm::vec2 p1, glm::vec2 p2,
-											float thickness, const glm::vec4& color);
+		float thickness, const glm::vec4& color);
+	static ShapePTR MakeShape(enum class ShapeType type, glm::vec2 center,
+		float radius, float thickness, const glm::vec4& color);
+	static ShapePTR MakeShape(enum class ShapeType type, glm::vec2 center,
+		float radius, float startAngle, float endAngle, float thickness, const glm::vec4& color);
 	static ShapePTR MakeShape(const nlohmann::json& json);
 
 	virtual ShapePTR Duplicate() = 0;
+	virtual std::string GetTypeString() const = 0;
 
 	virtual std::pair<glm::vec2, glm::vec2> GetBoundingBox() const = 0;
 	virtual bool ShouldBeRendered(float screenWidth, float screenHeight) const = 0;
 	virtual bool IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) const = 0;
 	virtual bool IsShapeHovered(const glm::vec2& cursor, float thresholdDistance) const = 0;
 
-	virtual void SetPoint1(const glm::vec2& position) = 0;
-	virtual void SetPoint2(const glm::vec2& position) = 0;
-	virtual void SetThickness(float thickness) = 0;
-	virtual void SetColor(const glm::vec4& color) = 0;
-	virtual glm::vec2 GetPoint1() const = 0;
-	virtual glm::vec2 GetPoint2() const = 0;
-	virtual float GetThickness() const = 0;
-	virtual glm::vec4 GetColor() const = 0;
 	virtual glm::vec2 GetCenterPosition() const = 0;
 
 	virtual bool ShowPropertiesWindow() = 0;

@@ -8,6 +8,7 @@
 #include "Tools/SelectionTool.h"
 #include "Tools/LineTool.h"
 #include "Tools/LineStripTool.h"
+#include "Tools/CircleTool.h"
 
 void Navigator::CreateInstance() {
 	instance.reset(new Navigator());
@@ -69,12 +70,12 @@ void Navigator::OnRender() {
 
 	ApplicationRenderer::BeginFrame();
 
-	Battery::Renderer2D::DrawBackground(backgroundColor);
+	Battery::Renderer2D::DrawBackground(file.backgroundColor);
 
 	// Draw first part of the selection box
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			static_cast<SelectionTool*>(selectedTool.get())->RenderFirstPart();
+			static_cast<SelectionTool*>(selectedTool)->RenderFirstPart();
 		}
 	}
 	
@@ -97,7 +98,7 @@ void Navigator::OnRender() {
 	// Draw second part of the selection box
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			static_cast<SelectionTool*>(selectedTool.get())->RenderSecondPart();
+			static_cast<SelectionTool*>(selectedTool)->RenderSecondPart();
 		}
 	}
 
@@ -276,24 +277,32 @@ void Navigator::UseTool(enum class ToolType tool) {
 
 	case ToolType::NONE:
 		LOG_WARN("Can't choose tool 'NONE'");
-		selectedTool.release();
+		selectedTool = &selectionTool;
 		break;
 
 	case ToolType::SELECT:
-		selectedTool = std::make_unique<SelectionTool>();
+		selectedTool = &selectionTool;
 		break;
 
 	case ToolType::LINE:
-		selectedTool = std::make_unique<LineTool>();
+		selectedTool = &lineTool;
 		break;
 
 	case ToolType::LINE_STRIP:
-		selectedTool = std::make_unique<LineStripTool>();
+		selectedTool = &lineStripTool;
+		break;
+
+	case ToolType::CIRCLE:
+		selectedTool = &circleTool;
+		break;
+
+	case ToolType::ARC:
+		selectedTool = &arcTool;
 		break;
 
 	default:
 		LOG_WARN("Unsupported tool type was selected");
-		selectedTool.release();
+		selectedTool = &selectionTool;
 		break;
 	}
 
@@ -313,7 +322,7 @@ void Navigator::PrintShapes() {
 void Navigator::RemoveSelectedShapes() {
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			static_cast<SelectionTool*>(selectedTool.get())->RemoveSelectedShapes();
+			static_cast<SelectionTool*>(selectedTool)->RemoveSelectedShapes();
 		}
 	}
 }
@@ -321,7 +330,7 @@ void Navigator::RemoveSelectedShapes() {
 void Navigator::MoveSelectedShapesLeft() {
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			static_cast<SelectionTool*>(selectedTool.get())->MoveSelectedShapesLeft(snapSize);
+			static_cast<SelectionTool*>(selectedTool)->MoveSelectedShapesLeft(snapSize);
 		}
 	}
 }
@@ -329,7 +338,7 @@ void Navigator::MoveSelectedShapesLeft() {
 void Navigator::MoveSelectedShapesRight() {
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			static_cast<SelectionTool*>(selectedTool.get())->MoveSelectedShapesRight(snapSize);
+			static_cast<SelectionTool*>(selectedTool)->MoveSelectedShapesRight(snapSize);
 		}
 	}
 }
@@ -337,7 +346,7 @@ void Navigator::MoveSelectedShapesRight() {
 void Navigator::MoveSelectedShapesUp() {
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			static_cast<SelectionTool*>(selectedTool.get())->MoveSelectedShapesUp(snapSize);
+			static_cast<SelectionTool*>(selectedTool)->MoveSelectedShapesUp(snapSize);
 		}
 	}
 }
@@ -345,7 +354,7 @@ void Navigator::MoveSelectedShapesUp() {
 void Navigator::MoveSelectedShapesDown() {
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			static_cast<SelectionTool*>(selectedTool.get())->MoveSelectedShapesDown(snapSize);
+			static_cast<SelectionTool*>(selectedTool)->MoveSelectedShapesDown(snapSize);
 		}
 	}
 }
@@ -353,9 +362,10 @@ void Navigator::MoveSelectedShapesDown() {
 void Navigator::SelectNextPossibleShape() {
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			static_cast<SelectionTool*>(selectedTool.get())->SelectNextPossibleShape();
+			static_cast<SelectionTool*>(selectedTool)->SelectNextPossibleShape();
 		}
 	}
+	tabbedShapeInfo = true;
 }
 
 
@@ -451,6 +461,17 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 		}
 		break;
 
+	case ALLEGRO_KEY_N:
+		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {
+			if (GetClientApplication()->GetKey(ALLEGRO_KEY_LSHIFT)) {
+				Navigator::GetInstance()->StartNewApplicationInstance();	// CTRL + SHIFT + N
+			}
+			else {
+				Navigator::GetInstance()->OpenEmptyFile();		// CTRL + N
+			}
+		}
+		break;
+
 	default:
 		break;
 
@@ -463,7 +484,7 @@ void Navigator::OnMouseClicked(const glm::vec2& position, const glm::vec2& snapp
 
 	if (selectedTool) {
 		if (selectedTool->GetType() == ToolType::SELECT) {
-			shapeClicked = static_cast<SelectionTool*>(selectedTool.get())->selectionHandler.GetHoveredShape(position);
+			shapeClicked = static_cast<SelectionTool*>(selectedTool)->selectionHandler.GetHoveredShape(position);
 		}
 	}
 
@@ -494,6 +515,14 @@ void Navigator::OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped
 		OnMouseHovered(position, snapped, dx, dy);
 	}
 
+	if (selectedTool) {
+		if (selectedTool->GetType() == ToolType::SELECT) {
+			ShapeID hovered = static_cast<SelectionTool*>(selectedTool)->selectionHandler.GetLastHoveredShape();
+			if (hovered == -1) {
+				tabbedShapeInfo = false;
+			}
+		}
+	}
 }
 
 void Navigator::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
@@ -823,17 +852,43 @@ void Navigator::AddLayer() {
 	file.PushLayer();
 }
 
-void Navigator::AddLine(const glm::vec2& p1, const glm::vec2& p2) {
+void Navigator::AddLine(const LineShape& line) {
 
 	// Safety check
-	if (p1 == p2) {
+	if (line.GetPoint1() == line.GetPoint2()) {
 		LOG_WARN(__FUNCTION__ "(): Line is not added to buffer: Start and end points are identical!");
 		return;
 	}
 
-	file.AddShape(ShapeType::LINE, p1, p2, currentLineThickness, currentShapeColor);
+	file.AddShape(ShapeType::LINE, line.GetPoint1(), line.GetPoint2(), line.GetThickness(), line.GetColor());
 
 	LOG_TRACE(__FUNCTION__"(): Line was added");
+}
+
+void Navigator::AddCircle(const CircleShape& circle) {
+
+	// Safety check
+	if (circle.GetRadius() == 0) {
+		LOG_WARN(__FUNCTION__ "(): Circle is not added to buffer: Radius is 0!");
+		return;
+	}
+
+	file.AddShape(ShapeType::CIRCLE, circle.GetCenter(), circle.GetRadius(), circle.GetThickness(), circle.GetColor());
+
+	LOG_TRACE(__FUNCTION__"(): Circle was added");
+}
+
+void Navigator::AddArc(const ArcShape& arc) {
+
+	// Safety check
+	if (arc.GetRadius() == 0) {
+		LOG_WARN(__FUNCTION__ "(): Arc is not added to buffer: Radius is 0!");
+		return;
+	}
+
+	file.AddShape(ShapeType::ARC, arc.GetCenter(), arc.GetRadius(), arc.GetStartAngle(), arc.GetEndAngle(), arc.GetThickness(), arc.GetColor());
+
+	LOG_TRACE(__FUNCTION__"(): Arc was added");
 }
 
 
@@ -889,8 +944,8 @@ void Navigator::RenderShapes() {
 
 				if (selectedTool) {
 					if (selectedTool->GetType() == ToolType::SELECT) {
-						shapeSelected = static_cast<SelectionTool*>(selectedTool.get())->selectionHandler.IsShapeSelected(id);
-						shapeHovered = static_cast<SelectionTool*>(selectedTool.get())->selectionHandler.GetLastHoveredShape();
+						shapeSelected = static_cast<SelectionTool*>(selectedTool)->selectionHandler.IsShapeSelected(id);
+						shapeHovered = static_cast<SelectionTool*>(selectedTool)->selectionHandler.GetLastHoveredShape();
 					}
 				}
 
@@ -917,8 +972,8 @@ void Navigator::RenderShapes() {
 
 			if (selectedTool) {
 				if (selectedTool->GetType() == ToolType::SELECT) {
-					shapeSelected = static_cast<SelectionTool*>(selectedTool.get())->selectionHandler.IsShapeSelected(id);
-					shapeHovered = static_cast<SelectionTool*>(selectedTool.get())->selectionHandler.GetLastHoveredShape();
+					shapeSelected = static_cast<SelectionTool*>(selectedTool)->selectionHandler.IsShapeSelected(id);
+					shapeHovered = static_cast<SelectionTool*>(selectedTool)->selectionHandler.GetLastHoveredShape();
 
 					if (shapeSelected || id == shapeHovered) {
 						shape->Render(true, shapeSelected, id == shapeHovered);

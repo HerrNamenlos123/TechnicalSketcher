@@ -9,18 +9,20 @@
 void SketchFile::UpdateWindowTitle() {
 	std::string file = Battery::FileUtils::GetBasenameFromPath(filename);
 	const std::string& version = Navigator::GetInstance()->applicationVersion;
+	std::string title = "";
 
-	if (version.length() > 0) {
-		if (fileChanged) {
-			Battery::GetApplication()->window.SetTitle("*" + file + " - " APPLICATION_NAME + " - " + version);
-		}
-		else {
-			Battery::GetApplication()->window.SetTitle(file + " - " APPLICATION_NAME + " - " + version);
-		}
+	if (fileChanged) {
+		title = "*" + file + " - " APPLICATION_NAME;
 	}
 	else {
-		Battery::GetApplication()->window.SetTitle(file + " - " APPLICATION_NAME);
+		title = file + " - " APPLICATION_NAME;
 	}
+
+	if (version.length() > 0) {
+		title += " - " + version;
+	}
+
+	Battery::GetApplication()->window.SetTitle(title);
 }
 
 bool SketchFile::SaveFile(bool saveAs) {
@@ -138,6 +140,7 @@ bool SketchFile::OpenEmptyFile() {
 	fileChanged = false;
 	filename = DEFAULT_FILENAME;	// Filename contains extension
 	fileLocation = "";
+	backgroundColor = DEFAULT_BACKGROUND_COLOR;
 	return true;
 }
 
@@ -180,11 +183,7 @@ bool SketchFile::OpenFile(const std::string& path) {
 	// Now it's valid, check if it is empty
 	if (file.content().length() == 0) {
 		// Create an empty file
-		content = FileContent();
-		fileChanged = false;
-		fileLocation = path;
-		filename = Battery::FileUtils::GetFilenameFromPath(path);
-		return true;
+		return OpenEmptyFile();
 	}
 
 	try {
@@ -219,6 +218,25 @@ bool SketchFile::OpenFile(const std::string& path) {
 			layers.push_back(std::move(layer));
 		}
 
+		// And finally, load the background color
+		glm::vec4 bCol;
+		if (j.contains("background_color")) {
+			std::vector<float> col = j["background_color"];
+
+			if (col.size() == 4) {
+				bCol.r = col[0];
+				bCol.g = col[1];
+				bCol.b = col[2];
+				bCol.a = col[3];
+			}
+			else {
+				bCol = DEFAULT_BACKGROUND_COLOR;
+			}
+		}
+		else {
+			bCol = DEFAULT_BACKGROUND_COLOR;
+		}
+
 		// Json is parsed, now load the content
 		this->content = FileContent(false);				// Clean everything
 		for (Layer& layer : layers) {
@@ -227,6 +245,7 @@ bool SketchFile::OpenFile(const std::string& path) {
 
 		fileChanged = false;
 		fileLocation = path;
+		backgroundColor = bCol;
 		filename = Battery::FileUtils::GetFilenameFromPath(path);
 
 		UpdateWindowTitle();

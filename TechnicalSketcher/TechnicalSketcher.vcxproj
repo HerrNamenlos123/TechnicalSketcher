@@ -113,9 +113,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\SelectionHandler.cpp" />
+    <ClCompile Include="..\src\Shapes\ArcShape.cpp" />
+    <ClCompile Include="..\src\Shapes\CircleShape.cpp" />
     <ClCompile Include="..\src\Shapes\GenericShape.cpp" />
     <ClCompile Include="..\src\Shapes\LineShape.cpp" />
     <ClCompile Include="..\src\SketchFile.cpp" />
+    <ClCompile Include="..\src\Tools\ArcTool.cpp" />
+    <ClCompile Include="..\src\Tools\CircleTool.cpp" />
     <ClCompile Include="..\src\Tools\LineStripTool.cpp" />
     <ClCompile Include="..\src\Tools\LineTool.cpp" />
     <ClCompile Include="..\src\Tools\SelectionTool.cpp" />
@@ -140,9 +144,13 @@
     <ClInclude Include="..\include\pch.h" />
     <ClInclude Include="..\include\PerlinNoise.h" />
     <ClInclude Include="..\include\SelectionHandler.h" />
+    <ClInclude Include="..\include\Shapes\ArcShape.h" />
+    <ClInclude Include="..\include\Shapes\CircleShape.h" />
     <ClInclude Include="..\include\Shapes\GenericShape.h" />
     <ClInclude Include="..\include\Shapes\LineShape.h" />
     <ClInclude Include="..\include\SketchFile.h" />
+    <ClInclude Include="..\include\Tools\ArcTool.h" />
+    <ClInclude Include="..\include\Tools\CircleTool.h" />
     <ClInclude Include="..\include\Tools\GenericTool.h" />
     <ClInclude Include="..\include\Tools\LineStripTool.h" />
     <ClInclude Include="..\include\Tools\LineTool.h" />

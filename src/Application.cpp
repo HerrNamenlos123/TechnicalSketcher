@@ -10,7 +10,8 @@
 
 App::App() : Battery::Application(SPLASH_SCREEN_WIDTH, SPLASH_SCREEN_HEIGHT, APPLICATION_NAME) {
 	//LOG_SET_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
-	SetWindowFlags(ALLEGRO_RESIZABLE | ALLEGRO_FRAMELESS);
+	SetWindowFlag(WindowFlags::FRAMELESS);
+	SetWindowFlag(WindowFlags::NO_TASKBAR);
 }
 
 bool App::OnStartup() {
@@ -20,7 +21,7 @@ bool App::OnStartup() {
 	splash.LoadEmbeddedResource(IDB_PNG1);
 	if (splash.IsValid()) {
 		al_draw_bitmap(splash.GetAllegroBitmap(), 0, 0, 0);
-		al_flip_display();
+		window.FlipDisplay();
 	}
 
 	// Initialize the renderer
@@ -65,7 +66,7 @@ bool App::OnStartup() {
 
 	// Set the window size and position
 	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
-	al_flip_display();
+	window.FlipDisplay();
 	glm::vec2 monitorSize = GetPrimaryMonitorSize();	// If screen is too small with a little margin, maximize the window				
 	if (monitorSize.x / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_WIDTH || monitorSize.y / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_HEIGHT) {
 		window.SetSize(monitorSize / SCREEN_SIZE_MARGIN);
@@ -77,17 +78,11 @@ bool App::OnStartup() {
 		window.SetSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
 	}
 
-	// Show the window in the taskbar
-	long style = GetWindowLong(window.GetWinHandle(), GWL_STYLE);
-	style |= WS_VISIBLE;
-	ShowWindow(window.GetWinHandle(), SW_HIDE);
-	SetWindowLong(window.GetWinHandle(), GWL_STYLE, style);
-
 	// Setup display
-	al_set_display_flag(window.allegroDisplayPointer, ALLEGRO_FRAMELESS, false);
+	window.SetFrameless(false);
 	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
-	al_flip_display();
-	ShowWindow(window.GetWinHandle(), SW_SHOW);
+	window.FlipDisplay();
+	window.ShowInTaskbar();
 
 	return true;
 }
@@ -143,25 +138,16 @@ void App::OnEvent(Battery::Event* e) {
 		//	//system("start \"C:\\Program Files\\GIMP 2\\bin\\gimp-2.10.exe\" test.png");
 		//}
 
-		if (static_cast<KeyPressedEvent*>(e)->keycode == 'h') {
+		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_H) {
 			e->SetHandled();
 
 
 		}
-
-		if (static_cast<KeyPressedEvent*>(e)->keycode == 'j') {
+		
+		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_J) {
 			e->SetHandled();
 
-			//long style = GetWindowLong(hWnd, GWL_STYLE);
-			//style &= ~(WS_VISIBLE);    // this works - window become invisible 
-			//
-			//style |= WS_EX_TOOLWINDOW;   // flags don't work - windows remains in taskbar
-			//style &= ~(WS_EX_APPWINDOW);
-			//
-			//ShowWindow(hWnd, SW_HIDE); // hide the window
-			//SetWindowLong(hWnd, GWL_STYLE, style); // set the style
-			//ShowWindow(hWnd, SW_SHOW); // show the window for the new style to come into effect
-			//ShowWindow(hWnd, SW_HIDE); // hide the window so we can't see it
+
 		}
 		break;
 

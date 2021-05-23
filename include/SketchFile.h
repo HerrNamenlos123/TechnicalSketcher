@@ -17,6 +17,8 @@ class SketchFile {
 	std::string fileLocation = "";
 
 public:
+	glm::vec4 backgroundColor = DEFAULT_BACKGROUND_COLOR;
+
 	SketchFile() {
 
 	}
@@ -101,6 +103,16 @@ public:
 		fileChanged = true;
 	}
 
+	void AddShape(enum class ShapeType type, glm::vec2 center, float radius, float thickness, const glm::vec4& color) {
+		content.GetActiveLayer().AddShape(type, center, radius, thickness, color);
+		fileChanged = true;
+	}
+
+	void AddShape(enum class ShapeType type, glm::vec2 center, float radius, float startAngle, float endAngle, float thickness, const glm::vec4& color) {
+		content.GetActiveLayer().AddShape(type, center, radius, startAngle, endAngle, thickness, color);
+		fileChanged = true;
+	}
+
 	void AddShapes(std::vector<ShapePTR>&& shapes) {
 		content.GetActiveLayer().AddShapes(std::move(shapes));
 		fileChanged = true;
@@ -170,6 +182,10 @@ public:
 
 	void UpdateWindowTitle();
 
+	void FileChanged() {
+		fileChanged = true;
+	}
+
 	nlohmann::json GetJsonFromShapes(const std::vector<ShapeID>& ids) {
 		nlohmann::json json = nlohmann::json();
 
@@ -203,6 +219,7 @@ public:
 			layers.push_back(layer.GetJson());
 		}
 		j["layers"] = layers;
+		j["background_color"] = nlohmann::json::array({ backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a });
 		j["file_type"] = JSON_FILE_TYPE;
 		j["file_version"] = JSON_FILE_VERSION;
 

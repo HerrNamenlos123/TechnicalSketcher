@@ -2,6 +2,8 @@
 
 #include "pch.h"
 #include "Shapes/LineShape.h"
+#include "ApplicationRenderer.h"
+#include "Navigator.h"
 
 extern ImFont* materialFont35;
 extern ImFont* segoeFont35;
@@ -28,6 +30,10 @@ LineShape::LineShape(const nlohmann::json& j) {
 
 ShapePTR LineShape::Duplicate() {
 	return std::make_shared<LineShape>(p1, p2, thickness, color);
+}
+
+std::string LineShape::GetTypeString() const {
+	return "Line";
 }
 
 

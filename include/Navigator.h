@@ -7,6 +7,10 @@
 #include "config.h"
 
 #include "Tools/SelectionTool.h"
+#include "Tools/LineTool.h"
+#include "Tools/LineStripTool.h"
+#include "Tools/CircleTool.h"
+#include "Tools/ArcTool.h"
 
 class Navigator {
 
@@ -23,7 +27,7 @@ public:
 	std::string applicationVersion;
 	std::string imguiFileLocation;
 
-	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve once, to be consistent through the update loop
+	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve every frame, to be consistent through the update loop
 	Battery::ClipboardFormatID clipboardShapeFormat;
 
 	// User interface
@@ -33,11 +37,8 @@ public:
 	float defaultSnapSize = 5;
 	float snapSize = defaultSnapSize;
 	float mouseHighlightThresholdDistance = 8;
-	float currentLineThickness = 0.75;
 	bool infiniteSheet = false;
 	bool gridShown = true;
-	glm::vec4 currentShapeColor = glm::vec4(0, 0, 0, 255);
-	glm::vec4 backgroundColor = glm::vec4(255, 255, 255, 255);
 
 	float exportDPI = 300;
 	bool exportTransparent = true;
@@ -45,6 +46,7 @@ public:
 	bool popupDeleteLayerOpen = false;
 	bool popupSettingsOpen = false;
 	bool keepUpToDate = true;
+	bool tabbedShapeInfo = false;
 
 	// Buffers to store event data
 	float scrollBuffer = 0;
@@ -62,7 +64,13 @@ public:
 	glm::vec2 previewPointPosition = { 0, 0 };
 	bool previewPointShown = false;
 
-	std::unique_ptr<GenericTool> selectedTool = std::make_unique<SelectionTool>();
+	SelectionTool selectionTool;
+	LineTool lineTool;
+	LineStripTool lineStripTool;
+	CircleTool circleTool;
+	ArcTool arcTool;
+
+	GenericTool* selectedTool = &selectionTool;		// This is a reference to the stack objects above, don't delete
 
 	static void CreateInstance();
 	static void DestroyInstance();
@@ -131,7 +139,9 @@ public:
 	void CloseApplication();
 
 	void AddLayer();
-	void AddLine(const glm::vec2& p1, const glm::vec2& p2);
+	void AddLine(const LineShape& line);
+	void AddCircle(const CircleShape& circle);
+	void AddArc(const ArcShape& arc);
 
 	void RenderShapes();
 };

@@ -39,6 +39,20 @@ public:
     static void DrawLineExport(const glm::vec2& point1, const glm::vec2& point2, float thickness, 
         const glm::vec4& color, glm::vec2 min, glm::vec2 max, float width, float height);
 
+    static void DrawCircleWorkspace(const glm::vec2& center, float radius, float thickness, 
+        const glm::vec4& color, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);
+    static void DrawCircleScreenspace(const glm::vec2& center, float radius, float thickness,
+        const glm::vec4& color, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);
+    static void DrawCircleExport(const glm::vec2& center, float radius, float thickness,
+        const glm::vec4& color, glm::vec2 min, glm::vec2 max, float width, float height);
+
+    static void DrawArcWorkspace(const glm::vec2& center, float radius, float startAngle, float endAngle, float thickness,
+        const glm::vec4& color, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);
+    static void DrawArcScreenspace(const glm::vec2& center, float radius, float startAngle, float endAngle, float thickness,
+        const glm::vec4& color, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);
+    static void DrawArcExport(const glm::vec2& center, float radius, float startAngle, float endAngle, float thickness,
+        const glm::vec4& color, glm::vec2 min, glm::vec2 max, float width, float height);
+
     static void DrawRectangleWorkspace(const glm::vec2& point1, const glm::vec2& point2, float outlineThickness,
         const glm::vec4& outlineColor, const glm::vec4& fillColor, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);
     static void DrawRectangleScreenspace(const glm::vec2& point1, const glm::vec2& point2, float outlineThickness,

@@ -8,7 +8,9 @@ enum class ToolType {
 	NONE,
 	SELECT,
 	LINE,
-	LINE_STRIP
+	LINE_STRIP,
+	CIRCLE,
+	ARC
 };
 
 class GenericTool {

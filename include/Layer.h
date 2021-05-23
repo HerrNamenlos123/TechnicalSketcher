@@ -32,6 +32,8 @@ public:
 
 	bool AddShape(const nlohmann::json& json);
 	void AddShape(enum class ShapeType type, glm::vec2 p1, glm::vec2 p2, float thickness, const glm::vec4& color);
+	void AddShape(enum class ShapeType type, glm::vec2 center, float radius, float thickness, const glm::vec4& color);
+	void AddShape(enum class ShapeType type, glm::vec2 center, float radius, float startAngle, float endAngle, float thickness, const glm::vec4& color);
 	bool AddShapes(const std::vector<nlohmann::json>& jsonArray);
 	void AddShapes(std::vector<ShapePTR>&& shapes);
 	bool RemoveShape(const ShapeID& id);

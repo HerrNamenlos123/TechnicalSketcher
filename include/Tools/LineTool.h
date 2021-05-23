@@ -1,7 +1,7 @@
 #pragma once
 
+#include "config.h"
 #include "Tools/GenericTool.h"
-#include "Shapes/GenericShape.h"
 #include "Shapes/LineShape.h"
 
 class LineTool : public GenericTool {
@@ -10,7 +10,7 @@ class LineTool : public GenericTool {
 	bool lineStarted = false;
 	
 public:
-	LineTool() : GenericTool(ToolType::LINE), previewLine({ 0, 0 }, { 0, 0 }, 0, { 0, 0, 0, 0 }) {}
+	LineTool() : GenericTool(ToolType::LINE), previewLine({ 0, 0 }, { 0, 0 }, DEFAULT_LINE_THICKNESS, DEFAULT_LINE_COLOR) {}
 
 	void OnToolChanged();
 	void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);

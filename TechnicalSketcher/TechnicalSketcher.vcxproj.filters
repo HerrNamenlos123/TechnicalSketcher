@@ -81,6 +81,18 @@
     <ClCompile Include="..\src\Fonts\FontLoader.cpp">
       <Filter>Source Files\Fonts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Shapes\CircleShape.cpp">
+      <Filter>Source Files\Shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Tools\CircleTool.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Shapes\ArcShape.cpp">
+      <Filter>Source Files\Shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Tools\ArcTool.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Application.h">
@@ -166,6 +178,18 @@
     </ClInclude>
     <ClInclude Include="..\include\Fonts\SegoeMDL2FontData.h">
       <Filter>Header Files\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Shapes\CircleShape.h">
+      <Filter>Header Files\Shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Tools\CircleTool.h">
+      <Filter>Header Files\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Shapes\ArcShape.h">
+      <Filter>Header Files\Shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Tools\ArcTool.h">
+      <Filter>Header Files\Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

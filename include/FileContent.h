@@ -6,7 +6,6 @@
 class FileContent {
 
 	std::vector<Layer> layers;
-	size_t nextLayerNameID = 1;
 	size_t activeLayer = -1;	// This is the std::vector index!!!
 
 public:
@@ -32,7 +31,30 @@ public:
 	}
 
 	void PushLayer() {
-		PushLayer("Layer #" + std::to_string(nextLayerNameID++));
+		// Use a new name that does not exist yet
+		std::string name = "Layer #1";
+		size_t id = 1;
+
+		// Increase number until it's unique
+		bool repeat = false;
+		do {
+			repeat = false;
+
+			for (Layer& layer : layers) {
+				if (layer.name == name) {	// Name already exists
+					repeat = true;
+
+					// Increase the name number
+					id++;
+					name = "Layer #" + std::to_string(id);
+
+					break;
+				}
+			}
+		} while (repeat);
+
+		// Now push it
+		PushLayer(name);
 	}
 
 	void PushLayer(const std::string& name) {

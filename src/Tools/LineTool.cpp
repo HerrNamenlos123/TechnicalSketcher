@@ -12,17 +12,13 @@ void LineTool::OnToolChanged() {
 void LineTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
 	if (left) {
 		if (!lineStarted) {				// Start a line
-			float thickness = Navigator::GetInstance()->currentLineThickness;
-			auto color = Navigator::GetInstance()->currentShapeColor;
 			previewLine.SetPoint1(snapped);
 			previewLine.SetPoint2(snapped);
-			previewLine.SetThickness(thickness);
-			previewLine.SetColor(color);
 			Navigator::GetInstance()->previewPointShown = false;
 			lineStarted = true;
 		}
 		else {						// Finish a line
-			Navigator::GetInstance()->AddLine(previewLine.GetPoint1(), snapped);
+			Navigator::GetInstance()->AddLine(previewLine);
 			CancelShape();
 		}
 	}
@@ -97,13 +93,7 @@ bool LineTool::IsPropertiesWindowShown() {
 
 void LineTool::ShowPropertiesWindow() {
 	if (!lineStarted) {
-		previewLine.SetThickness(Navigator::GetInstance()->currentLineThickness);
-		previewLine.SetColor(Navigator::GetInstance()->currentShapeColor);
-
 		previewLine.ShowPropertiesWindow();
-
-		Navigator::GetInstance()->currentLineThickness = previewLine.GetThickness();
-		Navigator::GetInstance()->currentShapeColor = previewLine.GetColor();
 	}
 }
 
