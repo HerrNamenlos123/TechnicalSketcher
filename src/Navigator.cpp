@@ -423,6 +423,7 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 
 	case ALLEGRO_KEY_A:		// Select all
 		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+			UseTool(ToolType::SELECT);
 			SelectAll();
 		}
 		break;
@@ -457,6 +458,7 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 
 	case ALLEGRO_KEY_V:		// Paste
 		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+			UseTool(ToolType::SELECT);
 			PasteClipboard();
 		}
 		break;
@@ -468,6 +470,7 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 			}
 			else {
 				Navigator::GetInstance()->OpenEmptyFile();		// CTRL + N
+				UseTool(ToolType::SELECT);
 			}
 		}
 		break;
