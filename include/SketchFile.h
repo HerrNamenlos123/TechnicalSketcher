@@ -66,6 +66,10 @@ public:
 		return false;
 	}
 
+	void SaveActiveLayerState() {
+		content.GetActiveLayer().SaveState();
+	}
+
 	void UndoAction() {
 		content.GetActiveLayer().UndoAction();
 	}

@@ -851,6 +851,7 @@ namespace GUI {
 		MouseInfoWindow mouseInfo;
 		PropertiesWindow propertiesWindow;
 		bool showThemeEditor = false;
+		bool wasPropertiesWindowShown = false;
 
 		ALLEGRO_SYSTEM_MOUSE_CURSOR mouseCursor = ALLEGRO_SYSTEM_MOUSE_CURSOR_NONE;
 
@@ -910,10 +911,23 @@ namespace GUI {
 			toolbox.Render();
 			mouseInfo.Render();
 
+			bool wasShownBefore = wasPropertiesWindowShown;
 			if (Navigator::GetInstance()->selectedTool) {
 				if (Navigator::GetInstance()->selectedTool->IsPropertiesWindowShown()) {
-					propertiesWindow.Render();
+					propertiesWindow.Render(); 
+					wasPropertiesWindowShown = true;
 				}
+				else {
+					wasPropertiesWindowShown = false;
+				}
+			}
+			else {
+				wasPropertiesWindowShown = false;
+			}
+
+			if (wasPropertiesWindowShown && !wasShownBefore) {	// Properties window is being opened, save state
+				Navigator::GetInstance()->file.SaveActiveLayerState();
+				LOG_WARN("Saving state");
 			}
 
 			DrawTabInfoBox();

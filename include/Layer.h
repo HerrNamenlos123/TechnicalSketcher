@@ -49,10 +49,7 @@ public:
 	bool MoveShapesDown(const std::vector<ShapeID>& ids, float amount);
 	bool MoveShapes(const std::vector<ShapeID>& ids, glm::vec2 amount);
 
-private:
 	void SaveState();
-
-public:
 	void UndoAction();
 
 	void SetPreviewImage(const Battery::Texture2D& image);
