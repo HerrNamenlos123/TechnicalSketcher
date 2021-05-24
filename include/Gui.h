@@ -912,22 +912,16 @@ namespace GUI {
 			mouseInfo.Render();
 
 			bool wasShownBefore = wasPropertiesWindowShown;
+			wasPropertiesWindowShown = false;
 			if (Navigator::GetInstance()->selectedTool) {
 				if (Navigator::GetInstance()->selectedTool->IsPropertiesWindowShown()) {
 					propertiesWindow.Render(); 
 					wasPropertiesWindowShown = true;
 				}
-				else {
-					wasPropertiesWindowShown = false;
-				}
-			}
-			else {
-				wasPropertiesWindowShown = false;
 			}
 
 			if (wasPropertiesWindowShown && !wasShownBefore) {	// Properties window is being opened, save state
 				Navigator::GetInstance()->file.SaveActiveLayerState();
-				LOG_WARN("Saving state");
 			}
 
 			DrawTabInfoBox();
