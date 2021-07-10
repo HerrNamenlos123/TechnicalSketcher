@@ -53,7 +53,7 @@ void ApplicationRenderer::DrawLineWorkspace(const glm::vec2& point1, const glm::
 	glm::vec2 p1 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point1);
 	glm::vec2 p2 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point2);
 	float thick = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(thickness);
-	Battery::Renderer2D::DrawLine(p1, p2, thick, color, falloff);
+	Battery::Renderer2D::DrawLine(p1, p2, max(thick, 0.5f), color, falloff);
 }
 
 void ApplicationRenderer::DrawLineScreenspace(const glm::vec2& point1, const glm::vec2& point2, float thickness, 

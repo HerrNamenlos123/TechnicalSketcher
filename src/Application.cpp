@@ -8,6 +8,9 @@
 
 #include "Layer.h"
 
+float thick = 0.f;
+std::unique_ptr<Battery::Scene> scene;
+
 App::App() : Battery::Application(SPLASH_SCREEN_WIDTH, SPLASH_SCREEN_HEIGHT, APPLICATION_NAME) {
 	//LOG_SET_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
 	SetWindowFlag(WindowFlags::FRAMELESS);
@@ -27,42 +30,44 @@ bool App::OnStartup() {
 	// Initialize the renderer
 	ApplicationRenderer::Load();
 
+	scene = std::make_unique<Battery::Scene>(window);
+
 	// Various layers
-	PushLayer(new NavigatorLayer());
-	PushOverlay(new GUI::GuiLayer());
-
-	// Load the settings
-	if (!Navigator::GetInstance()->LoadSettings()) {
-		Navigator::GetInstance()->SaveSettings();	// If settings can't be loaded, save the default settings
-	}
-
-	// Now that settings are loaded, start updater
-	PushLayer(new UpdaterLayer());
-
-	// Set the icon and title of the window
-	window.SetWindowExecutableIcon();
-	window.SetTitle(APPLICATION_NAME);
-
-	// Check if file to open was supplied
-	std::string openFile = "";
-	bool newFile = false;
-	if (args.size() >= 2) {
-		if (args[1] == "new") {
-			newFile = true;
-		}
-
-		openFile = args[1];
-	}
-
-	// Otherwise, open most recent 
-	if (openFile == "") {
-		openFile = Navigator::GetInstance()->GetMostRecentFile();
-	}
-
-	// Now open it
-	if (openFile != "" && !newFile) {
-		Navigator::GetInstance()->OpenFile(openFile);
-	}
+	//PushLayer(new NavigatorLayer());
+	//PushOverlay(new GUI::GuiLayer());
+	//
+	//// Load the settings
+	//if (!Navigator::GetInstance()->LoadSettings()) {
+	//	Navigator::GetInstance()->SaveSettings();	// If settings can't be loaded, save the default settings
+	//}
+	//
+	//// Now that settings are loaded, start updater
+	//PushLayer(new UpdaterLayer());
+	//
+	//// Set the icon and title of the window
+	//window.SetWindowExecutableIcon();
+	//window.SetTitle(APPLICATION_NAME);
+	//
+	//// Check if file to open was supplied
+	//std::string openFile = "";
+	//bool newFile = false;
+	//if (args.size() >= 2) {
+	//	if (args[1] == "new") {
+	//		newFile = true;
+	//	}
+	//
+	//	openFile = args[1];
+	//}
+	//
+	//// Otherwise, open most recent 
+	//if (openFile == "") {
+	//	openFile = Navigator::GetInstance()->GetMostRecentFile();
+	//}
+	//
+	//// Now open it
+	//if (openFile != "" && !newFile) {
+	//	Navigator::GetInstance()->OpenFile(openFile);
+	//}
 
 	// Set the window size and position
 	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
@@ -106,11 +111,28 @@ void App::OnUpdate() {
 
 void App::OnRender() {
 	using namespace Battery;
+
+	thick = fmodf(TimeUtils::GetRuntime(), 2.f);
+	Battery::Renderer2D::BeginScene(scene.get());
+	//float falloff = 1; 
+	//glEnable(GL_LINE_SMOOTH);
+	glBegin(GL_LINES);
+	glVertex2f(0.1, 0.1);
+	glVertex2f(0.9, 0.9);
+	glEnd();
+	//al_draw_line(100, 100, 400, 400, Graphics::ConvertAllegroColor(glm::vec4(255, 0, 0, 255)), thick);
+	//al_draw_line(100, 100, 100, 400, Graphics::ConvertAllegroColor(glm::vec4(255, 0, 0, 255)), thick);
+	//al_draw_line(100, 100, 400, 100, Graphics::ConvertAllegroColor(glm::vec4(255, 0, 0, 255)), thick);
+	//Battery::Renderer2D::DrawLine({ 100, 100 }, { 400, 400 }, thick, { 255, 0, 0, 255 }, falloff);
+	//Battery::Renderer2D::DrawLine({ 100, 100 }, { 100, 400 }, thick, { 255, 0, 0, 255 }, falloff);
+	//Battery::Renderer2D::DrawLine({ 100, 100 }, { 400, 100 }, thick, { 255, 0, 0, 255 }, falloff);
+	Battery::Renderer2D::EndScene();
 }
 
 void App::OnShutdown() {
 	// Unload the renderer
 	ApplicationRenderer::Unload();
+	scene.release();
 }
 
 void App::OnEvent(Battery::Event* e) {
