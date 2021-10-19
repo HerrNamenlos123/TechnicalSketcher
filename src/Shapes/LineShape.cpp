@@ -42,8 +42,8 @@ std::string LineShape::GetTypeString() const {
 std::pair<glm::vec2, glm::vec2> LineShape::GetBoundingBox() const {
 
 	float u = thickness / 2.f;
-	glm::vec2 _min = { min(p1.x, p2.x) - u, min(p1.y, p2.y) - u };
-	glm::vec2 _max = { max(p1.x, p2.x) + u, max(p1.y, p2.y) + u };
+	glm::vec2 _min = { std::min(p1.x, p2.x) - u, std::min(p1.y, p2.y) - u };
+	glm::vec2 _max = { std::max(p1.x, p2.x) + u, std::max(p1.y, p2.y) + u };
 
 	return std::make_pair(_min, _max);
 }

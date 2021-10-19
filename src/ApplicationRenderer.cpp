@@ -19,7 +19,7 @@ ApplicationRenderer::~ApplicationRenderer() {
 
 void ApplicationRenderer::Load() {
 	if (!GetInstance().scene) {
-		GetInstance().scene = std::make_unique<Battery::Scene>(App::GetApplicationPointer()->window);
+		GetInstance().scene = std::make_unique<Battery::Scene>(Battery::GetMainWindow());
 	}
 	else {
 		throw Battery::Exception(__FUNCTION__"(): Can't load renderer: Is already loaded!");
@@ -53,7 +53,7 @@ void ApplicationRenderer::DrawLineWorkspace(const glm::vec2& point1, const glm::
 	glm::vec2 p1 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point1);
 	glm::vec2 p2 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point2);
 	float thick = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(thickness);
-	Battery::Renderer2D::DrawLine(p1, p2, max(thick, 0.5f), color, falloff);
+	Battery::Renderer2D::DrawLine(p1, p2, std::max(thick, 0.5f), color, falloff);
 }
 
 void ApplicationRenderer::DrawLineScreenspace(const glm::vec2& point1, const glm::vec2& point2, float thickness, 
@@ -155,11 +155,11 @@ void ApplicationRenderer::DrawGrid(bool infinite) {
 	auto nav = Navigator::GetInstance();
 
 	float thickness = GetInstance().gridLineWidth;
-	float alpha = min(Navigator::GetInstance()->scale * GetInstance().gridAlphaFactor + GetInstance().gridAlphaOffset, GetInstance().gridAlphaMax);
+	float alpha = std::min(Navigator::GetInstance()->scale * GetInstance().gridAlphaFactor + GetInstance().gridAlphaOffset, GetInstance().gridAlphaMax);
 	glm::vec4 color = glm::vec4(GetInstance().gridLineColor, GetInstance().gridLineColor, GetInstance().gridLineColor, alpha);
 
-	int w = GetClientApplication()->window.GetWidth();
-	int h = GetClientApplication()->window.GetHeight();
+	int w = GetMainWindow().GetWidth();
+	int h = GetMainWindow().GetHeight();
 
 	float right = w;
 	float left = 0;

@@ -133,7 +133,7 @@ bool ArcShape::ShouldBeRendered(float screenWidth, float screenHeight) const {
 float ArcShape::GetDistanceToCursor(const glm::vec2& p) const {
 	float centerDist = dist(Navigator::GetInstance()->mousePosition, center);
 	float arcDist = abs(centerDist - radius);
-	return min(arcDist, centerDist);
+	return std::min(arcDist, centerDist);
 }
 
 bool ArcShape::IsShapeHovered(const glm::vec2& cursor, float thresholdDistance) const {

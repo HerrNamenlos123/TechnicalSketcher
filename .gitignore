@@ -31,14 +31,17 @@
 *.out
 *.app
 
-# Visual Studio folder
+# Visual Studio stuff
 .vs
+*.sln
 
 # Python files
 *.spec
 
-# Various Folders
+# Miscellaneous
 bin/
+build/
+!premake5.exe
 Deploy/
 History/
 DeployInstallers/build/

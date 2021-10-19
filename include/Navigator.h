@@ -119,7 +119,7 @@ public:
 	void PasteClipboard();
 	bool OpenFile();
 	bool OpenEmptyFile();
-	bool OpenFile(const std::string& path);
+	bool OpenFile(const std::string& path, bool silent = false);
 	bool SaveFile();
 	bool SaveFileAs();
 	void ResetGui();

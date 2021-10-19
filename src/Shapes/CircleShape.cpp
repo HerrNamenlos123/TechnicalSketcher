@@ -65,7 +65,7 @@ bool CircleShape::ShouldBeRendered(float screenWidth, float screenHeight) const 
 
 float CircleShape::GetDistanceToCursor(const glm::vec2& p) const {
 	float centerDist = dist(Navigator::GetInstance()->mousePosition, center);
-	return min(abs(centerDist - radius), centerDist);
+	return std::min(abs(centerDist - radius), centerDist);
 }
 
 bool CircleShape::IsShapeHovered(const glm::vec2& cursor, float thresholdDistance) const {

@@ -211,7 +211,7 @@ public:
 	bool SaveFile(bool saveAs = false);
 	bool OpenFile();
 	bool OpenEmptyFile();
-	bool OpenFile(const std::string& path);
+	bool OpenFile(const std::string& path, bool silent = false);
 	
 	Battery::Texture2D ExportImage(bool transparent = true, float dpi = 300);
 

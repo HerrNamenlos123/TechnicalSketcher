@@ -33,7 +33,7 @@ void Navigator::OnAttach() {
 	applicationVersion = GetApplicationVersion();
 
 	// Register the clipboard format
-	clipboardShapeFormat = GetClientApplication()->window.RegisterClipboardFormat(CLIPBOARD_FORMAT);
+	clipboardShapeFormat = Battery::GetMainWindow().RegisterClipboardFormat(CLIPBOARD_FORMAT);
 
 	// Load the location of the ImGui .ini file
 	imguiFileLocation = GetSettingsDirectory() + IMGUI_FILENAME;
@@ -43,13 +43,13 @@ void Navigator::OnDetach() {
 }
 
 void Navigator::OnUpdate() {
-	windowSize = glm::ivec2(GetClientApplication()->window.GetWidth(), GetClientApplication()->window.GetHeight());
-	mousePosition = ConvertScreenToWorkspaceCoords(GetClientApplication()->window.GetMousePosition());
+	windowSize = glm::ivec2(Battery::GetMainWindow().GetWidth(), Battery::GetMainWindow().GetHeight());
+	mousePosition = ConvertScreenToWorkspaceCoords(Battery::GetMainWindow().GetMousePosition());
 	mouseSnapped = round(mousePosition / snapSize) * snapSize;
 
 	// Key control
-	controlKeyPressed = GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL) || GetClientApplication()->GetKey(ALLEGRO_KEY_RCTRL);
-	shiftKeyPressed = GetClientApplication()->GetKey(ALLEGRO_KEY_LSHIFT) || GetClientApplication()->GetKey(ALLEGRO_KEY_RSHIFT);
+	controlKeyPressed = Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL) || Battery::GetApp().GetKey(ALLEGRO_KEY_RCTRL);
+	shiftKeyPressed = Battery::GetApp().GetKey(ALLEGRO_KEY_LSHIFT) || Battery::GetApp().GetKey(ALLEGRO_KEY_RSHIFT);
 	
 	// Allow smooth positioning when CTRL is pressed
 	if (controlKeyPressed) {
@@ -147,13 +147,13 @@ void Navigator::OnEvent(Battery::Event* e) {
 
 
 glm::vec2 Navigator::ConvertScreenToWorkspaceCoords(const glm::vec2& v) {
-	return (v - panOffset - glm::vec2(GetClientApplication()->window.GetWidth(), 
-		GetClientApplication()->window.GetHeight()) * 0.5f) / scale;
+	return (v - panOffset - glm::vec2(Battery::GetMainWindow().GetWidth(), 
+		Battery::GetMainWindow().GetHeight()) * 0.5f) / scale;
 }
 
 glm::vec2 Navigator::ConvertWorkspaceToScreenCoords(const glm::vec2& v) {
-	return panOffset + v * scale + glm::vec2(GetClientApplication()->window.GetWidth(),
-		GetClientApplication()->window.GetHeight()) * 0.5f;
+	return panOffset + v * scale + glm::vec2(Battery::GetMainWindow().GetWidth(),
+		Battery::GetMainWindow().GetHeight()) * 0.5f;
 }
 
 float Navigator::ConvertWorkspaceToScreenDistance(float distance) {
@@ -187,7 +187,7 @@ void Navigator::MouseScrolled(float amount) {
 		scale /= factor;
 	}
 
-	auto mPos = GetClientApplication()->window.GetMousePosition();
+	auto mPos = Battery::GetMainWindow().GetMousePosition();
 	glm::vec2 mouseToCenter = glm::vec2(panOffset.x - mPos.x + windowSize.x / 2.f,
 										panOffset.y - mPos.y + windowSize.y / 2.f);
 
@@ -416,56 +416,56 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 
 	case ALLEGRO_KEY_Z:
 		// Undo previous action
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
 			UndoAction();
 		}
 		break;
 
 	case ALLEGRO_KEY_A:		// Select all
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
 			UseTool(ToolType::SELECT);
 			SelectAll();
 		}
 		break;
 
 	case ALLEGRO_KEY_O:		// Open
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
 			OpenFile();
 		}
 		break;
 
 	case ALLEGRO_KEY_S:		// Save
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL) &&
-			GetClientApplication()->GetKey(ALLEGRO_KEY_LSHIFT)) {
+		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL) &&
+			Battery::GetApp().GetKey(ALLEGRO_KEY_LSHIFT)) {
 			SaveFileAs();
 		}
-		else if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {
+		else if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {
 			SaveFile();
 		}
 		break;
 
 	case ALLEGRO_KEY_C:		// Copy
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
 			CopyClipboard();
 		}
 		break;
 
 	case ALLEGRO_KEY_X:		// Cut
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
 			CutClipboard();
 		}
 		break;
 
 	case ALLEGRO_KEY_V:		// Paste
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
 			UseTool(ToolType::SELECT);
 			PasteClipboard();
 		}
 		break;
 
 	case ALLEGRO_KEY_N:
-		if (GetClientApplication()->GetKey(ALLEGRO_KEY_LCTRL)) {
-			if (GetClientApplication()->GetKey(ALLEGRO_KEY_LSHIFT)) {
+		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {
+			if (Battery::GetApp().GetKey(ALLEGRO_KEY_LSHIFT)) {
 				Navigator::GetInstance()->StartNewApplicationInstance();	// CTRL + SHIFT + N
 			}
 			else {
@@ -508,9 +508,9 @@ void Navigator::OnMouseReleased(const glm::vec2& position, bool left, bool right
 void Navigator::OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	using namespace Battery;
 
-	if (GetClientApplication()->window.GetLeftMouseButton() || 
-		GetClientApplication()->window.GetRightMouseButton() || 
-		GetClientApplication()->window.GetMouseWheel())
+	if (Battery::GetMainWindow().GetLeftMouseButton() || 
+		Battery::GetMainWindow().GetRightMouseButton() || 
+		Battery::GetMainWindow().GetMouseWheel())
 	{
 		OnMouseDragged(position, snapped, dx, dy);
 	}
@@ -628,8 +628,8 @@ bool Navigator::OpenEmptyFile() {
 	return file.OpenEmptyFile();
 }
 
-bool Navigator::OpenFile(const std::string& path) {
-	return file.OpenFile(path);
+bool Navigator::OpenFile(const std::string& path, bool silent) {
+	return file.OpenFile(path, silent);
 }
 
 bool Navigator::SaveFile() {
@@ -656,14 +656,14 @@ void Navigator::ResetViewport() {
 }
 
 bool Navigator::ExportClipboardRendering() {
-	GetClientApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
+	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 	auto image = file.ExportImage(exportTransparent, exportDPI);
 
 	if (!image.IsValid())
 		return false;
 
-	bool success = GetClientApplication()->window.SetClipboardImage(image);
-	GetClientApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+	bool success = Battery::GetMainWindow().SetClipboardImage(image);
+	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 	return success;
 }
 
@@ -801,7 +801,7 @@ void Navigator::OpenNewWindowFile(const std::string& file) {
 		LOG_INFO("Starting new application instance while opening file '{}'", file);
 
 		// Execute the first command line argument, which is always the path of the exe
-		system(std::string("start " + GetClientApplication()->args[0] + " " + file).c_str());
+		system(std::string("start " + Battery::GetApp().args[0] + " " + file).c_str());
 	}
 	else {
 		LOG_ERROR("File can not be found: '{}'", file);
@@ -813,7 +813,7 @@ void Navigator::StartNewApplicationInstance() {
 	LOG_INFO("Starting new instance of the application");
 
 	// Execute the first command line argument, which is always the path of the exe
-	system(std::string("start " + GetClientApplication()->args[0] + " new").c_str());
+	system(std::string("start " + Battery::GetApp().args[0] + " new").c_str());
 }
 
 void Navigator::CloseApplication() {
@@ -828,20 +828,20 @@ void Navigator::CloseApplication() {
 	// Only close application, if file is saved
 
 	if (!file.ContainsChanges()) {
-		GetClientApplication()->CloseApplication();
+		Battery::GetApp().CloseApplication();
 		return;
 	}
 
 	bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-		"Do you want to save the file?", GetClientApplication()->window.allegroDisplayPointer);
+		"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
 
 	if (!save) {	// Discard changes and close the application
-		GetClientApplication()->CloseApplication();
+		Battery::GetApp().CloseApplication();
 		return;
 	}
 
 	if (SaveFile()) {
-		GetClientApplication()->CloseApplication();
+		Battery::GetApp().CloseApplication();
 		return;
 	}
 }
@@ -941,8 +941,8 @@ void Navigator::RenderShapes() {
 		for (auto& shape : layer.GetShapes()) {
 
 			// Skip the shape if it's not on the screen
-			if (shape->ShouldBeRendered(GetClientApplication()->window.GetWidth(), 
-										GetClientApplication()->window.GetHeight()))
+			if (shape->ShouldBeRendered(Battery::GetMainWindow().GetWidth(), 
+										Battery::GetMainWindow().GetHeight()))
 			{
 				// Render the shape
 				ShapeID id = shape->GetID();
@@ -968,8 +968,8 @@ void Navigator::RenderShapes() {
 	for (auto& shape : file.GetActiveLayer().GetShapes()) {
 
 		// Skip the shape if it's not on the screen
-		if (shape->ShouldBeRendered(GetClientApplication()->window.GetWidth(),
-			GetClientApplication()->window.GetHeight()))
+		if (shape->ShouldBeRendered(Battery::GetMainWindow().GetWidth(),
+			Battery::GetMainWindow().GetHeight()))
 		{
 			// Render the shape
 			ShapeID id = shape->GetID();
@@ -994,8 +994,8 @@ void Navigator::RenderShapes() {
 	for (const auto& shape : file.GetActiveLayer().GetShapes()) {
 
 		// Skip the shape if it's not on the screen
-		if (shape->ShouldBeRendered(GetClientApplication()->window.GetWidth(),
-			GetClientApplication()->window.GetHeight()))
+		if (shape->ShouldBeRendered(Battery::GetMainWindow().GetWidth(),
+			Battery::GetMainWindow().GetHeight()))
 		{
 			// Render the shape on top of all others
 			ShapeID id = shape->GetID();

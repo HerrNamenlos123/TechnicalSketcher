@@ -1,77 +1,73 @@
 
 #include "pch.h"
 #include "Application.h"
-#include "Gui.h"
+#include "UserInterface.h"
 #include "Updater.h"
 #include "NavigatorLayer.h"
-#include "../TechnicalSketcher/resource.h"	// For the icon
+#include "../resource/resource.h"
 
-#include "Layer.h"
-
-float thick = 0.f;
-std::unique_ptr<Battery::Scene> scene;
-
-App::App() : Battery::Application(SPLASH_SCREEN_WIDTH, SPLASH_SCREEN_HEIGHT, APPLICATION_NAME) {
-	//LOG_SET_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
+App::App() : Battery::Application(0, 0, APPLICATION_NAME) {
 	SetWindowFlag(WindowFlags::FRAMELESS);
 	SetWindowFlag(WindowFlags::NO_TASKBAR);
+	SetWindowFlag(WindowFlags::HIDDEN);
 }
 
 bool App::OnStartup() {
 
 	// Show splash screen
 	Battery::Texture2D splash;
-	splash.LoadEmbeddedResource(IDB_PNG1);
+	splash.LoadEmbeddedResource(DB_SPLASHSCREEN);
 	if (splash.IsValid()) {
+		window.SetSize(splash.GetSize());
+		window.CenterOnPrimaryMonitor();
+		window.FlipDisplay();
 		al_draw_bitmap(splash.GetAllegroBitmap(), 0, 0, 0);
 		window.FlipDisplay();
+		window.Show();
 	}
 
 	// Initialize the renderer
 	ApplicationRenderer::Load();
 
-	scene = std::make_unique<Battery::Scene>(window);
-
 	// Various layers
-	//PushLayer(new NavigatorLayer());
-	//PushOverlay(new GUI::GuiLayer());
-	//
-	//// Load the settings
-	//if (!Navigator::GetInstance()->LoadSettings()) {
-	//	Navigator::GetInstance()->SaveSettings();	// If settings can't be loaded, save the default settings
-	//}
-	//
-	//// Now that settings are loaded, start updater
-	//PushLayer(new UpdaterLayer());
-	//
-	//// Set the icon and title of the window
-	//window.SetWindowExecutableIcon();
-	//window.SetTitle(APPLICATION_NAME);
-	//
-	//// Check if file to open was supplied
-	//std::string openFile = "";
-	//bool newFile = false;
-	//if (args.size() >= 2) {
-	//	if (args[1] == "new") {
-	//		newFile = true;
-	//	}
-	//
-	//	openFile = args[1];
-	//}
-	//
-	//// Otherwise, open most recent 
-	//if (openFile == "") {
-	//	openFile = Navigator::GetInstance()->GetMostRecentFile();
-	//}
-	//
-	//// Now open it
-	//if (openFile != "" && !newFile) {
-	//	Navigator::GetInstance()->OpenFile(openFile);
-	//}
+	PushLayer(std::make_shared<NavigatorLayer>());
+	PushOverlay(std::make_shared<UserInterface>());
+	
+	// Load the settings
+	if (!Navigator::GetInstance()->LoadSettings()) {
+		Navigator::GetInstance()->SaveSettings();	// If settings can't be loaded, save the default settings
+	}
+	
+	// Now that settings are loaded, start updater
+	PushLayer(std::make_shared<UpdaterLayer>());
+	
+	// Set the icon and title of the window
+	window.SetWindowExecutableIcon(DB_ICON1);
+	window.SetTitle(APPLICATION_NAME);
+	
+	// Check if file to open was supplied
+	std::string openFile = "";
+	bool newFile = false;
+	if (args.size() >= 2) {
+		if (args[1] == "new") {
+			newFile = true;
+		}
+	
+		openFile = args[1];
+	}
+	
+	// Otherwise, open most recent 
+	if (openFile == "") {
+		openFile = Navigator::GetInstance()->GetMostRecentFile();
+	}
+	
+	// Now open it
+	if (openFile != "" && !newFile) {
+		Navigator::GetInstance()->OpenFile(openFile, true);
+	}
 
 	// Set the window size and position
-	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
-	window.FlipDisplay();
+	window.Hide();
 	glm::vec2 monitorSize = GetPrimaryMonitorSize();	// If screen is too small with a little margin, maximize the window				
 	if (monitorSize.x / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_WIDTH || monitorSize.y / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_HEIGHT) {
 		window.SetSize(monitorSize / SCREEN_SIZE_MARGIN);
@@ -83,11 +79,12 @@ bool App::OnStartup() {
 		window.SetSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
 	}
 
-	// Setup display
+	// Finalize display
 	window.SetFrameless(false);
 	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
 	window.FlipDisplay();
 	window.ShowInTaskbar();
+	window.Show();
 
 	return true;
 }
@@ -111,62 +108,23 @@ void App::OnUpdate() {
 
 void App::OnRender() {
 	using namespace Battery;
-
-	thick = fmodf(TimeUtils::GetRuntime(), 2.f);
-	Battery::Renderer2D::BeginScene(scene.get());
-	//float falloff = 1; 
-	//glEnable(GL_LINE_SMOOTH);
-	glBegin(GL_LINES);
-	glVertex2f(0.1, 0.1);
-	glVertex2f(0.9, 0.9);
-	glEnd();
-	//al_draw_line(100, 100, 400, 400, Graphics::ConvertAllegroColor(glm::vec4(255, 0, 0, 255)), thick);
-	//al_draw_line(100, 100, 100, 400, Graphics::ConvertAllegroColor(glm::vec4(255, 0, 0, 255)), thick);
-	//al_draw_line(100, 100, 400, 100, Graphics::ConvertAllegroColor(glm::vec4(255, 0, 0, 255)), thick);
-	//Battery::Renderer2D::DrawLine({ 100, 100 }, { 400, 400 }, thick, { 255, 0, 0, 255 }, falloff);
-	//Battery::Renderer2D::DrawLine({ 100, 100 }, { 100, 400 }, thick, { 255, 0, 0, 255 }, falloff);
-	//Battery::Renderer2D::DrawLine({ 100, 100 }, { 400, 100 }, thick, { 255, 0, 0, 255 }, falloff);
-	Battery::Renderer2D::EndScene();
 }
 
 void App::OnShutdown() {
 	// Unload the renderer
 	ApplicationRenderer::Unload();
-	scene.release();
 }
 
 void App::OnEvent(Battery::Event* e) {
 	using namespace Battery;
 
-	// Force a screen update
-	lastScreenRefresh = 0;
+	lastScreenRefresh = 0;	// Force a screen update
 
-	// Act on the event
 	switch (e->GetType()) {
 
 	case EventType::KeyPressed:
 
-		//if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_SPACE) {
-		//	e->SetHandled();
-		//	//Battery::Texture2D image = Navigator::GetInstance()->file.ExportImage();
-		//	//window.SetClipboardImage(image);
-		//	//image.SaveImage("test.png");
-		//	//system("start mspaint.exe test.png");
-		//
-		//	//Battery::Texture2D image = Navigator::GetInstance()->file.ExportImage();
-		//	//window.SetClipboardImage(image);
-		//	//image.SaveImage("test.png");
-		//
-		//	//system("start \"C:\\Program Files\\GIMP 2\\bin\\gimp-2.10.exe\" test.png");
-		//}
-
 		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_H) {
-			e->SetHandled();
-
-
-		}
-		
-		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_J) {
 			e->SetHandled();
 
 
@@ -185,10 +143,6 @@ void App::OnEvent(Battery::Event* e) {
 
 Battery::Application* Battery::CreateApplication() {
 	return new App();
-}
-
-App* GetClientApplication() {
-	return static_cast<App*>(Battery::Application::GetApplicationPointer());
 }
 
 

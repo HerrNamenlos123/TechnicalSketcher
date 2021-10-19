@@ -22,10 +22,12 @@ void SketchFile::UpdateWindowTitle() {
 		title += " - " + version;
 	}
 
-	Battery::GetApplication()->window.SetTitle(title);
+	Battery::GetMainWindow().SetTitle(title);
 }
 
 bool SketchFile::SaveFile(bool saveAs) {
+
+	auto& window = Battery::GetMainWindow();
 
 	// First get the file content
 	std::string content = GetJson().dump(4);
@@ -34,8 +36,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 	// Get file location if not known already
 	if (tempLocation == "" || saveAs) {
 		while (true) {
-			tempLocation = Battery::FileUtils::PromptFileSaveDialog({ "*.*", "*.tsk" },
-				Battery::Application::GetApplicationPointer()->window);
+			tempLocation = Battery::FileUtils::PromptFileSaveDialog({ "*.*", "*.tsk" }, window);
 
 			// If location is still invalid, abort
 			if (tempLocation == "") {
@@ -52,7 +53,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 				if (!Battery::ShowWarningMessageBoxYesNo("The file '" +
 					Battery::FileUtils::GetFilenameFromPath(tempLocation) +
 					"' already exists, are you sure you want to overwrite it?",
-					Battery::GetApplication()->window.allegroDisplayPointer))
+					window.allegroDisplayPointer))
 				{
 					continue;	// Repeat from top
 				}
@@ -67,13 +68,13 @@ bool SketchFile::SaveFile(bool saveAs) {
 		tempLocation += ".tsk";
 	}
 
-	Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
+	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 
 	// Now save the file
 	if (!Battery::FileUtils::WriteFile(tempLocation, content)) {
-		Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 		Battery::ShowErrorMessageBox("The file '" + tempLocation + "' could not be saved!",
-			Battery::GetApplication()->window.allegroDisplayPointer);
+			window.allegroDisplayPointer);
 		return false;
 	}
 
@@ -84,7 +85,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 
 	UpdateWindowTitle();
 	Navigator::GetInstance()->AppendRecentFile(fileLocation);
-	Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 
 	return true;
 }
@@ -95,7 +96,7 @@ bool SketchFile::OpenFile() {
 	if (ContainsChanges()) {
 
 		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-			"Do you want to save the file?", Battery::GetApplication()->window.allegroDisplayPointer);
+			"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
 
 		if (save) {	// File needs to be saved
 			if (!SaveFile()) {	// Saving was not successful
@@ -107,8 +108,7 @@ bool SketchFile::OpenFile() {
 	UpdateWindowTitle();
 
 	// Now open a new one
-	std::string path = Battery::FileUtils::PromptFileOpenDialog({ "*.*", "*.tsk" },
-		Battery::Application::GetApplicationPointer()->window);
+	std::string path = Battery::FileUtils::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetMainWindow());
 
 	if (path == "") {
 		return false;
@@ -123,7 +123,7 @@ bool SketchFile::OpenEmptyFile() {
 	if (ContainsChanges()) {
 
 		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-			"Do you want to save the file?", Battery::GetApplication()->window.allegroDisplayPointer);
+			"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
 
 		if (save) {	// File needs to be saved
 			if (!SaveFile()) {	// Saving was not successful
@@ -144,11 +144,15 @@ bool SketchFile::OpenEmptyFile() {
 	return true;
 }
 
-bool SketchFile::OpenFile(const std::string& path) {
+bool SketchFile::OpenFile(const std::string& path, bool silent) {
+
+	auto& window = Battery::GetMainWindow();
 
 	if (Battery::FileUtils::GetExtensionFromPath(path) != ".tsk") {
-		Battery::ShowErrorMessageBox("Can't load file '" + path + "': Unsupported file format, only .tsk files are supported",
-			Battery::GetApplication()->window.allegroDisplayPointer);
+		if (!silent) {
+			Battery::ShowErrorMessageBox("Can't load file '" + path + "': Unsupported file format, only .tsk files are supported",
+				window.allegroDisplayPointer);
+		}
 		return false;
 	}
 
@@ -158,7 +162,7 @@ bool SketchFile::OpenFile(const std::string& path) {
 	if (ContainsChanges()) {
 
 		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-			"Do you want to save the file?", Battery::GetApplication()->window.allegroDisplayPointer);
+			"Do you want to save the file?", window.allegroDisplayPointer);
 
 		if (save) {	// File needs to be saved
 			if (!SaveFile()) {	// Saving was not successful
@@ -169,14 +173,16 @@ bool SketchFile::OpenFile(const std::string& path) {
 
 	UpdateWindowTitle();
 
-	Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
+	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 
 	// Now load the new file
 	auto file = Battery::FileUtils::ReadFile(path);
 	if (file.fail()) {
-		Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
-		Battery::ShowErrorMessageBox("Can't load file '" + path + "': File not found",
-			Battery::GetApplication()->window.allegroDisplayPointer);
+		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+		if (!silent) {
+			Battery::ShowErrorMessageBox("Can't load file '" + path + "': File not found",
+				window.allegroDisplayPointer);
+		}
 		return false;
 	}
 
@@ -190,16 +196,20 @@ bool SketchFile::OpenFile(const std::string& path) {
 		nlohmann::json j = nlohmann::json::parse(file.content());
 
 		if (j["file_type"] != JSON_FILE_TYPE) {
-			Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
-			Battery::ShowErrorMessageBox("Can't load file: File type is unknown!",
-				Battery::GetApplication()->window.allegroDisplayPointer);
+			window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+			if (!silent) {
+				Battery::ShowErrorMessageBox("Can't load file: File type is unknown!",
+					window.allegroDisplayPointer);
+			}
 			return false;
 		}
 
 		if (j["file_version"] != JSON_FILE_VERSION) {
-			Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
-			Battery::ShowErrorMessageBox("Can't load file: File version is unsupported!",
-				Battery::GetApplication()->window.allegroDisplayPointer);
+			window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+			if (!silent) {
+				Battery::ShowErrorMessageBox("Can't load file: File version is unsupported!",
+					window.allegroDisplayPointer);
+			}
 			return false;
 		}
 
@@ -209,9 +219,11 @@ bool SketchFile::OpenFile(const std::string& path) {
 			Layer layer("");
 
 			if (!layer.LoadJson(layerJson)) {
-				Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
-				Battery::ShowErrorMessageBox("Can't load file: File can't be parsed!",
-					Battery::GetApplication()->window.allegroDisplayPointer);
+				window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+				if (!silent) {
+					Battery::ShowErrorMessageBox("Can't load file: File can't be parsed!",
+						window.allegroDisplayPointer);
+				}
 				return false;
 			}
 
@@ -250,17 +262,19 @@ bool SketchFile::OpenFile(const std::string& path) {
 
 		UpdateWindowTitle();
 		Navigator::GetInstance()->AppendRecentFile(fileLocation);
-		Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 
 		return true;
 	}
 	catch (...) {
-		Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
-		Battery::ShowErrorMessageBox("Can't load file: JSON format is invalid!",
-			Battery::GetApplication()->window.allegroDisplayPointer);
+		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+		if (!silent) {
+			Battery::ShowErrorMessageBox("Can't load file: JSON format is invalid!",
+				window.allegroDisplayPointer);
+		}
 	}
 
-	Battery::GetApplication()->window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 	return false;
 }
 
@@ -290,7 +304,7 @@ Battery::Texture2D SketchFile::ExportImage(bool transparent, float dpi) {
 
 	// Initialize texture image to render on
 	Battery::Texture2D image(width, height);
-	std::unique_ptr<Battery::Scene> scene = std::make_unique<Battery::Scene>(Battery::GetApplication()->window, image);
+	std::unique_ptr<Battery::Scene> scene = std::make_unique<Battery::Scene>(Battery::GetMainWindow(), image);
 	//LOG_WARN("Created Battery::Texture2D");
 
 	// Initialize the renderer
