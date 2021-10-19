@@ -6,7 +6,7 @@ if projectName == nil then print("The project name was not specified! --projectn
 
 -- Main Solution
 workspace (projectName)
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release", "Deploy" }
 
     platforms { "x64" }
     defaultplatform "x64"
@@ -29,7 +29,7 @@ project (projectName)
     -- Configuration filters, filters are active up to the next filter statement
     -- Indentation is purely visual
     filter "configurations:Debug"
-        defines { "DEBUG", "_DEBUG", "ALLEGRO_STATICLINK" }
+        defines { "DEBUG", "_DEBUG", "NDEPLOY", "ALLEGRO_STATICLINK" }
         kind "ConsoleApp"
         runtime "Debug"
         symbols "On"
@@ -37,12 +37,20 @@ project (projectName)
         links { "$(BATTERY_ENGINE_DEBUG_LINK_FILES)" }
 
     filter "configurations:Release"
-        defines { "NDEBUG", "ALLEGRO_STATICLINK" }
+        defines { "NDEBUG", "NDEPLOY", "ALLEGRO_STATICLINK" }
         kind "WindowedApp"
         runtime "Release"
         optimize "On"
         libdirs { "$(BATTERY_ENGINE_RELEASE_LINK_DIRS)" }
         links { "$(BATTERY_ENGINE_RELEASE_LINK_FILES)" }
+
+    filter "configurations:Deploy"
+        defines { "NDEBUG", "DEPLOY", "ALLEGRO_STATICLINK" }
+        kind "WindowedApp"
+        runtime "Release"
+        optimize "On"
+        libdirs { "$(BATTERY_ENGINE_DEPLOY_LINK_DIRS)" }
+        links { "$(BATTERY_ENGINE_DEPLOY_LINK_FILES)" }
 
     filter {}
     

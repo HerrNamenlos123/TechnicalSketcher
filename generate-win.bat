@@ -22,5 +22,5 @@ set _projectname=TechnicalSketcher
 :: ===================================================================
 echo Generating project '%_projectname%'
 
-%~dp0premake5\windows\premake5.exe %_generator% --file=%~dp0premake5.lua --projectname=%_projectname% && start %_projectname%.sln
+call "%~dp0premake5\windows\premake5.exe" %_generator% --file="%~dp0premake5.lua" --projectname=%_projectname% && start %_projectname%.sln
 Timeout 5
