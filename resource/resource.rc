@@ -1,4 +1,4 @@
 #include "../resource/resource.h"
 
-DB_ICON1            ICON    "icon.ico"
-DB_SPLASHSCREEN     PNG     "SplashScreen.png"
+DB_ICON1            ICON    "TechnicalSketcher.ico"
+DB_SPLASHSCREEN     PNG     "splashscreen.png"

@@ -45,5 +45,3 @@ build/
 !premake5.exe
 !premake5/**
 !resource/**
-Deploy/
-History/

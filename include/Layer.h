@@ -16,7 +16,7 @@ class Layer {
 
 public:
 	std::string name;
-	Battery::Texture2D previewImage;
+	Battery::Bitmap previewImage;
 	bool layerChanged = false;
 
 	Layer(const std::string& name);
@@ -52,7 +52,7 @@ public:
 	void SaveState();
 	void UndoAction();
 
-	void SetPreviewImage(const Battery::Texture2D& image);
+	void SetPreviewImage(const Battery::Bitmap& image);
 	void GeneratePreview();
 
 	std::optional<std::reference_wrapper<GenericShape>> FindShape(const ShapeID& shape);

@@ -35,6 +35,7 @@ project (projectName)
         symbols "On"
         libdirs { "$(BATTERY_ENGINE_DEBUG_LINK_DIRS)" }
         links { "$(BATTERY_ENGINE_DEBUG_LINK_FILES)" }
+        targetdir (_SCRIPT_DIR .. "/bin/debug")
 
     filter "configurations:Release"
         defines { "NDEBUG", "NDEPLOY", "ALLEGRO_STATICLINK" }
@@ -43,6 +44,7 @@ project (projectName)
         optimize "On"
         libdirs { "$(BATTERY_ENGINE_RELEASE_LINK_DIRS)" }
         links { "$(BATTERY_ENGINE_RELEASE_LINK_FILES)" }
+        targetdir (_SCRIPT_DIR .. "/bin/release")
 
     filter "configurations:Deploy"
         defines { "NDEBUG", "DEPLOY", "ALLEGRO_STATICLINK" }
@@ -51,15 +53,33 @@ project (projectName)
         optimize "On"
         libdirs { "$(BATTERY_ENGINE_DEPLOY_LINK_DIRS)" }
         links { "$(BATTERY_ENGINE_DEPLOY_LINK_FILES)" }
+        targetdir (_SCRIPT_DIR .. "/bin/deploy")
 
     filter {}
     
     includedirs { _SCRIPT_DIR .. "/include", "$(BATTERY_ENGINE_INCLUDE_DIRECTORY)" }
     files { _SCRIPT_DIR .. "/include/**", _SCRIPT_DIR .. "/src/**" }
-    targetdir (_SCRIPT_DIR .. "/bin")
 
     linkoptions { "/IGNORE:4099" }  -- Ignore warning that no .pdb file is found for debugging
 
     -- Embed resource files
     files "resource/resource.rc"
-    
+
+
+
+    -- Build the Installer
+    filter "configurations:Deploy"
+
+        local infile = "installer/TechnicalSketcher.wxs"
+        local outfile = "bin/installer/TechnicalSketcher-Installer-x64.msi"
+
+        postbuildcommands { 
+            "echo Building Installer...",
+            "del ../" .. outfile .. " 2>nul",
+            "\"%WIX%bin\\candle.exe\" ../" .. infile .. " -o obj/",
+            "\"%WIX%bin\\light.exe\" obj/*.wixobj -o ../" .. outfile .. " -sice:ICE91",
+            "echo TechnicalSketcher.vcxproj -^> " .. _SCRIPT_DIR .. "/" .. outfile,
+            "echo Installer has been built successfully"
+        }
+
+    filter {}

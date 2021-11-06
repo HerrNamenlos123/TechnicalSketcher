@@ -15,12 +15,29 @@
 :: vs2019            Generate Visual Studio 2019 project files
 :: xcode4            Generate Apple Xcode 4 project files
 
-:: Replace the generator here
-set _generator=vs2019
+:: Set the project name and generator here. Leave the name empty to ask for it while generating
 set _projectname=TechnicalSketcher
+set _generator=vs2019
 
-:: ===================================================================
+
+
+:: =============================================================================================
+set _projectfile=
+for /f "delims=" %%F in ('dir "%~dp0*.sln" /b /o-n 2^>nul') do set _projectfile=%%F
+
+IF [%_projectname%] == [] (
+
+    IF [%_projectfile%] == [] (
+        set /p _projectname="Enter the project name: "
+    ) ELSE (
+        set _projectname=%_projectfile:~0,-4%
+    )
+)
+
+if not "%_projectname%"=="%_projectname: =%" echo [91mThe project name must not contain spaces and cannot be empty![0m && Pause && exit 1
+
 echo Generating project '%_projectname%'
 
-call "%~dp0premake5\windows\premake5.exe" %_generator% --file="%~dp0premake5.lua" --projectname=%_projectname% && start %_projectname%.sln
+cd %~dp0
+premake5\windows\premake5.exe %_generator% --file=premake5.lua --projectname=%_projectname% && start %_projectname%.sln
 Timeout 5

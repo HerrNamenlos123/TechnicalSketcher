@@ -15,9 +15,8 @@ App::App() : Battery::Application(0, 0, APPLICATION_NAME) {
 bool App::OnStartup() {
 
 	// Show splash screen
-	Battery::Texture2D splash;
-	splash.LoadEmbeddedResource(DB_SPLASHSCREEN);
-	if (splash.IsValid()) {
+	Battery::Bitmap splash;
+	if (splash.LoadEmbeddedResource(DB_SPLASHSCREEN)) {
 		window.SetSize(splash.GetSize());
 		window.CenterOnPrimaryMonitor();
 		window.FlipDisplay();

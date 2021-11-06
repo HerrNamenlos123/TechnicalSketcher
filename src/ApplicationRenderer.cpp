@@ -13,7 +13,7 @@ ApplicationRenderer::ApplicationRenderer() {
 ApplicationRenderer::~ApplicationRenderer() {
 	if (GetInstance().scene) {
 		LOG_ERROR(__FUNCTION__"(): The Renderer was not unloaded! You must unload it before terminating!");
-		GetInstance().scene.release();
+		GetInstance().scene.reset();
 	}
 }
 
@@ -28,7 +28,7 @@ void ApplicationRenderer::Load() {
 
 void ApplicationRenderer::Unload() {
 	if (GetInstance().scene) {
-		GetInstance().scene.release();
+		GetInstance().scene.reset();
 	}
 	else {
 		throw Battery::Exception(__FUNCTION__"(): Can't unload renderer: Is not loaded!");

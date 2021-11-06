@@ -73,7 +73,7 @@ public:
 	void OnDetach() override {
 		if (updaterThread) {
 			updaterThread->join();
-			updaterThread.release();
+			updaterThread.reset();
 		}
 	}
 };

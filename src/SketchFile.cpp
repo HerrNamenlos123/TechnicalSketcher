@@ -278,7 +278,7 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 	return false;
 }
 
-Battery::Texture2D SketchFile::ExportImage(bool transparent, float dpi) {
+Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 
 	// Calculate the bounding box
 	glm::vec2 min = GetActiveLayer().GetBoundingBox().first;
@@ -303,7 +303,7 @@ Battery::Texture2D SketchFile::ExportImage(bool transparent, float dpi) {
 	float height = width / sizeX * sizeY;
 
 	// Initialize texture image to render on
-	Battery::Texture2D image(width, height);
+	Battery::Bitmap image(width, height);
 	std::unique_ptr<Battery::Scene> scene = std::make_unique<Battery::Scene>(Battery::GetMainWindow(), image);
 	//LOG_WARN("Created Battery::Texture2D");
 

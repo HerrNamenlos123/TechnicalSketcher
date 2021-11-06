@@ -15,7 +15,7 @@ void Navigator::CreateInstance() {
 }
 
 void Navigator::DestroyInstance() {
-	instance.release();
+	instance.reset();
 }
 
 Navigator* Navigator::GetInstance() {

@@ -213,7 +213,7 @@ public:
 	bool OpenEmptyFile();
 	bool OpenFile(const std::string& path, bool silent = false);
 	
-	Battery::Texture2D ExportImage(bool transparent = true, float dpi = 300);
+	Battery::Bitmap ExportImage(bool transparent = true, float dpi = 300);
 
 	nlohmann::json GetJson() {
 		nlohmann::json j = nlohmann::json();

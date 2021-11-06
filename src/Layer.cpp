@@ -283,13 +283,13 @@ void Layer::UndoAction() {
 	}
 }
 
-void Layer::SetPreviewImage(const Battery::Texture2D& image) {
+void Layer::SetPreviewImage(const Battery::Bitmap& image) {
 	previewImage = image;
 }
 
 void Layer::GeneratePreview() {
 	previewImage.Unload();
-	previewImage = Battery::Texture2D();
+	previewImage = Battery::Bitmap();
 	previewImage.CreateBitmap(GUI_PREVIEWWINDOW_SIZE, GUI_PREVIEWWINDOW_SIZE);
 	RenderLayerToBitmap(previewImage.GetAllegroBitmap());
 }
@@ -378,7 +378,7 @@ bool Layer::LoadJson(nlohmann::json json) {
 			this->name = name;
 			this->state = state;
 			history.Clear();
-			previewImage = Battery::Texture2D();
+			previewImage = Battery::Bitmap();
 			layerChanged = false;
 			return true;
 		}
