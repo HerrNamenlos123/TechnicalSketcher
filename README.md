@@ -11,6 +11,7 @@ https://github.com/HerrNamenlos123/TechnicalSketcher/releases/latest
 
  - Clone the repository
  - Clone and build the [BatteryEngine](https://github.com/HerrNamenlos123/BatteryEngine)
+ - Enable the [.NET Framework 3.5](https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows), needed for WiX
  - Install the [WiX Toolchain](https://wixtoolset.org/releases/) (direct link for [WiX stable 3.11.2](https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311.exe))
  - Execute `generate-win.bat`
  - Build the project
