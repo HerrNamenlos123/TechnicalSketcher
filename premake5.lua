@@ -4,6 +4,23 @@ newoption { trigger = "projectname", description = "Name of the generated projec
 local projectName = _OPTIONS["projectname"]
 if projectName == nil then print("The project name was not specified! --projectname=YourApplication") end
 
+-- Check if an environment variable exists, otherwise abort the program
+function CheckEnvVar (variable, productName)
+    if (os.getenv(variable) == nil) then
+        print("Environment variable " .. variable .. " not found! Make sure the " .. productName .. " is installed correctly!")
+        projectName = nil
+    end
+end
+
+-- Here check if the Festo Robotino API 2 is installed, otherwise abort
+CheckEnvVar("BATTERY_ENGINE_INCLUDE_DIRECTORY", "BatteryEngine")
+CheckEnvVar("BATTERY_ENGINE_DEBUG_LINK_FILES", "BatteryEngine")
+CheckEnvVar("BATTERY_ENGINE_RELEASE_LINK_FILES", "BatteryEngine")
+CheckEnvVar("BATTERY_ENGINE_DEPLOY_LINK_FILES", "BatteryEngine")
+CheckEnvVar("BATTERY_ENGINE_DEBUG_LINK_DIRS", "BatteryEngine")
+CheckEnvVar("BATTERY_ENGINE_RELEASE_LINK_DIRS", "BatteryEngine")
+CheckEnvVar("BATTERY_ENGINE_DEPLOY_LINK_DIRS", "BatteryEngine")
+
 -- Main Solution
 workspace (projectName)
     configurations { "Debug", "Release", "Deploy" }
