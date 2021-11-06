@@ -11,7 +11,7 @@ https://github.com/HerrNamenlos123/TechnicalSketcher/releases/latest
 
  - Clone the repository
  - Clone and build the [BatteryEngine](https://github.com/HerrNamenlos123/BatteryEngine)
- - Install the [WiX Toolchain](https://wixtoolset.org/releases/)
+ - Install the [WiX Toolchain](https://wixtoolset.org/releases/) (direct link for [WiX stable 3.11.2](https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311.exe))
  - Execute `generate-win.bat`
  - Build the project
  - To build the installer, set the configuration to `Deploy`
