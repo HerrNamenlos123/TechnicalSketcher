@@ -12,6 +12,17 @@
 #include "Tools/CircleTool.h"
 #include "Tools/ArcTool.h"
 
+enum class UpdateStatus {
+	NOTHING,			// This is the default
+	//USER_PROMPT,
+	INITIALIZING,
+	DOWNLOADING,
+	EXTRACTING,
+	INSTALLING,
+	DONE,				// Request to restart the application
+	FAILED
+};
+
 class Navigator {
 
 	Navigator() {}
@@ -28,7 +39,7 @@ public:
 	std::string imguiFileLocation;
 
 	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve every frame, to be consistent through the update loop
-	Battery::ClipboardFormatID clipboardShapeFormat;
+	Battery::ClipboardFormatID clipboardShapeFormat = 0;	// TODO: windowSize is maybe unnecessary
 
 	// User interface
 	glm::vec2 panOffset = { 0, 0 };
@@ -39,6 +50,11 @@ public:
 	float mouseHighlightThresholdDistance = 8;
 	bool infiniteSheet = false;
 	bool gridShown = true;
+	
+	std::atomic<enum class UpdateStatus> updateStatus = UpdateStatus::NOTHING;
+	std::atomic<double> timeSincePopup = 0.0;		// Timestamp when the popup was created, set by Updater
+	std::atomic<double> updateProgress = 0.0;		// 0.0 to 1.0
+	std::string restartExecutablePath;
 
 	float exportDPI = 300;
 	bool exportTransparent = true;
@@ -51,7 +67,7 @@ public:
 	// Buffers to store event data
 	float scrollBuffer = 0;
 	std::vector<Battery::MouseButtonPressedEvent> mousePressedEventBuffer;
-	std::vector<Battery::MouseButtonReleasedEvent> mouseReleasedEventBuffer;
+	std::vector<Battery::MouseButtonReleasedEvent> mouseReleasedEventBuffer;	// TODO: Better events
 	std::vector<Battery::MouseMovedEvent> mouseMovedEventBuffer;
 	std::vector<Battery::KeyPressedEvent> keyPressedEventBuffer;
 
@@ -136,7 +152,7 @@ public:
 	std::string GetApplicationVersion();
 	void OpenNewWindowFile(const std::string& file);
 	void StartNewApplicationInstance();
-	void CloseApplication();
+	bool CloseApplication();
 
 	void AddLayer();
 	void AddLine(const LineShape& line);

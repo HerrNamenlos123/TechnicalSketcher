@@ -26,6 +26,10 @@ void ApplicationRenderer::Load() {
 	}
 }
 
+bool ApplicationRenderer::IsLoaded() {
+	return (bool)GetInstance().scene;
+}
+
 void ApplicationRenderer::Unload() {
 	if (GetInstance().scene) {
 		GetInstance().scene.reset();

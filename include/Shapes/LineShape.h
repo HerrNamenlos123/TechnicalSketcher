@@ -53,11 +53,11 @@ public:
 
 
 	static inline bool IsInbetween(float v, float v1, float v2) {
-		return (v < v1&& v > v2) || (v > v1 && v < v2);
+		return (v < v1 && v > v2) || (v > v1 && v < v2);
 	}
 
 	static inline float dist(const glm::vec2& v) {
-		return sqrt(pow(v.x, 2) + pow(v.y, 2));
+		return sqrtf(powf(v.x, 2) + powf(v.y, 2));
 	}
 
 	static inline float dist(const glm::vec2& v1, const glm::vec2& v2) {

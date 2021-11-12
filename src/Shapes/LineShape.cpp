@@ -72,7 +72,7 @@ float LineShape::GetDistanceToCursor(const glm::vec2& p) const {
 	glm::vec2 bToP = p - p2;
 
 	if (aToB.length() == 0)
-		return aToP.length();
+		return (float)aToP.length();
 
 	if (glm::dot(aToB, aToP) < 0) {
 		return dist(p1, p);
@@ -136,10 +136,10 @@ bool LineShape::ShowPropertiesWindow() {
 	auto oldColor = color;
 	auto oldThickness = thickness;
 
-	color /= 255;
+	color /= 255.f;
 	ImGui::ColorEdit4("Line color", (float*)&color[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::DragFloat("Line thickness", &thickness, 0.1f, 0.f, 10.f);
-	color *= 255;
+	color *= 255.f;
 
 	ImGui::PopFont();
 	ImGui::PopFont();

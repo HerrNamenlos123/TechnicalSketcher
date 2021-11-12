@@ -1,5 +1,7 @@
 
 #include "pch.h"
+#include "Battery/AllegroDeps.h"
+
 #include "Application.h"
 #include "UserInterface.h"
 #include "Updater.h"
@@ -7,6 +9,7 @@
 #include "../resource/resource.h"
 
 App::App() : Battery::Application(0, 0, APPLICATION_NAME) {
+	//LOG_SET_BATTERY_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
 	SetWindowFlag(WindowFlags::FRAMELESS);
 	SetWindowFlag(WindowFlags::NO_TASKBAR);
 	SetWindowFlag(WindowFlags::HIDDEN);
@@ -94,14 +97,14 @@ void App::OnUpdate() {
 	// Only refresh the screen eventually to save cpu power
 	// Allow the first 60 frames to let everything initialize
 	// and only if the program runs in the background
-	if (TimeUtils::GetRuntime() < (lastScreenRefresh + passiveScreenTime) && 
+	if (GetRuntime() < (lastScreenRefresh + passiveScreenTime) && 
 		framecount > 60 && !window.IsFocused()) 
 	{
 		DiscardFrame();
 		return;
 	}
 	else {
-		lastScreenRefresh = TimeUtils::GetRuntime();
+		lastScreenRefresh = GetRuntime();
 	}
 }
 
@@ -111,7 +114,9 @@ void App::OnRender() {
 
 void App::OnShutdown() {
 	// Unload the renderer
-	ApplicationRenderer::Unload();
+	if (ApplicationRenderer::IsLoaded()) {
+		ApplicationRenderer::Unload();
+	}
 }
 
 void App::OnEvent(Battery::Event* e) {

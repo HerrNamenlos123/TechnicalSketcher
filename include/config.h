@@ -1,6 +1,13 @@
 #pragma once
 
 #define APPLICATION_NAME "TechnicalSketcher"
+#define APP_VERSION "v0.2.1-beta.1"
+
+#define UPDATER_LOG_FILENAME "update.log.txt"
+#define UPDATER_LOGGER_NAME "TechnicalSketcher-Updater"
+#define UPDATE_PACKAGE_URL "https://api.github.com/repos/HerrNamenlos123/TechnicalSketcher/releases/latest"
+#define UPDATE_FILENAME "AutomaticUpdaterRelease.zip"
+
 #define DEFAULT_FILENAME "Unnamed.tsk"
 #define CLIPBOARD_FORMAT "com.TechnicalSketcher.Shapes"
 
@@ -13,9 +20,6 @@
 #define JSON_SETTINGS_VERSION 1
 
 #define IMGUI_FILENAME "imgui.ini"
-
-#define UPDATER_EXE_NAME "updater.exe"
-#define ENABLE_PROFILING true
 
 #define DEFAULT_WINDOW_WIDTH 1400
 #define DEFAULT_WINDOW_HEIGHT 800

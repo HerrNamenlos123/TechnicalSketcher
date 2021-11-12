@@ -10,6 +10,10 @@
 //#define SPLASHSCREEN_FONT	"C:\\Windows\\Fonts\\consola.ttf"
 //#define SPLASHSCREEN_FONT_SIZE	14
 
+// TODO: Fix user interface with new Battery panels
+
+// TODO: Print version on splash screen
+
 #define GUI_RIBBON_HEIGHT 100
 #define GUI_LEFT_BAR_WIDTH 180
 #define GUI_LAYER_WINDOW_HEIGHT 200
@@ -17,6 +21,10 @@
 #define GUI_MOUSEINFO_WINDOW_HEIGHT 25
 #define GUI_PROPERTIES_WINDOW_WIDTH 200
 #define GUI_PROPERTIES_WINDOW_HEIGHT 200
+
+#define GUI_UPDATEINFO_WIDTH 260
+#define GUI_UPDATEINFO_HEIGHT 90
+#define POPUP_TIME 8
 
 struct FontContainer : public Battery::FontContainer {
 	const ImWchar icons_ranges[3] = { 0xe005, 0xf8ff, 0 };
@@ -63,6 +71,67 @@ static void ToolTip(const char* msg, ImFont* font) {
 		ImGui::EndTooltip();
 		ImGui::PopFont();
 	}
+}
+
+static void LoadingBar(const char* label, float value, const ImVec2& size_arg, const ImU32& bg_col, const ImU32& fg_col) {
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	if (window->SkipItems)
+		return;
+
+	ImGuiContext& g = *GImGui;
+	const ImGuiStyle& style = g.Style;
+	const ImGuiID id = window->GetID(label);
+
+	ImVec2 pos = window->DC.CursorPos;
+	ImVec2 size = size_arg;
+	size.x -= style.FramePadding.x * 2;
+
+	const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+	ImGui::ItemSize(bb, style.FramePadding.y);
+	if (!ImGui::ItemAdd(bb, id))
+		return;
+
+	// Render
+	window->DrawList->AddRectFilled(bb.Min, bb.Max, bg_col);
+	window->DrawList->AddRectFilled(bb.Min, ImVec2(bb.Min.x + size.x * value, bb.Max.y), fg_col);
+}
+
+static void Spinner(const char* label, double radius, int thickness, const ImU32& color) {
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	if (window->SkipItems)
+		return;
+
+	ImGuiContext& g = *GImGui;
+	const ImGuiStyle& style = g.Style;
+	const ImGuiID id = window->GetID(label);
+
+	ImVec2 pos = window->DC.CursorPos;
+	ImVec2 size((radius) * 2, (radius + style.FramePadding.y) * 2);
+
+	const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+	ImGui::ItemSize(bb, style.FramePadding.y);
+	if (!ImGui::ItemAdd(bb, id))
+		return;
+
+	// Render
+	window->DrawList->PathClear();
+
+	int num_segments = 30;
+	int start = abs(std::sin(Battery::GetRuntime() * 1.8) * (num_segments - 5.0));
+
+	double a_min = IM_PI * 2.0f * ((double)start) / (float)num_segments;
+	double a_max = IM_PI * 2.0f * ((double)num_segments - 3) / (float)num_segments;
+
+	const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
+
+	for (int i = 0; i < num_segments; i++) {
+		double a = a_min + ((double)i / (double)num_segments) * (a_max - a_min);
+		window->DrawList->PathLineTo(ImVec2(
+			(double)centre.x + std::cos(a + Battery::GetRuntime() * 14.0) * radius,
+			(double)centre.y + std::sin(a + Battery::GetRuntime() * 14.0) * radius));
+	}
+
+	window->DrawList->PathStroke(color, false, thickness);
 }
 
 class RibbonWindow : public Battery::ImGuiPanel<> {
@@ -141,60 +210,7 @@ public:
 		}
 	}
 
-	void OptionsPopup() {
-
-		if (openOptions) {
-			ImGui::OpenPopup("Options##Window");
-			openOptions = false;
-		}
-
-		bool exp = false;
-		Navigator::GetInstance()->popupSettingsOpen = false;
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-		if (ImGui::BeginPopupModal("Options##Window", NULL,
-			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-
-			Navigator::GetInstance()->popupSettingsOpen = true;
-
-			ImGui::Checkbox("Transparent background", &Navigator::GetInstance()->exportTransparent);
-			ToolTip("Un-tick this for MathCAD", GetFontContainer<FontContainer>()->sansFont17);
-			ImGui::Separator();
-
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
-			ImGui::Text("DPI");
-			ImGui::SameLine();
-			ImGui::PushItemWidth(210);
-			ImGui::InputFloat("##DPIField", &Navigator::GetInstance()->exportDPI);
-			ImGui::PopItemWidth();
-			ImGui::PushItemWidth(240);
-			ImGui::SliderFloat("##DPISlider", &Navigator::GetInstance()->exportDPI, 50, 1000);
-			ImGui::PopItemWidth();
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
-			ImGui::Separator();
-
-			if (ImGui::Button("Reset User interface")) {
-				Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
-				Navigator::GetInstance()->ResetGui();
-				Battery::TimeUtils::Sleep(0.03);
-				Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
-			}
-			ToolTip("Reset the layout of the user interface, if something gets lost", GetFontContainer<FontContainer>()->sansFont17);
-			ImGui::Separator();
-
-			ImGui::Checkbox("Keep Application up-to-date", &Navigator::GetInstance()->keepUpToDate);
-			ToolTip("If ticked, the application will receive fully automatic updates", GetFontContainer<FontContainer>()->sansFont17);
-			ImGui::Separator();
-
-			if (ImGui::Button("Close", ImVec2(240, 0))) {
-				ImGui::CloseCurrentPopup();
-				Navigator::GetInstance()->SaveSettings();
-			}
-			ImGui::EndPopup();
-		}
-		ImGui::PopStyleVar();
-		ImGui::PopFont();
-	}
+	void OptionsPopup();
 
 	void EditTab() {
 		if (ImGui::MenuItem("Undo", "CTRL+Z")) {
@@ -815,7 +831,7 @@ public:
 		}
 
 		ImGui::PopFont();
-	}
+	}	// TODO: Fix Properties window
 };
 
 class MouseInfoWindow : public Battery::ImGuiPanel<> {
@@ -850,6 +866,117 @@ public:
 	}
 };
 
+class UpdateInfoWindow : public Battery::ImGuiPanel<> {
+
+	bool had = true;
+
+public:
+
+	UpdateInfoWindow() : ImGuiPanel<>("UpdateInfoWindow", { 0, 0 }, { 0, 0 }, 
+		DEFAULT_IMGUI_PANEL_FLAGS | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar) {}
+
+	void OnAttach() {}
+	void OnDetach() {}
+
+	void OnUpdate() override {
+		size = { GUI_UPDATEINFO_WIDTH, GUI_UPDATEINFO_HEIGHT };
+
+		if (Navigator::GetInstance()->updateStatus == UpdateStatus::NOTHING) {
+			HideWindow();
+		} 
+		else if (Navigator::GetInstance()->updateStatus == UpdateStatus::DONE) {
+			size.x = 200;
+			size.y = 105;
+			if (Battery::GetRuntime() > Navigator::GetInstance()->timeSincePopup + POPUP_TIME) {
+				Navigator::GetInstance()->updateStatus = UpdateStatus::NOTHING;
+			}
+		}
+		else if (Navigator::GetInstance()->updateStatus == UpdateStatus::FAILED) {
+			size.x = 205;
+			size.y = 65;
+			if (Battery::GetRuntime() > Navigator::GetInstance()->timeSincePopup + POPUP_TIME) {
+				Navigator::GetInstance()->updateStatus = UpdateStatus::NOTHING;
+			}
+		}
+
+		position.x = Battery::GetMainWindow().GetWidth() - size.x;
+		position.y = Battery::GetMainWindow().GetHeight() - size.y;
+	}
+
+	void OnRender() override {
+		auto fonts = GetFontContainer<FontContainer>();
+		ImGui::PushFont(fonts->sansFont22);
+
+		std::string info = "";
+		float progress = 0.f;
+		switch (Navigator::GetInstance()->updateStatus) {
+
+		case UpdateStatus::INITIALIZING:
+			info = "Preparing for update";
+			break;
+
+		case UpdateStatus::DOWNLOADING:
+			info = "Downloading update";
+			progress = Navigator::GetInstance()->updateProgress;
+			break;
+
+		case UpdateStatus::EXTRACTING:
+			info = "Extracting update";
+			progress = 1.f;
+			break;
+
+		case UpdateStatus::INSTALLING:
+			info = "Installing update";
+			progress = 1.f;
+			break;
+
+		case UpdateStatus::DONE:
+			info = "TechnicalSketcher was\nupdated successfully";
+			break;
+
+		case UpdateStatus::FAILED:
+			info = "TechnicalSketcher could\nnot be updated :(";
+			break;
+
+		default:
+			break;
+		}
+
+		const ImU32 col = 0xFF13A300;
+		const ImU32 bg = ImGui::GetColorU32(ImGuiCol_Button);
+
+		if (Navigator::GetInstance()->updateStatus == UpdateStatus::DONE) {
+			static bool t = false;
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
+			ImGui::Text(info.c_str());
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 50);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
+			if (ImGui::Button("Restart now")) {
+				Navigator::GetInstance()->timeSincePopup = Battery::GetRuntime();
+				if (Navigator::GetInstance()->CloseApplication()) {
+					// And restart the application
+					Battery::ExecuteShellCommand("start " + Navigator::GetInstance()->restartExecutablePath);
+				}
+			}
+		}
+		else if (Navigator::GetInstance()->updateStatus == UpdateStatus::FAILED) {
+			ImGui::Text(info.c_str());
+		} 
+		else {
+			ImGui::Text(info.c_str());
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
+			Spinner("##spinner", 15, 6, col);
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10);
+			LoadingBar("##loading_bar", progress, ImVec2(180, 16), bg, col);
+		}
+
+		ImGui::PopFont();
+	}
+};
+
 class UserInterface : public Battery::ImGuiLayer<FontContainer> {
 public:
 
@@ -858,11 +985,12 @@ public:
 	ToolboxWindow toolbox;
 	MouseInfoWindow mouseInfo;
 	PropertiesWindow propertiesWindow;
+	UpdateInfoWindow updateInfoWindow;
 	bool wasPropertiesWindowShown = false;
 
-	ALLEGRO_SYSTEM_MOUSE_CURSOR mouseCursor = ALLEGRO_SYSTEM_MOUSE_CURSOR_NONE;
+	int mouseCursor;
 
-	UserInterface() : Battery::ImGuiLayer<FontContainer>("UserInterface") {}
+	UserInterface();
 
 	void OnImGuiAttach() override {
 		SetImGuiTheme();
@@ -877,6 +1005,7 @@ public:
 		toolbox.OnAttach();
 		mouseInfo.OnAttach();
 		propertiesWindow.OnAttach();
+		updateInfoWindow.OnAttach();
 	}
 
 	void OnImGuiDetach() override {
@@ -886,6 +1015,7 @@ public:
 		toolbox.OnDetach();
 		mouseInfo.OnDetach();
 		propertiesWindow.OnDetach();
+		updateInfoWindow.OnDetach();
 	}
 
 	void OnImGuiUpdate() override {
@@ -893,60 +1023,10 @@ public:
 		layers.Update();
 		toolbox.Update();
 		mouseInfo.Update();
-		propertiesWindow.Update();
+		updateInfoWindow.Update();
 	}
 
-	void OnImGuiRender() override {
-		ribbon.Render();
-		layers.Render();
-		toolbox.Render();
-		mouseInfo.Render();
-		
-		bool wasShownBefore = wasPropertiesWindowShown;
-		wasPropertiesWindowShown = false;
-		if (Navigator::GetInstance()->selectedTool) {
-			if (Navigator::GetInstance()->selectedTool->IsPropertiesWindowShown()) {
-				propertiesWindow.Render(); 
-				wasPropertiesWindowShown = true;
-			}
-		}
-		
-		if (wasPropertiesWindowShown && !wasShownBefore) {	// Properties window is being opened, save state
-			Navigator::GetInstance()->file.SaveActiveLayerState();
-		}
-		
-		DrawTabInfoBox();
-		
-		if (mouseCursor != ALLEGRO_SYSTEM_MOUSE_CURSOR_NONE)
-			Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
-		
-		// Handle LayerWindow events
-		if (layers.addLayerFlag) {
-			layers.addLayerFlag = false;
-			Navigator::GetInstance()->AddLayer();
-		}
-		
-		if (layers.moveLayerFrontFlag) {
-			layers.moveLayerFrontFlag = false;
-			Navigator::GetInstance()->file.MoveLayerFront(layers.moveLayerFrontID);
-		}
-		
-		if (layers.moveLayerBackFlag) {
-			layers.moveLayerBackFlag = false;
-			Navigator::GetInstance()->file.MoveLayerBack(layers.moveLayerBackID);
-		}
-		
-		if (layers.layerSelectedFlag) {
-			layers.layerSelectedFlag = false;
-			Navigator::GetInstance()->OnLayerSelected(layers.selectedLayer);
-		}
-		
-		if (layers.deleteLayerFlag) {
-			layers.deleteLayerFlag = false;
-			LOG_TRACE("Deleting layer {}", layers.deleteLayer);
-			Navigator::GetInstance()->file.RemoveLayer(layers.deleteLayer);
-		}
-	}
+	void OnImGuiRender() override;
 
 	void DrawTabInfoBox() {
 		if (Navigator::GetInstance()->tabbedShapeInfo) {

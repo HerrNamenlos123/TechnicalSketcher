@@ -50,6 +50,7 @@ project (projectName)
         kind "ConsoleApp"
         runtime "Debug"
         symbols "On"
+        optimize "Off"
         libdirs { "$(BATTERY_ENGINE_DEBUG_LINK_DIRS)" }
         links { "$(BATTERY_ENGINE_DEBUG_LINK_FILES)" }
         targetdir (_SCRIPT_DIR .. "/bin/debug")
@@ -58,6 +59,7 @@ project (projectName)
         defines { "NDEBUG", "NDEPLOY", "ALLEGRO_STATICLINK" }
         kind "WindowedApp"
         runtime "Release"
+        symbols "Off"
         optimize "On"
         libdirs { "$(BATTERY_ENGINE_RELEASE_LINK_DIRS)" }
         links { "$(BATTERY_ENGINE_RELEASE_LINK_FILES)" }
@@ -67,6 +69,7 @@ project (projectName)
         defines { "NDEBUG", "DEPLOY", "ALLEGRO_STATICLINK" }
         kind "WindowedApp"
         runtime "Release"
+        symbols "Off"
         optimize "On"
         libdirs { "$(BATTERY_ENGINE_DEPLOY_LINK_DIRS)" }
         links { "$(BATTERY_ENGINE_DEPLOY_LINK_FILES)" }
@@ -88,15 +91,25 @@ project (projectName)
     filter "configurations:Deploy"
 
         local infile = "installer/TechnicalSketcher.wxs"
-        local outfile = "bin/installer/TechnicalSketcher-Installer-x64.msi"
+        local outfile = "bin/deploy/TechnicalSketcher-Installer-x64.msi"
+        local zipfile = "bin\\deploy\\AutomaticUpdaterRelease.zip"
 
         postbuildcommands { 
-            "echo Building Installer...",
-            "del ../" .. outfile .. " 2>nul",
+            "echo Building Installer...",   -- Build the installer
+            "del /F ../" .. outfile .. " 2>nul",
             "\"%WIX%bin\\candle.exe\" ../" .. infile .. " -o obj/",
-            "\"%WIX%bin\\light.exe\" obj/*.wixobj -o ../" .. outfile .. " -sice:ICE91",
+            "\"%WIX%bin\\light.exe\" obj/*.wixobj -o ../" .. outfile .. " -sice:ICE91 -spdb",
             "echo TechnicalSketcher.vcxproj -^> " .. _SCRIPT_DIR .. "/" .. outfile,
-            "echo Installer has been built successfully"
+            "echo Installer has been built successfully",
+            "echo .",
+            "echo Bundling package for automatic updates...",       -- Copy all files to be compressed
+            "del /F ..\\" .. zipfile .. " 2>nul",
+            "rmdir /S /Q ..\\installer\\compress 2>nul",
+            "xcopy /y ..\\version ..\\installer\\compress\\",
+            "xcopy /y ..\\bin\\deploy\\TechnicalSketcher.exe ..\\installer\\compress\\",
+            "powershell.exe Compress-Archive ../installer/compress/** ../" .. zipfile,   -- Compress the archive
+            "echo TechnicalSketcher.vcxproj -^> " .. _SCRIPT_DIR .. "/" .. zipfile,
+            "echo Updater package was generated successfully"
         }
 
     filter {}

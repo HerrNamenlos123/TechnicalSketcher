@@ -27,6 +27,7 @@ public:
     float previewPointSize = 4;
 
     static void Load();
+    static bool IsLoaded();
     static void Unload();
 
     static void BeginFrame();

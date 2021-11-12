@@ -58,7 +58,7 @@ public:
 	}
 
 	static inline float dist(const glm::vec2& v) {
-		return sqrt(pow(v.x, 2) + pow(v.y, 2));
+		return sqrtf(powf(v.x, 2) + powf(v.y, 2));
 	}
 
 	static inline float dist(const glm::vec2& v1, const glm::vec2& v2) {

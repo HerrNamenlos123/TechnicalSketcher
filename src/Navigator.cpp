@@ -1,5 +1,7 @@
 
 #include "pch.h"
+#include "Battery/AllegroDeps.h"
+
 #include "Navigator.h"
 #include "Layer.h"
 #include "config.h"
@@ -643,8 +645,8 @@ bool Navigator::SaveFileAs() {
 void Navigator::ResetGui() {
 
 	// Simply delete the .ini file
-	if (Battery::FileUtils::FileExists(imguiFileLocation)) {
-		Battery::FileUtils::RemoveFile(imguiFileLocation);
+	if (Battery::FileExists(imguiFileLocation)) {
+		Battery::RemoveFile(imguiFileLocation);
 	}
 }
 
@@ -671,7 +673,7 @@ bool Navigator::LoadSettings() {
 
 	try {
 		std::string path = GetSettingsDirectory() + SETTINGS_FILENAME;
-		auto file = Battery::FileUtils::ReadFile(path);
+		auto file = Battery::ReadFile(path);
 
 		if (file.fail()) {
 			LOG_ERROR("Failed to load settings file!");
@@ -715,7 +717,7 @@ bool Navigator::SaveSettings() {
 		json["keep_up_to_date"] = keepUpToDate;
 
 		std::string file = GetSettingsDirectory() + SETTINGS_FILENAME;
-		return Battery::FileUtils::WriteFile(file, json.dump(4));
+		return Battery::WriteFile(file, json.dump(4));
 	}
 	catch (...) {
 		LOG_WARN("Failed to save settings file!");
@@ -742,7 +744,7 @@ std::string Navigator::GetMostRecentFile() {
 }
 
 std::vector<std::string> Navigator::GetRecentFiles() {
-	auto file = Battery::FileUtils::ReadFile(GetSettingsDirectory() + RECENT_FILES_FILENAME);
+	auto file = Battery::ReadFile(GetSettingsDirectory() + RECENT_FILES_FILENAME);
 
 	if (file.fail()) {
 		LOG_ERROR("Can't read file with recent files: '{}'!", file.path());
@@ -774,30 +776,20 @@ bool Navigator::AppendRecentFile(std::string recentFile) {
 
 bool Navigator::SaveRecentFiles(std::vector<std::string> recentFiles) {
 	auto file = Battery::StringUtils::JoinStrings(recentFiles, "\n");
-	return Battery::FileUtils::WriteFile(GetSettingsDirectory() + RECENT_FILES_FILENAME, file);
+	return Battery::WriteFile(GetSettingsDirectory() + RECENT_FILES_FILENAME, file);
 }
 
 std::string Navigator::GetSettingsDirectory() {
-	return Battery::FileUtils::GetAllegroStandardPath(ALLEGRO_USER_SETTINGS_PATH);
+	return Battery::GetAllegroStandardPath(ALLEGRO_USER_SETTINGS_PATH);
 }
 
 std::string Navigator::GetApplicationVersion() {
-#ifdef BATTERY_DEBUG
-	auto file = Battery::FileUtils::ReadFile(Battery::FileUtils::GetExecutableDirectory() + "../../version");
-#else
-	auto file = Battery::FileUtils::ReadFile(Battery::FileUtils::GetExecutableDirectory() + "../version");
-#endif
-
-	if (file.fail()) {
-		return "";
-	}
-
-	return file.content();
+	return APP_VERSION;
 }
 
 void Navigator::OpenNewWindowFile(const std::string& file) {
 
-	if (Battery::FileUtils::FileExists(file)) {
+	if (Battery::FileExists(file)) {
 		LOG_INFO("Starting new application instance while opening file '{}'", file);
 
 		// Execute the first command line argument, which is always the path of the exe
@@ -816,20 +808,20 @@ void Navigator::StartNewApplicationInstance() {
 	system(std::string("start " + Battery::GetApp().args[0] + " new").c_str());
 }
 
-void Navigator::CloseApplication() {
+bool Navigator::CloseApplication() {
 
 	// Skip if a popup is open
 
 	if (popupDeleteLayerOpen || popupExportOpen || popupSettingsOpen) {
 		LOG_WARN("Can't exit: A popup is still open!");
-		return;
+		return false;
 	}
 
 	// Only close application, if file is saved
 
 	if (!file.ContainsChanges()) {
 		Battery::GetApp().CloseApplication();
-		return;
+		return true;
 	}
 
 	bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
@@ -837,13 +829,15 @@ void Navigator::CloseApplication() {
 
 	if (!save) {	// Discard changes and close the application
 		Battery::GetApp().CloseApplication();
-		return;
+		return true;
 	}
 
 	if (SaveFile()) {
 		Battery::GetApp().CloseApplication();
-		return;
+		return true;
 	}
+
+	return false;
 }
 
 

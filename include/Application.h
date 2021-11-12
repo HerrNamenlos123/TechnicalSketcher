@@ -8,6 +8,7 @@ public:
 
 	double lastScreenRefresh = 0;
 	double passiveScreenTime = 5.0;		// Refresh the screen every 2 seconds
+	ALLEGRO_FONT* font = nullptr;
 
 	//std::string loadingMessage = "";
 

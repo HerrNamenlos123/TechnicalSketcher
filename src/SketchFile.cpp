@@ -2,12 +2,10 @@
 #include "pch.h"
 #include "SketchFile.h"
 #include "Navigator.h"
-
-#undef min
-#undef max
+#include "Battery/AllegroDeps.h"
 
 void SketchFile::UpdateWindowTitle() {
-	std::string file = Battery::FileUtils::GetBasenameFromPath(filename);
+	std::string file = Battery::GetBasename(filename);
 	const std::string& version = Navigator::GetInstance()->applicationVersion;
 	std::string title = "";
 
@@ -18,7 +16,7 @@ void SketchFile::UpdateWindowTitle() {
 		title = file + " - " APPLICATION_NAME;
 	}
 
-	if (version.length() > 0) {
+	if (!version.empty()) {
 		title += " - " + version;
 	}
 
@@ -36,7 +34,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 	// Get file location if not known already
 	if (tempLocation == "" || saveAs) {
 		while (true) {
-			tempLocation = Battery::FileUtils::PromptFileSaveDialog({ "*.*", "*.tsk" }, window);
+			tempLocation = Battery::PromptFileSaveDialog({ "*.*", "*.tsk" }, window);
 
 			// If location is still invalid, abort
 			if (tempLocation == "") {
@@ -44,14 +42,14 @@ bool SketchFile::SaveFile(bool saveAs) {
 			}
 
 			// Append the extension
-			if (Battery::FileUtils::GetExtensionFromPath(tempLocation) != ".tsk") {
+			if (Battery::GetExtension(tempLocation) != ".tsk") {
 				tempLocation += ".tsk";
 			}
 
 			// Warn and repeat if the file already exists
-			if (Battery::FileUtils::FileExists(tempLocation)) {
+			if (Battery::FileExists(tempLocation)) {
 				if (!Battery::ShowWarningMessageBoxYesNo("The file '" +
-					Battery::FileUtils::GetFilenameFromPath(tempLocation) +
+					Battery::GetFilename(tempLocation) +
 					"' already exists, are you sure you want to overwrite it?",
 					window.allegroDisplayPointer))
 				{
@@ -64,14 +62,14 @@ bool SketchFile::SaveFile(bool saveAs) {
 	}
 
 	// Simply append the extension
-	if (Battery::FileUtils::GetExtensionFromPath(tempLocation) != ".tsk") {
+	if (Battery::GetExtension(tempLocation) != ".tsk") {
 		tempLocation += ".tsk";
 	}
 
 	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 
 	// Now save the file
-	if (!Battery::FileUtils::WriteFile(tempLocation, content)) {
+	if (!Battery::WriteFile(tempLocation, content)) {
 		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 		Battery::ShowErrorMessageBox("The file '" + tempLocation + "' could not be saved!",
 			window.allegroDisplayPointer);
@@ -81,7 +79,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 	// Saving was successful
 	fileChanged = false;
 	fileLocation = tempLocation;
-	filename = Battery::FileUtils::GetFilenameFromPath(fileLocation);
+	filename = Battery::GetFilename(fileLocation);
 
 	UpdateWindowTitle();
 	Navigator::GetInstance()->AppendRecentFile(fileLocation);
@@ -108,7 +106,7 @@ bool SketchFile::OpenFile() {
 	UpdateWindowTitle();
 
 	// Now open a new one
-	std::string path = Battery::FileUtils::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetMainWindow());
+	std::string path = Battery::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetMainWindow());
 
 	if (path == "") {
 		return false;
@@ -148,7 +146,7 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 
 	auto& window = Battery::GetMainWindow();
 
-	if (Battery::FileUtils::GetExtensionFromPath(path) != ".tsk") {
+	if (Battery::GetExtension(path) != ".tsk") {
 		if (!silent) {
 			Battery::ShowErrorMessageBox("Can't load file '" + path + "': Unsupported file format, only .tsk files are supported",
 				window.allegroDisplayPointer);
@@ -176,7 +174,7 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 
 	// Now load the new file
-	auto file = Battery::FileUtils::ReadFile(path);
+	auto file = Battery::ReadFile(path);
 	if (file.fail()) {
 		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 		if (!silent) {
@@ -258,7 +256,7 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 		fileChanged = false;
 		fileLocation = path;
 		backgroundColor = bCol;
-		filename = Battery::FileUtils::GetFilenameFromPath(path);
+		filename = Battery::GetFilename(path);
 
 		UpdateWindowTitle();
 		Navigator::GetInstance()->AppendRecentFile(fileLocation);
