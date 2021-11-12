@@ -98,7 +98,7 @@ void App::OnUpdate() {
 	// Allow the first 60 frames to let everything initialize
 	// and only if the program runs in the background
 	if (GetRuntime() < (lastScreenRefresh + passiveScreenTime) && 
-		framecount > 60 && !window.IsFocused()) 
+		framecount > 60 && !window.IsFocused() && Navigator::GetInstance()->updateStatus == UpdateStatus::NOTHING)
 	{
 		DiscardFrame();
 		return;

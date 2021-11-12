@@ -42,7 +42,6 @@
 # Miscellaneous
 bin/
 build/
-installer/compress/
 !premake5.exe
 !premake5/**
 !resource/**

@@ -3,14 +3,7 @@
 #include "pch.h"
 #include "Shapes/ArcShape.h"
 #include "Navigator.h"
-
-extern ImFont* materialFont35;
-extern ImFont* segoeFont35;
-extern ImFont* materialFont22;
-extern ImFont* segoeFont22;
-extern ImFont* sansFont22;
-extern ImFont* sansFont17;
-extern ImFont* sansFont9;
+#include "Fonts/Fonts.h"
 
 
 static float mag(const glm::vec2& v) {
@@ -193,12 +186,13 @@ glm::vec2 ArcShape::GetCenterPosition() const {
 }
 
 bool ArcShape::ShowPropertiesWindow() {
+	auto fonts = Battery::__getUserInterface()->GetFontContainer<FontContainer>();
 	// Return true if a parameter changed, false if everything stays the same
-	ImGui::PushFont(sansFont22);
+	ImGui::PushFont(fonts->sansFont22);
 
 	ImGui::Text("Shape type: Arc");
 	ImGui::Separator();
-	ImGui::PushFont(sansFont17);
+	ImGui::PushFont(fonts->sansFont17);
 
 	auto oldColor = color;
 	auto oldThickness = thickness;

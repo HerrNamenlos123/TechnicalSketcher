@@ -4,14 +4,7 @@
 #include "Shapes/LineShape.h"
 #include "ApplicationRenderer.h"
 #include "Navigator.h"
-
-extern ImFont* materialFont35;
-extern ImFont* segoeFont35;
-extern ImFont* materialFont22;
-extern ImFont* segoeFont22;
-extern ImFont* sansFont22;
-extern ImFont* sansFont17;
-extern ImFont* sansFont9;
+#include "Fonts/Fonts.h"
 
 LineShape::LineShape() {
 
@@ -126,12 +119,13 @@ glm::vec2 LineShape::GetCenterPosition() const {
 }
 
 bool LineShape::ShowPropertiesWindow() {
+	auto fonts = Battery::__getUserInterface()->GetFontContainer<FontContainer>();
 	// Return true if a parameter changed, false if everything stays the same
-	ImGui::PushFont(sansFont22);
+	ImGui::PushFont(fonts->sansFont22);
 
 	ImGui::Text("Shape type: Line");
 	ImGui::Separator();
-	ImGui::PushFont(sansFont17);
+	ImGui::PushFont(fonts->sansFont17);
 
 	auto oldColor = color;
 	auto oldThickness = thickness;

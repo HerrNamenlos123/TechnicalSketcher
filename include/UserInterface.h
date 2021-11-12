@@ -6,6 +6,7 @@
 #include "Tools/GenericTool.h"
 #include "GuiTheme.h"
 #include "Fonts/FontLoader.h"
+#include "Fonts/Fonts.h"
 
 //#define SPLASHSCREEN_FONT	"C:\\Windows\\Fonts\\consola.ttf"
 //#define SPLASHSCREEN_FONT_SIZE	14
@@ -25,28 +26,6 @@
 #define GUI_UPDATEINFO_WIDTH 260
 #define GUI_UPDATEINFO_HEIGHT 90
 #define POPUP_TIME 8
-
-struct FontContainer : public Battery::FontContainer {
-	const ImWchar icons_ranges[3] = { 0xe005, 0xf8ff, 0 };
-	ImFont* sansFont9 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 9);
-	ImFont* sansFont14 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 14);
-	ImFont* sansFont17 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 17);
-	ImFont* sansFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 22);
-	ImFont* materialFont35 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_MATERIAL_ICONS, 35, nullptr, icons_ranges);
-	ImFont* materialFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_MATERIAL_ICONS, 22, nullptr, icons_ranges);
-	ImFont* segoeFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_SEGOE_MDL2, 22, nullptr, icons_ranges);
-};
-
-//struct FontContainer : public Battery::FontContainer {
-//	const ImWchar icons_ranges[3] = { 0xe005, 0xf8ff, 0 };
-//	ImFont* sansFont9		= defaultFont;
-//	ImFont* sansFont14		= defaultFont;
-//	ImFont* sansFont17		= defaultFont;
-//	ImFont* sansFont22		= defaultFont;
-//	ImFont* materialFont35	= defaultFont;
-//	ImFont* materialFont22	= defaultFont;
-//	ImFont* segoeFont22		= defaultFont;
-//};
 
 static void HelpMarker(const char* desc, ImFont* font)
 {
@@ -831,7 +810,7 @@ public:
 		}
 
 		ImGui::PopFont();
-	}	// TODO: Fix Properties window
+	}
 };
 
 class MouseInfoWindow : public Battery::ImGuiPanel<> {
@@ -1024,6 +1003,7 @@ public:
 		toolbox.Update();
 		mouseInfo.Update();
 		updateInfoWindow.Update();
+		propertiesWindow.Update();
 	}
 
 	void OnImGuiRender() override;

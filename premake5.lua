@@ -95,20 +95,39 @@ project (projectName)
         local zipfile = "bin\\deploy\\AutomaticUpdaterRelease.zip"
 
         postbuildcommands { 
-            "echo Building Installer...",   -- Build the installer
+            "echo Building Installer...",   
             "del /F ../" .. outfile .. " 2>nul",
+
+            -- Build the installer
             "\"%WIX%bin\\candle.exe\" ../" .. infile .. " -o obj/",
+            "if %errorlevel% neq 0 exit /b %errorlevel%",
+
             "\"%WIX%bin\\light.exe\" obj/*.wixobj -o ../" .. outfile .. " -sice:ICE91 -spdb",
+            "if %errorlevel% neq 0 exit /b %errorlevel%",
+
             "echo TechnicalSketcher.vcxproj -^> " .. _SCRIPT_DIR .. "/" .. outfile,
             "echo Installer has been built successfully",
             "echo .",
-            "echo Bundling package for automatic updates...",       -- Copy all files to be compressed
+
+            -- Copy all files to be compressed
+            "echo Bundling package for automatic updates...",       
             "del /F ..\\" .. zipfile .. " 2>nul",
-            "rmdir /S /Q ..\\installer\\compress 2>nul",
-            "xcopy /y ..\\version ..\\installer\\compress\\",
-            "xcopy /y ..\\bin\\deploy\\TechnicalSketcher.exe ..\\installer\\compress\\",
-            "powershell.exe Compress-Archive ../installer/compress/** ../" .. zipfile,   -- Compress the archive
-            "echo TechnicalSketcher.vcxproj -^> " .. _SCRIPT_DIR .. "/" .. zipfile,
+            "rmdir /S /Q ..\\build\\updatearchive 2>nul",
+            --"xcopy /y ..\\version ..\\installer\\compress\\",
+            --"if %errorlevel% neq 0 exit /b %errorlevel%",
+
+            -- Main Application Executable
+            "xcopy /y ..\\bin\\deploy\\TechnicalSketcher.exe ..\\build\\updatearchive\\latest\\",
+            "if %errorlevel% neq 0 exit /b %errorlevel%",
+
+            -- Icon
+            --"xcopy /y ..\\resource\\TechnicalSketcher.ico ..\\build\\updatearchive\\latest\\",
+            --"if %errorlevel% neq 0 exit /b %errorlevel%",
+
+            -- Compress the archive
+            "powershell.exe Compress-Archive ../build/updatearchive/** $(ProjectDir)..\\" .. zipfile,   
+            "if %errorlevel% neq 0 exit /b %errorlevel%",
+            "echo TechnicalSketcher.vcxproj -^> $(ProjectDir)..\\" .. zipfile,
             "echo Updater package was generated successfully"
         }
 

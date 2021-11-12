@@ -229,7 +229,6 @@ void RunUpdater() {
 			CleanUpdateFiles(rootdir);
 			return;
 		}
-		// TODO: Fix screen refresh while updating
 
 		// Now move the new files to the install directory
 		logger->info("Moving new files to rootdir");
