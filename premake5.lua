@@ -131,9 +131,15 @@ project (projectName)
             "echo TechnicalSketcher.vcxproj -^> $(ProjectDir)..\\" .. zipfile,
             "echo Updater package was generated successfully",
             
-            -- Everything done
+            -- Load version tag
             "set /p version=<..\\version.txt",
             "set version=%version:\"=%",
+
+            -- Create version file, so you always see the version next to the .msi (for deploying)
+            "del ..\\bin\\deploy\\v* 2>nul",
+            "type nul > ..\\bin\\deploy\\%version%",
+
+            -- Everything done now
             "echo .",
             "echo .",
             "echo The application was successfully packaged: Version %version%"
