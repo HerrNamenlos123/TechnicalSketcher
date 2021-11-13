@@ -26,8 +26,8 @@
 
 std::shared_ptr<spdlog::logger> logger;
 
-void DeleteOutdatedFiles(const std::string& rootdir) {
-	if (Battery::RemoveDirectory(rootdir + OUTDATED_DIRECTORY)) {
+void DeleteOutdatedFiles(const std::string& rootPath) {
+	if (Battery::DirectoryExists(rootPath + OUTDATED_DIRECTORY) && Battery::RemoveDirectory(rootPath + OUTDATED_DIRECTORY)) {
 		logger->info("Outdated files were deleted");
 	}
 }
@@ -100,9 +100,9 @@ bool DownloadUpdate(const std::string& url, const std::string& targetFile, int a
 	return true;
 }
 
-void CleanUpdateFiles(const std::string& rootdir) {
-	Battery::RemoveDirectory(rootdir + TEMP_DIRECTORY);
-	Battery::RemoveFile(rootdir + UPDATE_FILENAME);
+void CleanUpdateFiles(const std::string& rootPath) {
+	Battery::RemoveDirectory(rootPath + TEMP_DIRECTORY);
+	Battery::RemoveFile(rootPath + UPDATE_FILENAME);
 }
 
 void RunUpdater() {
@@ -123,21 +123,27 @@ void RunUpdater() {
 		//     - (updater.exe)	  - These two are there in existing installations of an older version
 		//     - (uninstall.exe)  - (Not needed anymore)
 		//
-		std::string installDir = Battery::GetExecutableDirectory();
-		std::string rootdir = Battery::GetParentDirectory(installDir);
+		std::string installPath = Battery::GetExecutableDirectory();
+		std::string rootPath = Battery::GetParentDirectory(installPath);
+		std::string installDir = Battery::GetFilename(installPath);
 		Navigator::GetInstance()->restartExecutablePath = Battery::GetExecutablePath();
+
+		// Don't update when the parent folder is called 'outdated': It's an old executable
+		if (installDir == "outdated") {
+			return;
+		}
 
 		// Create the lockfile, only one process can update the application at a time
 		std::unique_ptr<Battery::Lockfile> lockfile;
 		try {
-			lockfile = std::make_unique<Battery::Lockfile>(rootdir + "lock");
+			lockfile = std::make_unique<Battery::Lockfile>(rootPath + "lock");
 		}
 		catch (...) {
 			return;
 		}
 
 		// Setup logging
-		std::string logfile = rootdir + UPDATER_LOG_FILENAME;
+		std::string logfile = rootPath + UPDATER_LOG_FILENAME;
 		Battery::RemoveFile(logfile);
 		logger = spdlog::basic_logger_mt(UPDATER_LOGGER_NAME, logfile, true);
 		logger->set_level(BATTERY_LOG_LEVEL_TRACE);
@@ -146,7 +152,7 @@ void RunUpdater() {
 
 
 		// Delete old versions
-		DeleteOutdatedFiles(rootdir);
+		DeleteOutdatedFiles(rootPath);
 
 
 
@@ -188,7 +194,7 @@ void RunUpdater() {
 		// Download the update
 		Navigator::GetInstance()->updateStatus = UpdateStatus::DOWNLOADING;
 		logger->info("Downloading update package...");
-		if (!DownloadUpdate(downloadLink, rootdir + UPDATE_FILENAME)) {
+		if (!DownloadUpdate(downloadLink, rootPath + UPDATE_FILENAME)) {
 			logger->info("Failed to download update package, aborting update process...");
 			Navigator::GetInstance()->timeSincePopup = Battery::GetRuntime();
 			Navigator::GetInstance()->updateStatus = UpdateStatus::FAILED;
@@ -199,11 +205,11 @@ void RunUpdater() {
 		// Unzip the update
 		Navigator::GetInstance()->updateStatus = UpdateStatus::EXTRACTING;
 		logger->info("Unzipping the update package...");
-		if (!Battery::ExtractArchive(rootdir + UPDATE_FILENAME, rootdir + TEMP_DIRECTORY)) {
+		if (!Battery::ExtractArchive(rootPath + UPDATE_FILENAME, rootPath + TEMP_DIRECTORY)) {
 			logger->info("Failed to unzip update package, aborting update process...");
 			Navigator::GetInstance()->timeSincePopup = Battery::GetRuntime();
 			Navigator::GetInstance()->updateStatus = UpdateStatus::FAILED;
-			CleanUpdateFiles(rootdir);
+			CleanUpdateFiles(rootPath);
 			return;
 		}
 		logger->info("Unzipping was successful");
@@ -211,10 +217,10 @@ void RunUpdater() {
 		// Now move the old files to outdated
 		Navigator::GetInstance()->updateStatus = UpdateStatus::INSTALLING;
 		logger->info("Moving old files to outdated");	// This might fail when another outdated executable is still running
-		if (Battery::DirectoryExists(installDir)) {
-			std::string target = rootdir + OUTDATED_DIRECTORY;
+		if (Battery::DirectoryExists(installPath)) {
+			std::string target = rootPath + OUTDATED_DIRECTORY;
 			for (int i = 0; i < 10; i++) {
-				if (Battery::MoveDirectory(installDir, target)) {
+				if (Battery::MoveDirectory(installPath, target)) {
 					break;
 				}
 				
@@ -226,31 +232,32 @@ void RunUpdater() {
 				" Aborting to avoid breaking the installation...");
 			Navigator::GetInstance()->timeSincePopup = Battery::GetRuntime();
 			Navigator::GetInstance()->updateStatus = UpdateStatus::FAILED;
-			CleanUpdateFiles(rootdir);
+			CleanUpdateFiles(rootPath);
 			return;
 		}
 
 		// Now move the new files to the install directory
 		logger->info("Moving new files to rootdir");
-		if (!Battery::MoveDirectory(rootdir + TEMP_DIRECTORY, rootdir)) {
+		if (!Battery::MoveDirectory(rootPath + TEMP_DIRECTORY, rootPath)) {
 			logger->info("MoveDirectory failed, reverting installation...");
-			Battery::PrepareEmptyDirectory(installDir);
-			Battery::MoveDirectory(rootdir + OUTDATED_DIRECTORY, installDir);
+			Battery::PrepareEmptyDirectory(installPath);
+			Battery::MoveDirectory(rootPath + OUTDATED_DIRECTORY, installPath);
 			logger->info("Tried my best to recover the old installation, aborting update");
 			Navigator::GetInstance()->timeSincePopup = Battery::GetRuntime();
 			Navigator::GetInstance()->updateStatus = UpdateStatus::FAILED;
-			CleanUpdateFiles(rootdir);
+			CleanUpdateFiles(rootPath);
 			return;
 		}
-		if (Battery::GetFilename(installDir) != "latest") {
-			logger->info("Install directory was not called 'latest/', renaming to '{}/'", Battery::GetFilename(installDir));
-			Battery::RenameFile(rootdir + "latest/", rootdir + Battery::GetFilename(installDir));
+		if (installDir != "latest") {
+			logger->info("Install directory was not called 'latest/', renaming to '{}/'", installDir);
+			Battery::RemoveDirectory(installDir);
+			Battery::RenameFile(rootPath + "latest/", rootPath + installDir);
 		}
 		
 
 		// Delete update package
 		logger->info("Cleaning update files");
-		CleanUpdateFiles(rootdir);
+		CleanUpdateFiles(rootPath);
 
 		logger->info("Update was successful, stopping update thread");
 
