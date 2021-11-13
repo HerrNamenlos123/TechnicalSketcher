@@ -10,13 +10,14 @@ class UpdaterLayer : public Battery::Layer {
 public:
 
 	std::thread updaterThread;
+	bool noUpdate;
 
-	UpdaterLayer() : Battery::Layer("UpdaterLayer") {}
+	UpdaterLayer(bool noUpdate) : noUpdate(noUpdate), Battery::Layer("UpdaterLayer") {}
 
 	void OnAttach() override {
 
 #ifdef BATTERY_DEPLOY
-		if (Navigator::GetInstance()->keepUpToDate) {
+		if (Navigator::GetInstance()->keepUpToDate && !noUpdate) {
 			updaterThread = std::thread(RunUpdater);		// Updater will run in the background
 		}
 #endif

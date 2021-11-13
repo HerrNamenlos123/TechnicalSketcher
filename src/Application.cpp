@@ -40,9 +40,6 @@ bool App::OnStartup() {
 		Navigator::GetInstance()->SaveSettings();	// If settings can't be loaded, save the default settings
 	}
 	
-	// Now that settings are loaded, start updater
-	PushLayer(std::make_shared<UpdaterLayer>());
-	
 	// Set the icon and title of the window
 	window.SetWindowExecutableIcon(DB_ICON1);
 	window.SetTitle(APPLICATION_NAME);
@@ -50,9 +47,13 @@ bool App::OnStartup() {
 	// Check if file to open was supplied
 	std::string openFile = "";
 	bool newFile = false;
+	bool noUpdate = false;
 	if (args.size() >= 2) {
 		if (args[1] == "new") {
 			newFile = true;
+		}
+		else if (args[1] == "noupdate") {
+			noUpdate = true;
 		}
 	
 		openFile = args[1];
@@ -87,6 +88,9 @@ bool App::OnStartup() {
 	window.FlipDisplay();
 	window.ShowInTaskbar();
 	window.Show();
+
+	// Now start updater thread
+	PushLayer(std::make_shared<UpdaterLayer>(noUpdate));
 
 	return true;
 }

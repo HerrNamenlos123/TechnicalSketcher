@@ -74,6 +74,7 @@ project (projectName)
         libdirs { "$(BATTERY_ENGINE_DEPLOY_LINK_DIRS)" }
         links { "$(BATTERY_ENGINE_DEPLOY_LINK_FILES)" }
         targetdir (_SCRIPT_DIR .. "/bin/deploy")
+        debugargs { "noupdate" }    -- Prevent automatic update when launching deploy configuration from VS
 
     filter {}
     
