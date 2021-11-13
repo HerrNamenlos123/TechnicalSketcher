@@ -9,7 +9,7 @@
 #include "../resource/resource.h"
 
 App::App() : Battery::Application(0, 0, APPLICATION_NAME) {
-	LOG_SET_BATTERY_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
+	//LOG_SET_BATTERY_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
 	SetWindowFlag(WindowFlags::FRAMELESS);
 	SetWindowFlag(WindowFlags::NO_TASKBAR);
 	SetWindowFlag(WindowFlags::HIDDEN);

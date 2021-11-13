@@ -98,8 +98,8 @@ static void Spinner(const char* label, double radius, int thickness, const ImU32
 	int num_segments = 30;
 	int start = abs(std::sin(Battery::GetRuntime() * 1.8) * (num_segments - 5.0));
 
-	double a_min = IM_PI * 2.0f * ((double)start) / (float)num_segments;
-	double a_max = IM_PI * 2.0f * ((double)num_segments - 3) / (float)num_segments;
+	double a_min = IM_PI * 2.0 * ((double)start) / (float)num_segments;
+	double a_max = IM_PI * 2.0 * ((double)num_segments - 3) / (float)num_segments;
 
 	const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
 
@@ -162,7 +162,7 @@ public:
 			}
 			else {
 				// Loop in reverse order, so the most recent is on top
-				for (size_t i = recentFiles.size() - 1; i < recentFiles.size(); i--) {
+				for (size_t i = recentFiles.size() - 1; i < recentFiles.size(); i--) {	// TODO: Make this loop cleaner
 					std::string& file = recentFiles[i];
 
 					if (ImGui::MenuItem(file.c_str())) {
@@ -934,7 +934,11 @@ public:
 				Navigator::GetInstance()->timeSincePopup = Battery::GetRuntime();
 				if (Navigator::GetInstance()->CloseApplication()) {
 					// And restart the application
-					Battery::ExecuteShellCommand("start " + Navigator::GetInstance()->restartExecutablePath);
+					auto ret = Battery::ExecuteShellCommandSilent("start " + Navigator::GetInstance()->restartExecutablePath, true);
+					Navigator::GetInstance()->updateStatus = UpdateStatus::NOTHING;
+					if (!ret.first) {	// New version failed to launch
+						Battery::GetApp().shouldClose = false;		// TODO: Do this properly
+					}
 				}
 			}
 		}
