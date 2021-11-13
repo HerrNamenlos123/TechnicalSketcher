@@ -13,7 +13,7 @@
 <?define CabName = "TechnicalSketcher.cab" ?>
 
 
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:Util="http://schemas.microsoft.com/wix/UtilExtension" >
 
     <Product Id="60143f8d-5524-4b34-a894-ea57cc15425d" Name="$(var.Name)" Manufacturer="$(var.Manufacturer)" 
         UpgradeCode="$(var.UpgradeCode)" Version="$(var.Version)" Language="1033">
@@ -42,7 +42,12 @@
             <ComponentRef Id="ApplicationShortcut" />
             <!--Desktop shortcut-->
             <ComponentRef Id="ApplicationDesktopShortcut" />
+            <!--Remove settings folder-->
+            <ComponentRef Id="SettingsFolder" />
+            <!--Remove root folder-->
+            <ComponentRef Id="RootFolder" />
         </Feature>
+      
   </Product>
 
     <!--Fragment with details of installation directory-->
@@ -50,11 +55,33 @@
         <Directory Id="TARGETDIR" Name="SourceDir">
 
             <Directory Id="LocalAppDataFolder">
-                <Directory Id="INSTALLFOLDER" Name="$(var.Name)" />
+                <Directory Id="ROOTFOLDER" Name="$(var.Name)">
+                  
+                    <Directory Id="INSTALLFOLDER" Name="latest" />
+
+                    <Component Id="RootFolder" Guid="{a287abac-0536-4205-8c51-d84ccf32afcb}">
+                        <CreateFolder />
+                        <RemoveFile Id="ROOTFOLDER" Name="*.*" On="uninstall" />
+                        <RemoveFolder Id="ROOTFOLDERF" Directory="ROOTFOLDER" On="uninstall" />
+                        <RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="root_dir" Type="integer" Value="1" KeyPath="yes" />
+                    </Component>
+                  
+                </Directory>
             </Directory>
 
             <Directory Id="ProgramMenuFolder">
                 <Directory Id="ApplicationProgramsFolder" Name="$(var.Name)" />
+            </Directory>
+
+            <Directory Id="AppDataFolder">
+                <Directory Id="SETTINGSFOLDER" Name="$(var.Name)">
+                    <Component Id="SettingsFolder" Guid="{aaf2fe12-be6a-403d-bd2b-4fce70d0004e}">
+                        <CreateFolder />
+                        <RemoveFile Id="SETTINGSFOLDER" Name="*.*" On="uninstall" />
+                        <RemoveFolder Id="SETTINGSFOLDERF" Directory="SETTINGSFOLDER" On="uninstall" />
+                        <RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="settings_dir" Type="integer" Value="1" KeyPath="yes" />
+                    </Component>
+                </Directory>
             </Directory>
 
             <Directory Id="DesktopFolder" Name="Desktop" />
@@ -66,6 +93,7 @@
     <Fragment>
         <!--ComponentGroup refering to install component in INSTALLFOLDER Directory-->
         <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+          
             <!--Main Component with application executable path-->
             <Component Id="TechnicalSketcher.exe" Guid="3f5cc018-4389-4001-b07f-081b3af9d2c2">
                 <File Id="TechnicalSketcher.exe" Name="TechnicalSketcher.exe" Source="../bin/deploy/TechnicalSketcher.exe" />
@@ -74,6 +102,7 @@
                 <RemoveFolder Id="INSTALLFOLDER" On="uninstall" />
                 <RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="exe_installed" Type="integer" Value="1" KeyPath="yes" />
             </Component>
+          
         </ComponentGroup>
     </Fragment>
 

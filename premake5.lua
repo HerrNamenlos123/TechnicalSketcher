@@ -78,7 +78,8 @@ project (projectName)
     filter {}
     
     includedirs { _SCRIPT_DIR .. "/include", "$(BATTERY_ENGINE_INCLUDE_DIRECTORY)" }
-    files { _SCRIPT_DIR .. "/include/**", _SCRIPT_DIR .. "/src/**" }
+    files { _SCRIPT_DIR .. "/include/**", _SCRIPT_DIR .. "/src/**", _SCRIPT_DIR .. "/installer/**" }
+    files { _SCRIPT_DIR .. "/version.txt" }
 
     linkoptions { "/IGNORE:4099" }  -- Ignore warning that no .pdb file is found for debugging
 
@@ -128,7 +129,14 @@ project (projectName)
             "powershell.exe Compress-Archive ../build/updatearchive/** $(ProjectDir)..\\" .. zipfile,   
             "if %errorlevel% neq 0 exit /b %errorlevel%",
             "echo TechnicalSketcher.vcxproj -^> $(ProjectDir)..\\" .. zipfile,
-            "echo Updater package was generated successfully"
+            "echo Updater package was generated successfully",
+            
+            -- Everything done
+            "set /p version=<..\\version.txt",
+            "set version=%version:\"=%",
+            "echo .",
+            "echo .",
+            "echo The application was successfully packaged: Version %version%"
         }
 
     filter {}

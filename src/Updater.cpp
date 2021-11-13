@@ -242,9 +242,8 @@ void RunUpdater() {
 			CleanUpdateFiles(rootdir);
 			return;
 		}
-		logger->info("Install directory was not called 'latest/', renaming to '{}/'", Battery::GetFilename(installDir));
-		if (Battery::GetFilename(installDir) != "latest/") {
-			Battery::RemoveDirectory(installDir);
+		if (Battery::GetFilename(installDir) != "latest") {
+			logger->info("Install directory was not called 'latest/', renaming to '{}/'", Battery::GetFilename(installDir));
 			Battery::RenameFile(rootdir + "latest/", rootdir + Battery::GetFilename(installDir));
 		}
 		

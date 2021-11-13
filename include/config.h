@@ -1,7 +1,8 @@
 #pragma once
 
+// The version tag is loaded from the file "version.txt"
+
 #define APPLICATION_NAME "TechnicalSketcher"
-#define APP_VERSION "v0.2.1-beta.1"
 
 #define UPDATER_LOG_FILENAME "update.log.txt"
 #define UPDATER_LOGGER_NAME "TechnicalSketcher-Updater"
@@ -36,3 +37,7 @@
 
 #define DEFAULT_LINE_THICKNESS 1
 #define DEFAULT_LINE_COLOR glm::vec4(0, 0, 0, 255)
+
+static const char* APP_VERSION = {
+#include "../version.txt"
+};
