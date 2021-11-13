@@ -123,10 +123,11 @@ void RunUpdater() {
 		//     - (updater.exe)	  - These two are there in existing installations of an older version
 		//     - (uninstall.exe)  - (Not needed anymore)
 		//
-		std::string installPath = Battery::GetExecutableDirectory();
+		std::string exePath = Battery::GetExecutablePath();
+		std::string installPath = Battery::GetParentDirectory(exePath);
 		std::string rootPath = Battery::GetParentDirectory(installPath);
 		std::string installDir = Battery::GetFilename(installPath);
-		Navigator::GetInstance()->restartExecutablePath = Battery::GetExecutablePath();
+		Navigator::GetInstance()->restartExecutablePath = exePath;
 
 		// Don't update when the parent folder is called 'outdated': It's an old executable
 		if (installDir == "outdated") {
@@ -251,7 +252,16 @@ void RunUpdater() {
 		if (installDir != "latest") {
 			logger->info("Install directory was not called 'latest/', renaming to '{}/'", installDir);
 			Battery::RemoveDirectory(installDir);
-			Battery::RenameFile(rootPath + "latest/", rootPath + installDir);
+			if (!Battery::MoveDirectory(rootPath + "latest/", installPath)) {
+				logger->info("Renaming failed, trying to revert...");
+				Battery::PrepareEmptyDirectory(installPath);
+				Battery::MoveDirectory(rootPath + OUTDATED_DIRECTORY, installPath);
+				logger->info("Tried my best to recover the old installation, aborting update");
+				Navigator::GetInstance()->timeSincePopup = Battery::GetRuntime();
+				Navigator::GetInstance()->updateStatus = UpdateStatus::FAILED;
+				CleanUpdateFiles(rootPath);
+				return;
+			}
 		}
 		
 
