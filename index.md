@@ -39,4 +39,4 @@ Having trouble with Pages? Check out our [documentation](https://docs.github.com
 
 ## Download
 
-![download](https://user-images.githubusercontent.com/44909261/142581082-ec3fd1d8-4499-43fc-8c43-507f1ee182e7.png)
+![<img src="https://user-images.githubusercontent.com/44909261/142581082-ec3fd1d8-4499-43fc-8c43-507f1ee182e7.png">](https://github.com/HerrNamenlos123/TechnicalSketcher/releases/download/latest/TechnicalSketcher-Installer-x64.msi)
