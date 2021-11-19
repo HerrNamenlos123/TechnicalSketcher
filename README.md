@@ -16,6 +16,6 @@ https://github.com/HerrNamenlos123/TechnicalSketcher/releases/latest
 
 ### Building the installer
 
- - Enable the [.NET Framework 3.5](https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows), needed for WiX
+ - Enable the [.NET Framework 3.5](https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows), needed for WiX (use the control panel)
  - Install the [WiX Toolchain](https://wixtoolset.org/releases/) (direct link -> [WiX stable 3.11.2](https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311.exe))
  - Set configuration to `Deploy` and build the project
