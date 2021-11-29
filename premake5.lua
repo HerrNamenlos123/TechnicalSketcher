@@ -38,6 +38,7 @@ project (projectName)
     targetname (projectName)
 
     system "Windows"
+    entrypoint "mainCRTStartup"
     architecture "x86_64"
 
     pchheader "pch.h"
