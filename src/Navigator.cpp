@@ -797,7 +797,7 @@ void Navigator::OpenNewWindowFile(const std::string& file) {
 	}
 	else {
 		LOG_ERROR("File can not be found: '{}'", file);
-		Battery::ShowInfoMessageBox("The file '" + file + "' can not be found!");
+		//Battery::ShowInfoMessageBox("The file '" + file + "' can not be found!");
 	}
 }
 
@@ -817,20 +817,20 @@ bool Navigator::CloseApplication() {
 		return false;
 	}
 
-	// Only close application, if file is saved
+	// Only close application if file is saved
 
 	if (!file.ContainsChanges()) {
 		Battery::GetApp().CloseApplication();
 		return true;
 	}
 
-	bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-		"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
+	//bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
+	//	"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
 
-	if (!save) {	// Discard changes and close the application
-		Battery::GetApp().CloseApplication();
-		return true;
-	}
+	//if (!save) {	// Discard changes and close the application
+	//	Battery::GetApp().CloseApplication();
+	//	return true;
+	//}
 
 	if (SaveFile()) {
 		Battery::GetApp().CloseApplication();

@@ -34,7 +34,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 	// Get file location if not known already
 	if (tempLocation == "" || saveAs) {
 		while (true) {
-			tempLocation = Battery::PromptFileSaveDialog({ "*.*", "*.tsk" }, window);
+			//tempLocation = Battery::PromptFileSaveDialog({ "*.*", "*.tsk" }, window);
 
 			// If location is still invalid, abort
 			if (tempLocation == "") {
@@ -47,15 +47,15 @@ bool SketchFile::SaveFile(bool saveAs) {
 			}
 
 			// Warn and repeat if the file already exists
-			if (Battery::FileExists(tempLocation)) {
-				if (!Battery::ShowWarningMessageBoxYesNo("The file '" +
-					Battery::GetFilename(tempLocation) +
-					"' already exists, are you sure you want to overwrite it?",
-					window.allegroDisplayPointer))
-				{
-					continue;	// Repeat from top
-				}
-			}
+			//if (Battery::FileExists(tempLocation)) {
+			//	if (!Battery::ShowWarningMessageBoxYesNo("The file '" +
+			//		Battery::GetFilename(tempLocation) +
+			//		"' already exists, are you sure you want to overwrite it?",
+			//		window.allegroDisplayPointer))
+			//	{
+			//		continue;	// Repeat from top
+			//	}
+			//}
 
 			break;
 		}
@@ -91,13 +91,14 @@ bool SketchFile::SaveFile(bool saveAs) {
 bool SketchFile::OpenFile() {
 
 	// Now open a new one
-	std::string path = Battery::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetMainWindow());
-
-	if (path == "") {
-		return false;
-	}
-
-	return OpenFile(path);
+	//std::string path = Battery::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetMainWindow());
+	//
+	//if (path == "") {
+	//	return false;
+	//}
+	//
+	//return OpenFile(path);
+	return true;
 }
 
 bool SketchFile::OpenEmptyFile() {
@@ -105,14 +106,14 @@ bool SketchFile::OpenEmptyFile() {
 	// First save the file
 	if (ContainsChanges()) {
 
-		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-			"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
-
-		if (save) {	// File needs to be saved
-			if (!SaveFile()) {	// Saving was not successful
-				return false;
-			}
-		}
+		//bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
+		//	"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
+		//
+		//if (save) {	// File needs to be saved
+		//	if (!SaveFile()) {	// Saving was not successful
+		//		return false;
+		//	}
+		//}
 	}
 
 	UpdateWindowTitle();
@@ -147,14 +148,14 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 	// First save the file
 	if (ContainsChanges()) {
 
-		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-			"Do you want to save the file?", window.allegroDisplayPointer);
-
-		if (save) {	// File needs to be saved
-			if (!SaveFile()) {	// Saving was not successful
-				return false;
-			}
-		}
+		//bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
+		//	"Do you want to save the file?", window.allegroDisplayPointer);
+		//
+		//if (save) {	// File needs to be saved
+		//	if (!SaveFile()) {	// Saving was not successful
+		//		return false;
+		//	}
+		//}
 	}
 
 	UpdateWindowTitle();

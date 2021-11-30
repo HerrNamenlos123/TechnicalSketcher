@@ -18,15 +18,15 @@ App::App() : Battery::Application(0, 0, APPLICATION_NAME) {
 bool App::OnStartup() {
 
 	// Show splash screen
-	Battery::Bitmap splash;
-	if (splash.LoadEmbeddedResource(DB_SPLASHSCREEN)) {
-		window.SetSize(splash.GetSize());
-		window.CenterOnPrimaryMonitor();
-		window.FlipDisplay();
-		al_draw_bitmap(splash.GetAllegroBitmap(), 0, 0, 0);
-		window.FlipDisplay();
-		window.Show();
-	}
+	//Battery::Bitmap splash;
+	//if (splash.LoadEmbeddedResource(DB_SPLASHSCREEN)) {
+	//	window.SetSize(splash.GetSize());
+	//	window.CenterOnPrimaryMonitor();
+	//	window.FlipDisplay();
+	//	al_draw_bitmap(splash.GetAllegroBitmap(), 0, 0, 0);
+	//	window.FlipDisplay();
+	//	window.Show();
+	//}
 
 	// Initialize the renderer
 	ApplicationRenderer::Load();
@@ -140,7 +140,8 @@ void App::OnEvent(Battery::Event* e) {
 		break;
 
 	case EventType::WindowClose:
-		Navigator::GetInstance()->CloseApplication();
+		Battery::GetApp().CloseApplication();
+		//Navigator::GetInstance()->CloseApplication();
 		e->SetHandled();
 		break;
 
