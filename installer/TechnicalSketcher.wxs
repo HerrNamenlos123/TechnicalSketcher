@@ -12,58 +12,93 @@
 <!-- The name of the Cabinet -->
 <?define CabName = "TechnicalSketcher.cab" ?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="60143f8d-5524-4b34-a894-ea57cc15425d" Name="$(var.Name)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)" Version="$(var.Version)" Language="1033">
-        <!--Setup or Installer with properties-->
-        <Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" InstallPrivileges="limited" Description="$(var.Name)" Manufacturer="$(var.Manufacturer)" />
-        <!--Application logo-->
-        <Icon Id="TechnicalSketcher.ico" SourceFile="../resource/TechnicalSketcher.ico" />
-        <!--Application logo for Control Panel-->
-        <Property Id="ARPPRODUCTICON" Value="TechnicalSketcher.ico" />
-        <!--Embed Cabinet into single msi file-->
-        <Media Id="1" Cabinet="$(var.CabName)" EmbedCab="yes" />
-        <!-- Allow upgrades and prevent downgrades -->
-        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
-        <!--Main Feature for this Setup which can be found in Fragment Tag with ComponentGroupRef Id-->
-        <Feature Id="ProductFeature" Title="$(var.Name)" Level="1">
-            <!--Main application executable component-->
-            <ComponentGroupRef Id="ProductComponents" />
-            <!--Remove root folder-->
-            <ComponentRef Id="RootFolder" />
-            <ComponentRef Id="TechnicalSketcher.exe" />
-        </Feature>
-        <UI />
-    </Product>
-    <!--Fragment with details of installation directory-->
-    <Fragment>
-        <Directory Id="TARGETDIR" Name="SourceDir">
-            <Directory Id="LocalAppDataFolder">
-                <Directory Id="ROOTFOLDER" Name="$(var.Name)">
-                    <Directory Id="INSTALLFOLDER" Name="latest" />
-                    <Component Id="RootFolder" Guid="{a287abac-0536-4205-8c51-d84ccf32afcb}">
-                        <CreateFolder />
-                        <RemoveFile Id="ROOTFOLDER" Name="*.*" On="uninstall" />
-                        <RemoveFolder Id="ROOTFOLDERF" Directory="ROOTFOLDER" On="uninstall" />
-                        <RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="root_dir" Type="integer" Value="1" KeyPath="yes" />
-                    </Component>
-                </Directory>
-            </Directory>
-        </Directory>
-        <!--ComponentGroup refering to install component in INSTALLFOLDER Directory-->
-        <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-            <!--Main Component with application executable path-->
-            <Component Id="TechnicalSketcher.exe" Guid="3f5cc018-4389-4001-b07f-081b3af9d2c2">
-				<!--<File Id="TechnicalSketcher.exe" Name="TechnicalSketcher.exe" Source="../bin/deploy/TechnicalSketcher.exe" />-->
-                <File Id="TechnicalSketcher.exe" Name="TechnicalSketcher.exe" Source="../../AllegroNativeTest/AllegroNativeTest/x64/Debug/AllegroNativeTest.exe" />
-                <!-- Remove all files from the INSTALLFOLDER on uninstall -->
-                <RemoveFile Id="ALLFILES" Name="*.*" On="both" />
-                <RemoveFolder Id="INSTALLFOLDER" On="uninstall" />
-                <RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="exe_installed" Type="integer" Value="1" KeyPath="yes" />
-            </Component>
-        </ComponentGroup>
-        <!--Start Application after install-->
-        <CustomAction Id="EXECUTE_AFTER_FINALIZE" Execute="immediate" Impersonate="yes" Return="asyncNoWait" FileKey="TechnicalSketcher.exe" ExeCommand="" />
-        <InstallExecuteSequence>
-            <Custom Action="EXECUTE_AFTER_FINALIZE" After="InstallFinalize">NOT Installed</Custom>
-        </InstallExecuteSequence>
-    </Fragment>
+	<Product Id="60143f8d-5524-4b34-a894-ea57cc15425d" Name="$(var.Name)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)" Version="$(var.Version)" Language="1033">
+		<!--Setup or Installer with properties-->
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" InstallPrivileges="limited" Description="$(var.Name)" Manufacturer="$(var.Manufacturer)" />
+		<!--Application logo-->
+		<Icon Id="TechnicalSketcher.ico" SourceFile="../resource/TechnicalSketcher.ico" />
+		<!--Application logo for Control Panel-->
+		<Property Id="ARPPRODUCTICON" Value="TechnicalSketcher.ico" />
+		<!--Embed Cabinet into single msi file-->
+		<Media Id="1" Cabinet="$(var.CabName)" EmbedCab="yes" />
+		<!-- Allow upgrades and prevent downgrades -->
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<!--Main Feature for this Setup which can be found in Fragment Tag with ComponentGroupRef Id-->
+		<Feature Id="ProductFeature" Title="$(var.Name)" Level="1">
+			<!--Main application executable component-->
+			<ComponentGroupRef Id="ProductComponents" />
+			<!--Main application shortcut for Program Menu-->
+			<ComponentRef Id="ApplicationShortcut" />
+			<!--Desktop shortcut-->
+			<ComponentRef Id="ApplicationDesktopShortcut" />
+			<!--Remove settings folder-->
+			<ComponentRef Id="SettingsFolder" />
+			<!--Remove root folder-->
+			<ComponentRef Id="RootFolder" />
+			<ComponentRef Id="TechnicalSketcher.exe" />
+		</Feature>
+		<UI />
+	</Product>
+	<!--Fragment with details of installation directory-->
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="LocalAppDataFolder">
+				<Directory Id="ROOTFOLDER" Name="$(var.Name)">
+					<Directory Id="INSTALLFOLDER" Name="latest" />
+					<Component Id="RootFolder" Guid="{a287abac-0536-4205-8c51-d84ccf32afcb}">
+						<CreateFolder />
+						<RemoveFile Id="ROOTFOLDER" Name="*.*" On="uninstall" />
+						<RemoveFolder Id="ROOTFOLDERF" Directory="ROOTFOLDER" On="uninstall" />
+						<RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="root_dir" Type="integer" Value="1" KeyPath="yes" />
+					</Component>
+				</Directory>
+			</Directory>
+			<Directory Id="ProgramMenuFolder">
+				<Directory Id="ApplicationProgramsFolder" Name="$(var.Name)" />
+			</Directory>
+			<Directory Id="AppDataFolder">
+				<Directory Id="SETTINGSFOLDER" Name="$(var.Name)">
+					<Component Id="SettingsFolder" Guid="{aaf2fe12-be6a-403d-bd2b-4fce70d0004e}">
+						<CreateFolder />
+						<RemoveFile Id="SETTINGSFOLDER" Name="*.*" On="uninstall" />
+						<RemoveFolder Id="SETTINGSFOLDERF" Directory="SETTINGSFOLDER" On="uninstall" />
+						<RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="settings_dir" Type="integer" Value="1" KeyPath="yes" />
+					</Component>
+				</Directory>
+			</Directory>
+			<Directory Id="DesktopFolder" Name="Desktop" />
+		</Directory>
+		<!--ComponentGroup refering to install component in INSTALLFOLDER Directory-->
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<!--Main Component with application executable path-->
+			<Component Id="TechnicalSketcher.exe" Guid="3f5cc018-4389-4001-b07f-081b3af9d2c2">
+				<File Id="TechnicalSketcher.exe" Name="TechnicalSketcher.exe" Source="../bin/deploy/TechnicalSketcher.exe" />
+				<!-- Remove all files from the INSTALLFOLDER on uninstall -->
+				<RemoveFile Id="ALLFILES" Name="*.*" On="both" />
+				<RemoveFolder Id="INSTALLFOLDER" On="uninstall" />
+				<RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="exe_installed" Type="integer" Value="1" KeyPath="yes" />
+			</Component>
+		</ComponentGroup>
+		<!--Application Program menu shortcut-->
+		<DirectoryRef Id="ApplicationProgramsFolder">
+			<Component Id="ApplicationShortcut" Guid="{01ae041d-537b-4116-8ccb-d64caadd5129}">
+				<Shortcut Id="TechnicalSketcherStartMenuShortCut" Name="$(var.Name)" Description="$(var.Description)" Icon="TechnicalSketcher.ico" Directory="ApplicationProgramsFolder" Target="[INSTALLFOLDER]TechnicalSketcher.exe" />
+				<RemoveFolder Id="RemoveStartMenuFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+				<RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="shortcut_installed" Type="integer" Value="1" KeyPath="yes" />
+			</Component>
+		</DirectoryRef>
+		<!--Application Desktop shortcut-->
+		<DirectoryRef Id="DesktopFolder">
+			<Component Id="ApplicationDesktopShortcut" Guid="{81a56d89-c714-44c4-80b6-b21e92c3d622}">
+				<Shortcut Id="TechnicalSketcherDesktopShortCut" Name="$(var.Name)" Description="$(var.Description)" Icon="TechnicalSketcher.ico" Directory="DesktopFolder" Target="[INSTALLFOLDER]TechnicalSketcher.exe" />
+				<RemoveFile Id="RemoveDesktopShortcut" Name="TechnicalSketcherDesktopShortCut" On="uninstall" />
+				<RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="desktop_shortcut_installed" Type="integer" Value="1" KeyPath="yes" />
+			</Component>
+		</DirectoryRef>
+		<!--Start Application after install-->
+		<CustomAction Id="EXECUTE_AFTER_FINALIZE" Execute="immediate" Impersonate="yes" Return="asyncNoWait" FileKey="TechnicalSketcher.exe" ExeCommand="" />
+		<InstallExecuteSequence>
+			<Custom Action="EXECUTE_AFTER_FINALIZE" After="InstallFinalize">NOT Installed</Custom>
+		</InstallExecuteSequence>
+	</Fragment>
 </Wix>
