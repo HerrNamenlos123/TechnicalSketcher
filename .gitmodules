@@ -1,6 +1,3 @@
-[submodule "TechnicalSketcher-Allegro/imgui"]
-	path = TechnicalSketcher-Allegro/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "modules/IconFontCppHeaders"]
-	path = modules/IconFontCppHeaders
-	url = https://github.com/juliettef/IconFontCppHeaders.git
+[submodule "modules/BatteryEngine"]
+	path = modules/BatteryEngine
+	url = https://github.com/HerrNamenlos123/BatteryEngine.git
