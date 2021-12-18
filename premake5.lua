@@ -4,23 +4,6 @@ newoption { trigger = "projectname", description = "Name of the generated projec
 local projectName = _OPTIONS["projectname"]
 if projectName == nil then print("The project name was not specified! --projectname=YourApplication") end
 
--- Check if an environment variable exists, otherwise abort the program
-function CheckEnvVar (variable, productName)
-    if (os.getenv(variable) == nil) then
-        print("Environment variable " .. variable .. " not found! Make sure the " .. productName .. " is installed correctly!")
-        projectName = nil
-    end
-end
-
--- Here check if the Festo Robotino API 2 is installed, otherwise abort
-CheckEnvVar("BATTERY_ENGINE_INCLUDE_DIRECTORY", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_DEBUG_LINK_FILES", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_RELEASE_LINK_FILES", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_DEPLOY_LINK_FILES", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_DEBUG_LINK_DIRS", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_RELEASE_LINK_DIRS", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_DEPLOY_LINK_DIRS", "BatteryEngine")
-
 -- Main Solution
 workspace (projectName)
     configurations { "Debug", "Release", "Deploy" }
@@ -52,8 +35,8 @@ project (projectName)
         runtime "Debug"
         symbols "On"
         optimize "Off"
-        libdirs { "$(BATTERY_ENGINE_DEBUG_LINK_DIRS)" }
-        links { "$(BATTERY_ENGINE_DEBUG_LINK_FILES)" }
+        libdirs { _SCRIPT_DIR .. "/modules/BatteryEngine/bin" }
+        links { "BatteryEngine" }
         targetdir (_SCRIPT_DIR .. "/bin/debug")
 
     filter "configurations:Release"
@@ -62,8 +45,8 @@ project (projectName)
         runtime "Release"
         symbols "Off"
         optimize "On"
-        libdirs { "$(BATTERY_ENGINE_RELEASE_LINK_DIRS)" }
-        links { "$(BATTERY_ENGINE_RELEASE_LINK_FILES)" }
+        libdirs { _SCRIPT_DIR .. "/modules/BatteryEngine/bin" }
+        links { "BatteryEngine" }
         targetdir (_SCRIPT_DIR .. "/bin/release")
 
     filter "configurations:Deploy"
@@ -72,14 +55,14 @@ project (projectName)
         runtime "Release"
         symbols "Off"
         optimize "On"
-        libdirs { "$(BATTERY_ENGINE_DEPLOY_LINK_DIRS)" }
-        links { "$(BATTERY_ENGINE_DEPLOY_LINK_FILES)" }
+        libdirs { _SCRIPT_DIR .. "/modules/BatteryEngine/bin" }
+        links { "BatteryEngine" }
         targetdir (_SCRIPT_DIR .. "/bin/deploy")
         debugargs { "noupdate" }    -- Prevent automatic update when launching deploy configuration from VS
 
     filter {}
     
-    includedirs { _SCRIPT_DIR .. "/include", "$(BATTERY_ENGINE_INCLUDE_DIRECTORY)" }
+    includedirs { _SCRIPT_DIR .. "/include", _SCRIPT_DIR .. "/modules/BatteryEngine/include" }
     files { _SCRIPT_DIR .. "/include/**", _SCRIPT_DIR .. "/src/**", _SCRIPT_DIR .. "/installer/**" }
     files { _SCRIPT_DIR .. "/version.txt" }
 
@@ -148,3 +131,6 @@ project (projectName)
         }
 
     filter {}
+
+-- Import the BatteryEngine as a project
+include "modules/BatteryEngine"
