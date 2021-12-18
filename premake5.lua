@@ -2,24 +2,11 @@
 -- Retrieve the project name
 newoption { trigger = "projectname", description = "Name of the generated project" }
 local projectName = _OPTIONS["projectname"]
-if projectName == nil then print("The project name was not specified! --projectname=YourApplication") end
+if projectName == nil then print("The project name was not specified! --projectname=YourApplication") os.exit(1) end
+if projectName == "BatteryEngine" then print("The project cannot be named 'BatteryEngine'!") os.exit(1) end
 
--- Check if an environment variable exists, otherwise abort the program
-function CheckEnvVar (variable, productName)
-    if (os.getenv(variable) == nil) then
-        print("Environment variable " .. variable .. " not found! Make sure the " .. productName .. " is installed correctly!")
-        projectName = nil
-    end
-end
 
--- Here check if the Festo Robotino API 2 is installed, otherwise abort
-CheckEnvVar("BATTERY_ENGINE_INCLUDE_DIRECTORY", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_DEBUG_LINK_FILES", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_RELEASE_LINK_FILES", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_DEPLOY_LINK_FILES", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_DEBUG_LINK_DIRS", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_RELEASE_LINK_DIRS", "BatteryEngine")
-CheckEnvVar("BATTERY_ENGINE_DEPLOY_LINK_DIRS", "BatteryEngine")
+
 
 -- Main Solution
 workspace (projectName)
@@ -29,7 +16,17 @@ workspace (projectName)
     defaultplatform "x64"
     startproject (projectName)
 
--- Actual project
+
+
+-- The BatteryEngine Subproject
+batteryIncludeDirs = {}
+batteryLinkFiles = {}
+    
+include "modules/BatteryEngine"  -- Import the BatteryEngine's premake5.lua
+
+
+
+-- Actual application project
 project (projectName)
     language "C++"
 	cppdialect "C++17"
@@ -38,12 +35,16 @@ project (projectName)
     targetname (projectName)
 
     system "Windows"
+    entrypoint "mainCRTStartup"
     architecture "x86_64"
 
     pchheader "pch.h"
     pchsource "src/pch.cpp"
 
-    -- Configuration filters, filters are active up to the next filter statement
+
+
+
+    -- Configuration filters are active up to the next filter statement
     -- Indentation is purely visual
     filter "configurations:Debug"
         defines { "DEBUG", "_DEBUG", "NDEPLOY", "ALLEGRO_STATICLINK" }
@@ -51,9 +52,8 @@ project (projectName)
         runtime "Debug"
         symbols "On"
         optimize "Off"
-        libdirs { "$(BATTERY_ENGINE_DEBUG_LINK_DIRS)" }
-        links { "$(BATTERY_ENGINE_DEBUG_LINK_FILES)" }
         targetdir (_SCRIPT_DIR .. "/bin/debug")
+        linkoptions { '/NODEFAULTLIB:libcmt.lib', '/NODEFAULTLIB:msvcrt.lib', '/NODEFAULTLIB:msvcrtd.lib' }
 
     filter "configurations:Release"
         defines { "NDEBUG", "NDEPLOY", "ALLEGRO_STATICLINK" }
@@ -61,9 +61,8 @@ project (projectName)
         runtime "Release"
         symbols "Off"
         optimize "On"
-        libdirs { "$(BATTERY_ENGINE_RELEASE_LINK_DIRS)" }
-        links { "$(BATTERY_ENGINE_RELEASE_LINK_FILES)" }
         targetdir (_SCRIPT_DIR .. "/bin/release")
+        linkoptions { '/NODEFAULTLIB:libcmtd.lib', '/NODEFAULTLIB:msvcrt.lib', '/NODEFAULTLIB:msvcrtd.lib' }
 
     filter "configurations:Deploy"
         defines { "NDEBUG", "DEPLOY", "ALLEGRO_STATICLINK" }
@@ -71,23 +70,30 @@ project (projectName)
         runtime "Release"
         symbols "Off"
         optimize "On"
-        libdirs { "$(BATTERY_ENGINE_DEPLOY_LINK_DIRS)" }
-        links { "$(BATTERY_ENGINE_DEPLOY_LINK_FILES)" }
         targetdir (_SCRIPT_DIR .. "/bin/deploy")
         debugargs { "noupdate" }    -- Prevent automatic update when launching deploy configuration from VS
+        linkoptions { '/NODEFAULTLIB:libcmtd.lib', '/NODEFAULTLIB:msvcrt.lib', '/NODEFAULTLIB:msvcrtd.lib' }
 
     filter {}
+
+    -- Include directories for the compiler
+    includedirs { "include" }
     
-    includedirs { _SCRIPT_DIR .. "/include", "$(BATTERY_ENGINE_INCLUDE_DIRECTORY)" }
-    files { _SCRIPT_DIR .. "/include/**", _SCRIPT_DIR .. "/src/**", _SCRIPT_DIR .. "/installer/**" }
-    files { _SCRIPT_DIR .. "/version.txt" }
+    -- Source files (all files in the project view)
+    files "include/**"
+    files "src/**"
+    files "installer/**"
+    files "version.txt"
+    files "resource/resource.rc" -- Embed resource files
 
     linkoptions { "/IGNORE:4099" }  -- Ignore warning that no .pdb file is found for debugging
+    
+ 
 
-    -- Embed resource files
-    files "resource/resource.rc"
-
-
+    -- Load the BatteryEngine dependency
+    dependson("BatteryEngine");
+    includedirs { batteryIncludeDirs }
+    links { batteryLinkFiles }
 
     -- Build the Installer
     filter "configurations:Deploy"

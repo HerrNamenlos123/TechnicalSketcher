@@ -12,6 +12,9 @@ echo Cleaning bin directory...
 echo Cleaning build directory...
 2>NUL rmdir /s /q "%~dp0/build"
 
+echo Cleaning BatteryEngine...
+call "%~dp0modules/BatteryEngine/clean-win.bat"
+
 echo Done
 
 Timeout 5
