@@ -90,21 +90,6 @@ bool SketchFile::SaveFile(bool saveAs) {
 
 bool SketchFile::OpenFile() {
 
-	// First save the file
-	if (ContainsChanges()) {
-
-		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-			"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
-
-		if (save) {	// File needs to be saved
-			if (!SaveFile()) {	// Saving was not successful
-				return false;
-			}
-		}
-	}
-
-	UpdateWindowTitle();
-
 	// Now open a new one
 	std::string path = Battery::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetMainWindow());
 
@@ -139,6 +124,9 @@ bool SketchFile::OpenEmptyFile() {
 	filename = DEFAULT_FILENAME;	// Filename contains extension
 	fileLocation = "";
 	backgroundColor = DEFAULT_BACKGROUND_COLOR;
+
+	Navigator::GetInstance()->ResetViewport();
+
 	return true;
 }
 
@@ -261,6 +249,8 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 		UpdateWindowTitle();
 		Navigator::GetInstance()->AppendRecentFile(fileLocation);
 		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+
+		Navigator::GetInstance()->ResetViewport();
 
 		return true;
 	}
