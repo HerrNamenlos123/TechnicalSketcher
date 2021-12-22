@@ -661,7 +661,7 @@ bool Navigator::ExportClipboardRendering() {
 	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 	auto image = file.ExportImage(exportTransparent, exportDPI);
 
-	if (!image.IsValid())
+	if (!image)
 		return false;
 
 	bool success = Battery::GetMainWindow().SetClipboardImage(image);

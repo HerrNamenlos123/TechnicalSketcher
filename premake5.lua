@@ -1,5 +1,5 @@
 
--- Retrieve the project name
+-- Retrieve the project name from 'generate-win.bat'
 newoption { trigger = "projectname", description = "Name of the generated project" }
 local projectName = _OPTIONS["projectname"]
 if projectName == nil then print("The project name was not specified! --projectname=YourApplication") os.exit(1) end
@@ -17,13 +17,8 @@ workspace (projectName)
     startproject (projectName)
 
 
-
 -- The BatteryEngine Subproject
-batteryIncludeDirs = {}
-batteryLinkFiles = {}
-    
-include "modules/BatteryEngine"  -- Import the BatteryEngine's premake5.lua
-
+include "modules/BatteryEngine"
 
 
 -- Actual application project
@@ -76,9 +71,11 @@ project (projectName)
 
     filter {}
 
+
     -- Include directories for the compiler
     includedirs { "include" }
     
+
     -- Source files (all files in the project view)
     files "include/**"
     files "src/**"
@@ -86,14 +83,17 @@ project (projectName)
     files "version.txt"
     files "resource/resource.rc" -- Embed resource files
 
-    linkoptions { "/IGNORE:4099" }  -- Ignore warning that no .pdb file is found for debugging
+    --linkoptions { "/IGNORE:4099" }  -- Ignore warning that no .pdb file is found for debugging
     
  
 
     -- Load the BatteryEngine dependency
     dependson("BatteryEngine");
-    includedirs { batteryIncludeDirs }
-    links { batteryLinkFiles }
+    includedirs { BATTERY_INCLUDE_DIRS }
+    libdirs { BATTERY_LINK_DIRS }
+    links { BATTERY_LINKS }
+
+
 
     -- Build the Installer
     filter "configurations:Deploy"

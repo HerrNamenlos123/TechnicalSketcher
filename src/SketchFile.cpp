@@ -290,6 +290,9 @@ Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 	float width = sizeX * dpmm;
 	float height = width / sizeX * sizeY;
 
+	if (width <= 0.0 || height <= 0.0 || isnan(width) || isnan(height))
+		return Battery::Bitmap();
+
 	// Initialize texture image to render on
 	Battery::Bitmap image(width, height);
 	std::unique_ptr<Battery::Scene> scene = std::make_unique<Battery::Scene>(Battery::GetMainWindow(), image);

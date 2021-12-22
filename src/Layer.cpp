@@ -289,7 +289,7 @@ void Layer::SetPreviewImage(const Battery::Bitmap& image) {
 }
 
 void Layer::GeneratePreview() {
-	previewImage.Unload();
+	previewImage.Reset();
 	previewImage = Battery::Bitmap();
 	previewImage.CreateBitmap(GUI_PREVIEWWINDOW_SIZE, GUI_PREVIEWWINDOW_SIZE);
 	RenderLayerToBitmap(previewImage.GetAllegroBitmap());

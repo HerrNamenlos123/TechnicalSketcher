@@ -579,7 +579,7 @@ public:
 		
 			// Draw the preview of the layer
 			if (ImGui::IsItemHovered()) {
-				if (layer.previewImage.IsValid()) {
+				if (layer.previewImage) {
 					ImGui::BeginTooltip();
 					ImGui::Image(layer.previewImage.GetAllegroBitmap(), 
 						ImVec2(GUI_PREVIEWWINDOW_SIZE, GUI_PREVIEWWINDOW_SIZE));

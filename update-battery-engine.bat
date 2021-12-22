@@ -1,9 +1,10 @@
 @echo off
 
-mkdir modules\BatteryEngine
+mkdir modules\BatteryEngine 2>NUL
 cd modules\BatteryEngine
 
-git restore *
 git pull origin master
+
+call update-allegro5-binaries.bat
 
 Pause

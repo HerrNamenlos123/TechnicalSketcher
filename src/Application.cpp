@@ -17,6 +17,8 @@ App::App() : Battery::Application(0, 0, APPLICATION_NAME) {
 
 bool App::OnStartup() {
 
+	Battery::Bitmap bitmap(500, 500);
+
 	// Show splash screen
 	Battery::Bitmap splash;
 	if (splash.LoadEmbeddedResource(DB_SPLASHSCREEN)) {
