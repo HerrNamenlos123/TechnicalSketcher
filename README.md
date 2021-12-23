@@ -7,6 +7,8 @@ Download the latest version here (Download the .msi file):
 
 https://github.com/HerrNamenlos123/TechnicalSketcher/releases/latest
 
+Explain why the msi is blocked by windows smartscreen
+
 ## Building from source
 
  - Clone and build the [BatteryEngine](https://github.com/HerrNamenlos123/BatteryEngine)
