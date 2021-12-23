@@ -28,6 +28,7 @@ bool App::OnStartup() {
 		al_draw_bitmap(splash.GetAllegroBitmap(), 0, 0, 0);
 		window.FlipDisplay();
 		window.Show();
+		window.Focus();
 	}
 
 	// Initialize the renderer
@@ -90,6 +91,7 @@ bool App::OnStartup() {
 	window.FlipDisplay();
 	window.ShowInTaskbar();
 	window.Show();
+	window.Focus();
 
 	// Now start updater thread
 	PushLayer(std::make_shared<UpdaterLayer>(noUpdate));
