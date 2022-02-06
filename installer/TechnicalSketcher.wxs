@@ -78,6 +78,16 @@
                 <RemoveFolder Id="INSTALLFOLDER" On="uninstall" />
                 <RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="exe_installed" Type="integer" Value="1" KeyPath="yes" />
             </Component>
+			<!--File Type Association-->
+            <Component Id="FileAssociation" Guid="9b2af882-b91b-4877-8fb5-0590265c46d7">
+		        <ProgId Id="FileAssociation.tsk" Description="TechnicalSketcher document">
+				    <Extension Id="tsk">
+					    <Verb Id="open" Command="open" TargetFile="TechnicalSketcher.exe" Argument="&quot;%1&quot;"/>
+				    </Extension>
+			    </ProgId>
+                <RemoveFile Id="RemoveFileAssociation" Name="*.*" On="both" />
+			    <RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="file_association_installed" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
         </ComponentGroup>
         <!--Application Program menu shortcut-->
         <DirectoryRef Id="ApplicationProgramsFolder">
@@ -95,6 +105,19 @@
                 <RegistryValue Root="HKCU" Key="Software\$(var.Name)" Name="desktop_shortcut_installed" Type="integer" Value="1" KeyPath="yes" />
             </Component>
         </DirectoryRef>
+        <!--
+		<ComponentGroup Id="FileAssociation">
+            <Component Id="FileAssociationCmp" Directory="INSTALLDIR" Guid="{1915DC74-00E3-42F7-B994-9C96EAB969D1}">
+                <File Id="Excel.exe" Source="EXCEL.exe" />
+        
+                <ProgId Id="OurCompanyApplicationId" Description="!(loc.ProductFileExtensionDescription)" Advertise="no" Icon="Excel.exe">
+                        <Extension Id="xlsxai" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                            <Verb Id="open" Command="Open" TargetFile="Excel.exe" Argument="&quot;%1&quot;" />
+                    </Extension>
+                </ProgId>
+            </Component>
+        </ComponentGroup>
+		-->
         <!--Start Application after install-->
 		<CustomAction Id="RunAfterInstall" Impersonate="yes" Return="asyncNoWait" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c echo Running TechnicalSketcher... &amp;&amp; start %localappdata%/TechnicalSketcher/latest/TechnicalSketcher.exe" />
 		<InstallExecuteSequence>

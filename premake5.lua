@@ -110,7 +110,7 @@ project (projectName)
             "\"%WIX%bin\\candle.exe\" ../" .. infile .. " -o obj/",
             "if %errorlevel% neq 0 exit /b %errorlevel%",
 
-            "\"%WIX%bin\\light.exe\" obj/*.wixobj -o ../" .. outfile .. " -sice:ICE91 -spdb",
+            "\"%WIX%bin\\light.exe\" obj/*.wixobj -o ../" .. outfile .. " -sice:ICE91 -spdb -ext \"%WIX%bin\\WixUtilExtension.dll\"",
             "if %errorlevel% neq 0 exit /b %errorlevel%",
 
             "echo TechnicalSketcher.vcxproj -^> " .. _SCRIPT_DIR .. "/" .. outfile,
