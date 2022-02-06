@@ -96,9 +96,9 @@
             </Component>
         </DirectoryRef>
         <!--Start Application after install-->
-        <CustomAction Id="EXECUTE_AFTER_FINALIZE" Execute="immediate" Impersonate="yes" Return="asyncNoWait" FileKey="TechnicalSketcher.exe" ExeCommand="" />
-        <InstallExecuteSequence>
-            <Custom Action="EXECUTE_AFTER_FINALIZE" After="InstallFinalize">NOT Installed</Custom>
+		<CustomAction Id="RunAfterInstall" Impersonate="yes" Return="asyncNoWait" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c echo Running TechnicalSketcher... &amp;&amp; start %localappdata%/TechnicalSketcher/latest/TechnicalSketcher.exe" />
+		<InstallExecuteSequence>
+            <Custom Action="RunAfterInstall" After="InstallFinalize">NOT Installed</Custom>
         </InstallExecuteSequence>
     </Fragment>
 </Wix>
