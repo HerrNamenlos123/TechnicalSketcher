@@ -1,10 +1,8 @@
 @echo off
 
-mkdir modules\BatteryEngine 2>NUL
-cd modules\BatteryEngine
-
-git pull origin master
-
-call update-allegro5-binaries.bat
+cd "%~dp0"
+echo Pulling from github.com ...
+git submodule update --remote --merge
+echo Done
 
 Pause
