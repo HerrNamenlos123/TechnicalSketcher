@@ -20,7 +20,7 @@ void Layer::LoadState(const LayerState& state) {
 }
 
 Layer Layer::Duplicate() {
-	Layer layer(name);
+	Layer layer(name + " - copy");
 
 	layer.LoadState(state);
 	layer.layerChanged = true;
