@@ -70,6 +70,7 @@ public:
 	std::vector<Battery::MouseButtonReleasedEvent> mouseReleasedEventBuffer;	// TODO: Better events
 	std::vector<Battery::MouseMovedEvent> mouseMovedEventBuffer;
 	std::vector<Battery::KeyPressedEvent> keyPressedEventBuffer;
+	std::vector<Battery::KeyReleasedEvent> keyReleasedEventBuffer;
 
 	// Controls
 	glm::vec2 mousePosition = { 0, 0 };			// Those mouse positions are in workspace coordinates
@@ -117,6 +118,7 @@ public:
 	void SelectNextPossibleShape();
 
 	void OnKeyPressed(Battery::KeyPressedEvent* event);
+	void OnKeyReleased(Battery::KeyReleasedEvent* event);
 	void OnMouseClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);
 	void OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel);
 	void OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);

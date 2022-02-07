@@ -138,6 +138,11 @@ void Navigator::OnEvent(Battery::Event* e) {
 		e->SetHandled();
 		break;
 
+	case Battery::EventType::KeyReleased:
+		keyReleasedEventBuffer.push_back(*static_cast<Battery::KeyReleasedEvent*>(e));
+		e->SetHandled();
+		break;
+
 	default:
 		break;
 	}
@@ -262,6 +267,10 @@ void Navigator::UpdateEvents() {
 		OnKeyPressed(&event);
 	}
 	keyPressedEventBuffer.clear();
+	for (Battery::KeyReleasedEvent event : keyReleasedEventBuffer) {
+		OnKeyReleased(&event);
+	}
+	keyReleasedEventBuffer.clear();
 }
 
 void Navigator::CancelShape() {
@@ -386,6 +395,18 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 		SelectNextPossibleShape();
 		break;
 
+	case ALLEGRO_KEY_LCTRL:
+		if (Battery::GetMainWindow().GetLeftMouseButton() ||
+			Battery::GetMainWindow().GetRightMouseButton() ||
+			Battery::GetMainWindow().GetMouseWheel())
+		{
+			OnMouseDragged(mousePosition, mouseSnapped, 0, 0);
+		}
+		else {
+			OnMouseHovered(mousePosition, mouseSnapped, 0, 0);
+		}
+		break;
+
 	case ALLEGRO_KEY_DELETE:
 		// Delete selected shapes
 		RemoveSelectedShapes();
@@ -474,6 +495,28 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 				Navigator::GetInstance()->OpenEmptyFile();		// CTRL + N
 				UseTool(ToolType::SELECT);
 			}
+		}
+		break;
+
+	default:
+		break;
+
+	}
+}
+
+void Navigator::OnKeyReleased(Battery::KeyReleasedEvent* event) {
+	
+	switch (event->keycode) {
+
+	case ALLEGRO_KEY_LCTRL:
+		if (Battery::GetMainWindow().GetLeftMouseButton() ||
+			Battery::GetMainWindow().GetRightMouseButton() ||
+			Battery::GetMainWindow().GetMouseWheel())
+		{
+			OnMouseDragged(mousePosition, mouseSnapped, 0, 0);
+		}
+		else {
+			OnMouseHovered(mousePosition, mouseSnapped, 0, 0);
 		}
 		break;
 
