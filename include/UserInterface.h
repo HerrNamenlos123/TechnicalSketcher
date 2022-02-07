@@ -19,7 +19,8 @@
 #define GUI_LEFT_BAR_WIDTH 180
 #define GUI_LAYER_WINDOW_HEIGHT 200
 #define GUI_TOOLBOX_WINDOW_HEIGHT 300
-#define GUI_MOUSEINFO_WINDOW_HEIGHT 25
+#define GUI_MOUSEINFO_WINDOW_WIDTH 280
+#define GUI_MOUSEINFO_WINDOW_HEIGHT 35
 #define GUI_PROPERTIES_WINDOW_WIDTH 200
 #define GUI_PROPERTIES_WINDOW_HEIGHT 200
 
@@ -817,7 +818,7 @@ class MouseInfoWindow : public Battery::ImGuiPanel<> {
 public:
 
 	MouseInfoWindow() : ImGuiPanel<>("MouseInfoWindow", { 0, 0 }, 
-		{ GUI_LEFT_BAR_WIDTH, GUI_MOUSEINFO_WINDOW_HEIGHT }) {
+		{ GUI_MOUSEINFO_WINDOW_WIDTH, GUI_MOUSEINFO_WINDOW_HEIGHT }) {
 	}
 
 	void OnAttach() {
@@ -833,7 +834,7 @@ public:
 
 	void OnRender() override {
 
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont9);
+		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
 		auto nav = Navigator::GetInstance();
 
 		char str[1024];
