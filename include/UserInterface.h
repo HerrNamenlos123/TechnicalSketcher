@@ -291,6 +291,7 @@ public:
 
 
 		// Export popup
+		bool save = false;
 		bool exp = false;
 		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
@@ -300,17 +301,17 @@ public:
 			Navigator::GetInstance()->popupExportOpen = true;
 
 			ImGui::Checkbox("Transparent background", &Navigator::GetInstance()->exportTransparent);
-			ImGui::Text("Don't choose this for MathCAD");
+			ToolTip("Transparency is not supported by programs like Paint or MathCAD", GetFontContainer<FontContainer>()->sansFont17);
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
 			ImGui::Separator();
 
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
 			ImGui::Text("DPI");
 			ImGui::SameLine();
-			ImGui::PushItemWidth(210);
+			ImGui::PushItemWidth(-1);
 			ImGui::InputFloat("##DPIField", &Navigator::GetInstance()->exportDPI);
 			ImGui::PopItemWidth();
-			ImGui::PushItemWidth(240);
+			ImGui::PushItemWidth(-1);
 			ImGui::SliderFloat("##DPISlider", &Navigator::GetInstance()->exportDPI, 50, 1000);
 			ImGui::PopItemWidth();
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
@@ -318,13 +319,19 @@ public:
 
 			Navigator::GetInstance()->exportDPI = std::min(std::max(Navigator::GetInstance()->exportDPI, 50.f), 1000.f);
 
-			if (ImGui::Button("OK", ImVec2(120, 0))) {	// Delete the layer now
+			if (ImGui::Button("Copy to clipboard", ImVec2(120, 0))) {
 				ImGui::CloseCurrentPopup();
 				exp = true;
 			}
-			ToolTip("The image will be copied directly to your clipboard", GetFontContainer<FontContainer>()->sansFont17);
 			ImGui::SetItemDefaultFocus();
 			ImGui::SameLine();
+			
+			if (ImGui::Button("Save to file", ImVec2(120, 0))) {
+				ImGui::CloseCurrentPopup();
+				save = true;
+			}
+			ImGui::SameLine();
+
 			if (ImGui::Button("Cancel", ImVec2(120, 0))) {
 				ImGui::CloseCurrentPopup();
 			}
@@ -334,7 +341,10 @@ public:
 		ImGui::PopFont();
 
 		if (exp) {
-			Navigator::GetInstance()->ExportClipboardRendering();
+			Navigator::GetInstance()->ExportToClipboard();
+		}
+		if (save) {
+			Navigator::GetInstance()->ExportToFile();
 		}
 
 

@@ -140,7 +140,8 @@ public:
 	bool SaveFileAs();
 	void ResetGui();
 	void ResetViewport();
-	bool ExportClipboardRendering();
+	bool ExportToClipboard();
+	bool ExportToFile();
 	bool LoadSettings();
 	bool SaveSettings();
 

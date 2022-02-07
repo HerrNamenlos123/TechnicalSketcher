@@ -657,7 +657,7 @@ void Navigator::ResetViewport() {
 
 }
 
-bool Navigator::ExportClipboardRendering() {
+bool Navigator::ExportToClipboard() {
 	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 	auto image = file.ExportImage(exportTransparent, exportDPI);
 
@@ -666,6 +666,26 @@ bool Navigator::ExportClipboardRendering() {
 
 	bool success = Battery::GetMainWindow().SetClipboardImage(image);
 	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+	return success;
+}
+
+bool Navigator::ExportToFile() {
+	
+	std::string filename = Battery::PromptFileSaveDialog({ "*.png" }, Battery::GetMainWindow());
+	if (filename == "")
+		return false;
+
+	if (Battery::GetExtension(filename) != ".png") {
+		filename += ".png";
+	}
+
+	// TODO: Overwrite message if png is added
+	Battery::Bitmap image = file.ExportImage(exportTransparent, exportDPI);
+	if (!image)
+		return false;
+
+	bool success = image.SaveToFile(filename);
+	Battery::ExecuteShellCommand("explorer.exe /select," + filename);
 	return success;
 }
 
