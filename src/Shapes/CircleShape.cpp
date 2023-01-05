@@ -102,13 +102,12 @@ glm::vec2 CircleShape::GetCenterPosition() const {
 }
 
 bool CircleShape::ShowPropertiesWindow() {
-	auto fonts = Battery::__getUserInterface()->GetFontContainer<FontContainer>();
 	// Return true if a parameter changed, false if everything stays the same
-	ImGui::PushFont(fonts->sansFont22);
+	ImGui::PushFont(Fonts::sansFont22);
 
 	ImGui::Text("Shape type: Circle");
 	ImGui::Separator();
-	ImGui::PushFont(fonts->sansFont17);
+	ImGui::PushFont(Fonts::sansFont17);
 
 	auto oldColor = color;
 	auto oldThickness = thickness;

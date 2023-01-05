@@ -6,7 +6,7 @@
 class NavigatorLayer : public Battery::Layer {
 public:
 
-	NavigatorLayer() : Battery::Layer("NavigatorLayer") {
+	NavigatorLayer() {
 		Navigator::CreateInstance();
 	}
 
@@ -30,7 +30,7 @@ public:
 		Navigator::GetInstance()->OnRender();
 	}
 
-	void OnEvent(Battery::Event* e) override {
-		Navigator::GetInstance()->OnEvent(e);
+	void OnEvent(sf::Event e, bool& handled) override {
+		Navigator::GetInstance()->OnEvent(e, handled);
 	}
 };

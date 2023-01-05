@@ -1,15 +1,28 @@
 #pragma once
 
 #include "pch.h"
-#include "FontLoader.h"
+#include "Fonts/MaterialIconFontData.h"
+#include "Fonts/OpenSansFontData.h"
+#include "Fonts/SegoeMDL2FontData.h"
 
-struct FontContainer : public Battery::FontContainer {
-	const ImWchar icons_ranges[3] = { 0xe005, 0xf8ff, 0 };
-	ImFont* sansFont9 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 9);
-	ImFont* sansFont14 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 14);
-	ImFont* sansFont17 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 17);
-	ImFont* sansFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_OPENSANS, 22);
-	ImFont* materialFont35 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_MATERIAL_ICONS, 35, nullptr, icons_ranges);
-	ImFont* materialFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_MATERIAL_ICONS, 22, nullptr, icons_ranges);
-	ImFont* segoeFont22 = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(FONT_SEGOE_MDL2, 22, nullptr, icons_ranges);
+struct Fonts {
+
+	inline static ImFont* sansFont9 = nullptr;
+	inline static ImFont* sansFont14 = nullptr;
+	inline static ImFont* sansFont17 = nullptr;
+	inline static ImFont* sansFont22 = nullptr;
+	inline static ImFont* materialFont35 = nullptr;
+	inline static ImFont* materialFont22 = nullptr;
+	inline static ImFont* segoeFont22 = nullptr;
+
+	static void load() {
+		sansFont9 = ADD_FONT(OpenSansFontData, 9);
+		sansFont14 = ADD_FONT(OpenSansFontData, 14);
+		sansFont17 = ADD_FONT(OpenSansFontData, 17);
+		sansFont22 = ADD_FONT(OpenSansFontData, 22);
+		materialFont35 = ADD_ICON_FONT(MaterialIconFontData, 35);
+		materialFont22 = ADD_ICON_FONT(MaterialIconFontData, 22);
+		segoeFont22 = ADD_ICON_FONT(SegoeMDL2FontData, 22);
+	}
+	
 };

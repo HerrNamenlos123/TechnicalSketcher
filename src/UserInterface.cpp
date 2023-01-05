@@ -1,10 +1,11 @@
 
 #include "pch.h"
 #include "UserInterface.h"
-#include "Battery/AllegroDeps.h"
 
-UserInterface::UserInterface() : Battery::ImGuiLayer<FontContainer>("UserInterface") {
-	mouseCursor = ALLEGRO_SYSTEM_MOUSE_CURSOR_NONE;
+sf::Cursor cursor;
+
+UserInterface::UserInterface() {
+
 }
 
 void RibbonWindow::OptionsPopup() {
@@ -16,7 +17,7 @@ void RibbonWindow::OptionsPopup() {
 
 	bool exp = false;
 	Navigator::GetInstance()->popupSettingsOpen = false;
-	ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+	ImGui::PushFont(Fonts::sansFont17);
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 	if (ImGui::BeginPopupModal("Options##Window", NULL,
 		ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
@@ -24,7 +25,7 @@ void RibbonWindow::OptionsPopup() {
 		Navigator::GetInstance()->popupSettingsOpen = true;
 
 		ImGui::Checkbox("Transparent background", &Navigator::GetInstance()->exportTransparent);
-		ToolTip("Un-tick this for MathCAD", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Un-tick this for MathCAD", Fonts::sansFont17);
 		ImGui::Separator();
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
@@ -40,16 +41,18 @@ void RibbonWindow::OptionsPopup() {
 		ImGui::Separator();
 
 		if (ImGui::Button("Reset User interface")) {
-			Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
+			(void)cursor.loadFromSystem(sf::Cursor::ArrowWait);
+			Battery::GetApp().window.setMouseCursor(cursor);
 			Navigator::GetInstance()->ResetGui();
 			Battery::Sleep(0.03);
-			Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+			(void)cursor.loadFromSystem(sf::Cursor::Arrow);
+			Battery::GetApp().window.setMouseCursor(cursor);
 		}
-		ToolTip("Reset the layout of the user interface, if something gets lost", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Reset the layout of the user interface, if something gets lost", Fonts::sansFont17);
 		ImGui::Separator();
 
 		ImGui::Checkbox("Keep Application up-to-date", &Navigator::GetInstance()->keepUpToDate);
-		ToolTip("If ticked, the application will receive fully automatic updates", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("If ticked, the application will receive fully automatic updates", Fonts::sansFont17);
 		ImGui::Separator();
 
 		if (ImGui::Button("Close", ImVec2(240, 0))) {
@@ -64,7 +67,7 @@ void RibbonWindow::OptionsPopup() {
 
 
 
-void UserInterface::OnImGuiRender() {
+void UserInterface::OnRender() {
 	ribbon.Render();
 	layers.Render();
 	toolbox.Render();
@@ -87,9 +90,6 @@ void UserInterface::OnImGuiRender() {
 	}
 
 	DrawTabInfoBox();
-
-	if (mouseCursor != ALLEGRO_SYSTEM_MOUSE_CURSOR_NONE)
-		Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 
 	// Handle LayerWindow events
 	if (layers.addLayerFlag) {

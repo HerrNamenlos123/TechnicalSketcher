@@ -12,7 +12,7 @@ public:
 	std::thread updaterThread;
 	bool noUpdate;
 
-	UpdaterLayer(bool noUpdate) : noUpdate(noUpdate), Battery::Layer("UpdaterLayer") {}
+	UpdaterLayer(bool noUpdate) : noUpdate(noUpdate) {}
 
 	void OnAttach() override {
 

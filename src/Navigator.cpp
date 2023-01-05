@@ -1,11 +1,8 @@
 
 #include "pch.h"
-#include "Battery/AllegroDeps.h"
 
 #include "Navigator.h"
-#include "Layer.h"
 #include "config.h"
-#include "Application.h"
 
 #include "Tools/SelectionTool.h"
 #include "Tools/LineTool.h"
@@ -35,7 +32,8 @@ void Navigator::OnAttach() {
 	applicationVersion = GetApplicationVersion();
 
 	// Register the clipboard format
-	clipboardShapeFormat = Battery::GetMainWindow().RegisterClipboardFormat(CLIPBOARD_FORMAT);
+	//clipboardShapeFormat = Battery::GetApp().window.RegisterClipboardFormat(CLIPBOARD_FORMAT);
+	LOG_ERROR("CLIPBOARD");
 
 	// Load the location of the ImGui .ini file
 	imguiFileLocation = GetSettingsDirectory() + IMGUI_FILENAME;
@@ -45,13 +43,13 @@ void Navigator::OnDetach() {
 }
 
 void Navigator::OnUpdate() {
-	windowSize = glm::ivec2(Battery::GetMainWindow().GetWidth(), Battery::GetMainWindow().GetHeight());
-	mousePosition = ConvertScreenToWorkspaceCoords(Battery::GetMainWindow().GetMousePosition());
+	//windowSize = glm::ivec2(Battery::GetApp().window.getSize().x, Battery::GetApp().window.getSize().y);
+	mousePosition = ConvertScreenToWorkspaceCoords({ sf::Mouse::getPosition().x, sf::Mouse::getPosition().y });
 	mouseSnapped = round(mousePosition / snapSize) * snapSize;
 
 	// Key control
-	controlKeyPressed = Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL) || Battery::GetApp().GetKey(ALLEGRO_KEY_RCTRL);
-	shiftKeyPressed = Battery::GetApp().GetKey(ALLEGRO_KEY_LSHIFT) || Battery::GetApp().GetKey(ALLEGRO_KEY_RSHIFT);
+	controlKeyPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl);
+	shiftKeyPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) || sf::Keyboard::isKeyPressed(sf::Keyboard::RShift);
 	
 	// Allow smooth positioning when CTRL is pressed
 	if (controlKeyPressed) {
@@ -70,9 +68,7 @@ void Navigator::OnUpdate() {
 
 void Navigator::OnRender() {
 
-	ApplicationRenderer::BeginFrame();
-
-	Battery::Renderer2D::DrawBackground(file.backgroundColor);
+	//Battery::Renderer2D::DrawBackground(file.canvasColor);
 
 	// Draw first part of the selection box
 	if (selectedTool) {
@@ -103,44 +99,19 @@ void Navigator::OnRender() {
 			static_cast<SelectionTool*>(selectedTool)->RenderSecondPart();
 		}
 	}
-
-	ApplicationRenderer::EndFrame();
 }
 
-void Navigator::OnEvent(Battery::Event* e) {
-	switch (e->GetType()) {
-
-	case Battery::EventType::MouseScrolled:
-	{
-		Battery::MouseScrolledEvent* event = static_cast<Battery::MouseScrolledEvent*>(e);
-		scrollBuffer += event->dx + event->dy;
-		e->SetHandled();
-		break;
-	}
-
-	case Battery::EventType::MouseButtonPressed:
-		mousePressedEventBuffer.push_back(*static_cast<Battery::MouseButtonPressedEvent*>(e));
-		e->SetHandled();
-		break;
-
-	case Battery::EventType::MouseButtonReleased:
-		mouseReleasedEventBuffer.push_back(*static_cast<Battery::MouseButtonReleasedEvent*>(e));
-		e->SetHandled();
-		break;
-
-	case Battery::EventType::MouseMoved:
-		mouseMovedEventBuffer.push_back(*static_cast<Battery::MouseMovedEvent*>(e));
-		e->SetHandled();
-		break;
-
-	case Battery::EventType::KeyPressed:
-		keyPressedEventBuffer.push_back(*static_cast<Battery::KeyPressedEvent*>(e));
-		e->SetHandled();
-		break;
-
-	case Battery::EventType::KeyReleased:
-		keyReleasedEventBuffer.push_back(*static_cast<Battery::KeyReleasedEvent*>(e));
-		e->SetHandled();
+void Navigator::OnEvent(sf::Event e, bool& handled) {
+	
+	switch (e.type) {
+	case sf::Event::MouseWheelScrolled:
+	case sf::Event::MouseButtonPressed:
+	case sf::Event::MouseButtonReleased:
+	case sf::Event::MouseMoved:
+	case sf::Event::KeyPressed:
+	case sf::Event::KeyReleased:
+		eventBuffer.push_back(e);
+		handled = true;
 		break;
 
 	default:
@@ -154,13 +125,13 @@ void Navigator::OnEvent(Battery::Event* e) {
 
 
 glm::vec2 Navigator::ConvertScreenToWorkspaceCoords(const glm::vec2& v) {
-	return (v - panOffset - glm::vec2(Battery::GetMainWindow().GetWidth(), 
-		Battery::GetMainWindow().GetHeight()) * 0.5f) / scale;
+	return (v - panOffset - glm::vec2(Battery::GetApp().window.getSize().x, 
+		Battery::GetApp().window.getSize().y) * 0.5f) / scale;
 }
 
 glm::vec2 Navigator::ConvertWorkspaceToScreenCoords(const glm::vec2& v) {
-	return panOffset + v * scale + glm::vec2(Battery::GetMainWindow().GetWidth(),
-		Battery::GetMainWindow().GetHeight()) * 0.5f;
+	return panOffset + v * scale + glm::vec2(Battery::GetApp().window.getSize().x,
+		Battery::GetApp().window.getSize().y) * 0.5f;
 }
 
 float Navigator::ConvertWorkspaceToScreenDistance(float distance) {
@@ -194,7 +165,7 @@ void Navigator::MouseScrolled(float amount) {
 		scale /= factor;
 	}
 
-	auto mPos = Battery::GetMainWindow().GetMousePosition();
+	auto mPos = sf::Mouse::getPosition();
 	glm::vec2 mouseToCenter = glm::vec2(panOffset.x - mPos.x + windowSize.x / 2.f,
 										panOffset.y - mPos.y + windowSize.y / 2.f);
 
@@ -206,71 +177,47 @@ void Navigator::MouseScrolled(float amount) {
 
 void Navigator::UpdateEvents() {
 
-	// Update the scroll events
-	if (scrollBuffer != 0.f) {
-		MouseScrolled(scrollBuffer);
-		scrollBuffer = 0;
-	}
+	for (sf::Event event : eventBuffer) {
 
-	// Then update mouse pressed events
-	for (Battery::MouseButtonPressedEvent event : mousePressedEventBuffer) {
-		glm::vec2 position = ConvertScreenToWorkspaceCoords({ event.x, event.y });
-		glm::vec2 snapped = round(position / snapSize) * snapSize;
-
-		// Allow smooth positioning when CTRL is pressed
-		if (controlKeyPressed) {
-			snapped = position;
-		}
-
-		// Call all event functions
-		bool left = event.button == 1;
-		bool right = event.button == 2;
-		bool wheel = event.button == 3;
-		OnMouseClicked(position, snapped, left, right, wheel);
-	}
-	mousePressedEventBuffer.clear();
-
-	// Next, mouse released events
-	for (Battery::MouseButtonReleasedEvent event : mouseReleasedEventBuffer) {
-		glm::vec2 position = ConvertScreenToWorkspaceCoords({ event.x, event.y });
-		glm::vec2 snapped = round(position / snapSize) * snapSize;
-
-		// Allow smooth positioning when CTRL is pressed
-		if (controlKeyPressed) {
-			snapped = position;
-		}
-
-		// Call all event functions
-		bool left = event.button == 1;
-		bool right = event.button == 2;
-		bool wheel = event.button == 3;
-		OnMouseReleased(position, left, right, wheel);
-	}
-	mouseReleasedEventBuffer.clear();
-
-	// And finally mouse moved events
-	for (Battery::MouseMovedEvent event : mouseMovedEventBuffer) {
-		glm::vec2 position = ConvertScreenToWorkspaceCoords({ event.x, event.y });
-		glm::vec2 snapped = round(position / snapSize) * snapSize;
+		glm::vec2 position = ConvertScreenToWorkspaceCoords({ event.mouseButton.x, event.mouseButton.y });	// Allow smooth positioning when CTRL is pressed
+		glm::vec2 snapped = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) ? round(position / snapSize) * snapSize : position;
 		
-		// Allow smooth positioning when CTRL is pressed
-		if (controlKeyPressed) {
-			snapped = position;
-		}
-		
-		OnMouseMoved(position, snapped, event.dx, event.dy);
-	}
-	mouseMovedEventBuffer.clear();
+		bool left = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+		bool right = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
+		bool wheel = sf::Mouse::isButtonPressed(sf::Mouse::Button::Middle);
 
-	// Now, handle key events
-	for (Battery::KeyPressedEvent event : keyPressedEventBuffer) {
-		OnKeyPressed(&event);
+		switch (event.type) {
+
+		case sf::Event::MouseWheelScrolled:
+			MouseScrolled(event.mouseWheelScroll.delta);
+			break;
+
+		case sf::Event::MouseButtonPressed:		
+			OnMouseClicked(position, snapped, left, right, wheel);
+			break;
+
+		case sf::Event::MouseButtonReleased:	
+			OnMouseReleased(position, left, right, wheel);
+			break;
+
+		case sf::Event::MouseMoved:
+			OnMouseMoved(position, snapped, event.mouseMove.x, event.mouseMove.y);
+			break;
+
+		case sf::Event::KeyPressed:
+			OnKeyPressed(event);
+			break;
+
+		case sf::Event::KeyReleased:
+			OnKeyReleased(event);
+			break;
+
+		default:
+			break;
+		}
+
 	}
-	keyPressedEventBuffer.clear();
-	for (Battery::KeyReleasedEvent event : keyReleasedEventBuffer) {
-		OnKeyReleased(&event);
-	}
-	keyReleasedEventBuffer.clear();
+	eventBuffer.clear();
 }
 
 void Navigator::CancelShape() {
@@ -386,19 +333,19 @@ void Navigator::SelectNextPossibleShape() {
 
 
 
-void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
+void Navigator::OnKeyPressed(sf::Event event) {
 	
-	switch (event->keycode) {
+	switch (event.key.code) {
 
-	case ALLEGRO_KEY_TAB:
+	case sf::Keyboard::Tab:
 		// Switch through all possibly selected shapes, is wrapped around automatically
 		SelectNextPossibleShape();
 		break;
 
-	case ALLEGRO_KEY_LCTRL:
-		if (Battery::GetMainWindow().GetLeftMouseButton() ||
-			Battery::GetMainWindow().GetRightMouseButton() ||
-			Battery::GetMainWindow().GetMouseWheel())
+	case sf::Keyboard::LControl:
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) ||
+			sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) ||
+			sf::Mouse::isButtonPressed(sf::Mouse::Button::Middle))
 		{
 			OnMouseDragged(mousePosition, mouseSnapped, 0, 0);
 		}
@@ -407,88 +354,85 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 		}
 		break;
 
-	case ALLEGRO_KEY_DELETE:
+	case sf::Keyboard::Delete:
 		// Delete selected shapes
 		RemoveSelectedShapes();
 		break;
 
-	case ALLEGRO_KEY_LEFT:
+	case sf::Keyboard::Left:
 		// Move shape to the left by one unit
 		MoveSelectedShapesLeft();
 		break;
 
-	case ALLEGRO_KEY_RIGHT:
+	case sf::Keyboard::Right:
 		// Move shape to the right by one unit
 		MoveSelectedShapesRight();
 		break;
 
-	case ALLEGRO_KEY_UP:
+	case sf::Keyboard::Up:
 		// Move shape up by one unit
 		MoveSelectedShapesUp();
 		break;
 
-	case ALLEGRO_KEY_DOWN:
+	case sf::Keyboard::Down:
 		// Move shape down by one unit
 		MoveSelectedShapesDown();
 		break;
 
-	case ALLEGRO_KEY_ESCAPE:
+	case sf::Keyboard::Escape:
 		// Reset tools
 		OnEscapePressed();
 		break;
 
-	case ALLEGRO_KEY_Z:
+	case sf::Keyboard::Z:
 		// Undo previous action
-		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+		if (event.key.control) {
 			UndoAction();
 		}
 		break;
 
-	case ALLEGRO_KEY_A:		// Select all
-		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+	case sf::Keyboard::A:		// Select all
+		if (event.key.control) {
 			UseTool(ToolType::SELECT);
 			SelectAll();
 		}
 		break;
 
-	case ALLEGRO_KEY_O:		// Open
-		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+	case sf::Keyboard::O:		// Open
+		if (event.key.control) {	// Get fresh key state
 			OpenFile();
 		}
 		break;
 
-	case ALLEGRO_KEY_S:		// Save
-		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL) &&
-			Battery::GetApp().GetKey(ALLEGRO_KEY_LSHIFT)) {
-			SaveFileAs();
-		}
-		else if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {
-			SaveFile();
+	case sf::Keyboard::S:		// Save
+		if (event.key.control) {
+			if (event.key.shift) SaveFileAs();	// CTRL+SHIFT+S
+			else SaveFile();					// CTRL+S
 		}
 		break;
 
-	case ALLEGRO_KEY_C:		// Copy
-		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+	case sf::Keyboard::C:		// Copy
+		if (event.key.control) {
 			CopyClipboard();
 		}
 		break;
 
-	case ALLEGRO_KEY_X:		// Cut
-		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+	case sf::Keyboard::X:		// Cut
+		if (event.key.control) {
 			CutClipboard();
 		}
 		break;
 
-	case ALLEGRO_KEY_V:		// Paste
-		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {	// Get fresh key state
+	case sf::Keyboard::V:		// Paste
+		if (event.key.control) {
 			UseTool(ToolType::SELECT);
 			PasteClipboard();
 		}
 		break;
 
-	case ALLEGRO_KEY_N:
-		if (Battery::GetApp().GetKey(ALLEGRO_KEY_LCTRL)) {
-			if (Battery::GetApp().GetKey(ALLEGRO_KEY_LSHIFT)) {
+	case sf::Keyboard::N:
+		if (event.key.control) {
+			if (event.key.shift) {
 				Navigator::GetInstance()->StartNewApplicationInstance();	// CTRL + SHIFT + N
 			}
 			else {
@@ -504,14 +448,14 @@ void Navigator::OnKeyPressed(Battery::KeyPressedEvent* event) {
 	}
 }
 
-void Navigator::OnKeyReleased(Battery::KeyReleasedEvent* event) {
+void Navigator::OnKeyReleased(sf::Event event) {
 	
-	switch (event->keycode) {
+	switch (event.key.code) {
 
-	case ALLEGRO_KEY_LCTRL:
-		if (Battery::GetMainWindow().GetLeftMouseButton() ||
-			Battery::GetMainWindow().GetRightMouseButton() ||
-			Battery::GetMainWindow().GetMouseWheel())
+	case sf::Keyboard::LControl:
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) || 
+			sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) ||
+			sf::Mouse::isButtonPressed(sf::Mouse::Button::Middle))
 		{
 			OnMouseDragged(mousePosition, mouseSnapped, 0, 0);
 		}
@@ -553,9 +497,9 @@ void Navigator::OnMouseReleased(const glm::vec2& position, bool left, bool right
 void Navigator::OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	using namespace Battery;
 
-	if (Battery::GetMainWindow().GetLeftMouseButton() || 
-		Battery::GetMainWindow().GetRightMouseButton() || 
-		Battery::GetMainWindow().GetMouseWheel())
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) ||
+		sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) ||
+		sf::Mouse::isButtonPressed(sf::Mouse::Button::Middle))
 	{
 		OnMouseDragged(position, snapped, dx, dy);
 	}
@@ -701,20 +645,21 @@ void Navigator::ResetViewport() {
 }
 
 bool Navigator::ExportToClipboard() {
-	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
-	auto image = file.ExportImage(exportTransparent, exportDPI);
-
-	if (!image)
+	Battery::SetMouseCursor(sf::Cursor::Type::Wait);
+	std::optional<sf::Image> image = file.ExportImage(exportTransparent, exportDPI);
+	if (image)
 		return false;
 
-	bool success = Battery::GetMainWindow().SetClipboardImage(image);
-	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
-	return success;
+	//bool success = Battery::SetClipboardImage(image.value());
+	LOG_ERROR("CLIPBOARD NOW");
+	Battery::SetMouseCursor(sf::Cursor::Type::Arrow);
+	//return success;
+	return false;
 }
 
 bool Navigator::ExportToFile() {
 	
-	std::string filename = Battery::PromptFileSaveDialog({ "*.png" }, Battery::GetMainWindow());
+	std::string filename = Battery::PromptFileSaveDialog({ "*.png" }, Battery::GetApp().window.getSystemHandle());
 	if (filename == "")
 		return false;
 
@@ -723,13 +668,15 @@ bool Navigator::ExportToFile() {
 	}
 
 	// TODO: Overwrite message if png is added
-	Battery::Bitmap image = file.ExportImage(exportTransparent, exportDPI);
+	std::optional<sf::Image> image = file.ExportImage(exportTransparent, exportDPI);
 	if (!image)
 		return false;
 
-	bool success = image.SaveToFile(filename);
-	Battery::ExecuteShellCommand("explorer.exe /select," + filename);
-	return success;
+	/*bool success = image.SaveToFile(filename);
+	Battery::ExecuteShellCommand("explorer.exe /select," + filename);	// TODO: Make for linux
+	return success;*/
+	LOG_ERROR("EXPORT NOW");
+	return false;
 }
 
 bool Navigator::LoadSettings() {
@@ -814,7 +761,7 @@ std::vector<std::string> Navigator::GetRecentFiles() {
 		return std::vector<std::string>();
 	}
 
-	return Battery::StringUtils::SplitString(file.content(), '\n');
+	return Battery::SplitString(file.content(), '\n');
 }
 
 bool Navigator::AppendRecentFile(std::string recentFile) {
@@ -838,12 +785,13 @@ bool Navigator::AppendRecentFile(std::string recentFile) {
 }
 
 bool Navigator::SaveRecentFiles(std::vector<std::string> recentFiles) {
-	auto file = Battery::StringUtils::JoinStrings(recentFiles, "\n");
+	auto file = Battery::JoinStrings(recentFiles, "\n");
 	return Battery::WriteFile(GetSettingsDirectory() + RECENT_FILES_FILENAME, file);
 }
 
 std::string Navigator::GetSettingsDirectory() {
-	return Battery::GetAllegroStandardPath(ALLEGRO_USER_SETTINGS_PATH);
+	return "";
+	//return Battery::GetAllegroStandardPath(ALLEGRO_USER_SETTINGS_PATH);
 }
 
 std::string Navigator::GetApplicationVersion() {
@@ -860,7 +808,7 @@ void Navigator::OpenNewWindowFile(const std::string& file) {
 	}
 	else {
 		LOG_ERROR("File can not be found: '{}'", file);
-		Battery::ShowInfoMessageBox("The file '" + file + "' can not be found!");
+		//Battery::ShowInfoMessageBox("The file '" + file + "' can not be found!");
 	}
 }
 
@@ -887,8 +835,9 @@ bool Navigator::CloseApplication() {
 		return true;
 	}
 
-	bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
-		"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
+	//bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
+	//	"Do you want to save the file?", Battery::GetApp().window.getSystemHandle());
+	bool save = false;
 
 	if (!save) {	// Discard changes and close the application
 		Battery::GetApp().CloseApplication();
@@ -998,8 +947,8 @@ void Navigator::RenderShapes() {
 		for (auto& shape : layer.GetShapes()) {
 
 			// Skip the shape if it's not on the screen
-			if (shape->ShouldBeRendered(Battery::GetMainWindow().GetWidth(), 
-										Battery::GetMainWindow().GetHeight()))
+			if (shape->ShouldBeRendered(Battery::GetApp().window.getSize().x, 
+										Battery::GetApp().window.getSize().y))
 			{
 				// Render the shape
 				ShapeID id = shape->GetID();
@@ -1025,8 +974,8 @@ void Navigator::RenderShapes() {
 	for (auto& shape : file.GetActiveLayer().GetShapes()) {
 
 		// Skip the shape if it's not on the screen
-		if (shape->ShouldBeRendered(Battery::GetMainWindow().GetWidth(),
-			Battery::GetMainWindow().GetHeight()))
+		if (shape->ShouldBeRendered(Battery::GetApp().window.getSize().x,
+			Battery::GetApp().window.getSize().y))
 		{
 			// Render the shape
 			ShapeID id = shape->GetID();
@@ -1051,8 +1000,8 @@ void Navigator::RenderShapes() {
 	for (const auto& shape : file.GetActiveLayer().GetShapes()) {
 
 		// Skip the shape if it's not on the screen
-		if (shape->ShouldBeRendered(Battery::GetMainWindow().GetWidth(),
-			Battery::GetMainWindow().GetHeight()))
+		if (shape->ShouldBeRendered(Battery::GetApp().window.getSize().x,
+			Battery::GetApp().window.getSize().y))
 		{
 			// Render the shape on top of all others
 			ShapeID id = shape->GetID();

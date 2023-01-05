@@ -39,7 +39,7 @@ public:
 	std::string imguiFileLocation;
 
 	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve every frame, to be consistent through the update loop
-	Battery::ClipboardFormatID clipboardShapeFormat = 0;	// TODO: windowSize is maybe unnecessary
+	//Battery::ClipboardFormatID clipboardShapeFormat = 0;	// TODO: windowSize is maybe unnecessary
 
 	// User interface
 	glm::vec2 panOffset = { 0, 0 };
@@ -52,7 +52,7 @@ public:
 	bool gridShown = true;
 	
 	std::atomic<enum class UpdateStatus> updateStatus = UpdateStatus::NOTHING;
-	std::atomic<double> timeSincePopup = 0.0;		// Timestamp when the popup was created, set by Updater
+	std::atomic<sf::Time> timeSincePopup;		// Timestamp when the popup was created, set by Updater
 	std::atomic<double> updateProgress = 0.0;		// 0.0 to 1.0
 	std::string restartExecutablePath;
 
@@ -65,12 +65,7 @@ public:
 	bool tabbedShapeInfo = false;
 
 	// Buffers to store event data
-	float scrollBuffer = 0;
-	std::vector<Battery::MouseButtonPressedEvent> mousePressedEventBuffer;
-	std::vector<Battery::MouseButtonReleasedEvent> mouseReleasedEventBuffer;	// TODO: Better events
-	std::vector<Battery::MouseMovedEvent> mouseMovedEventBuffer;
-	std::vector<Battery::KeyPressedEvent> keyPressedEventBuffer;
-	std::vector<Battery::KeyReleasedEvent> keyReleasedEventBuffer;
+	std::vector<sf::Event> eventBuffer;
 
 	// Controls
 	glm::vec2 mousePosition = { 0, 0 };			// Those mouse positions are in workspace coordinates
@@ -97,7 +92,7 @@ public:
 	void OnDetach();
 	void OnUpdate();
 	void OnRender();
-	void OnEvent(Battery::Event* e);
+	void OnEvent(sf::Event e, bool& handled);
 
 
 	glm::vec2 ConvertScreenToWorkspaceCoords(const glm::vec2& v);
@@ -117,8 +112,8 @@ public:
 	void MoveSelectedShapesDown();
 	void SelectNextPossibleShape();
 
-	void OnKeyPressed(Battery::KeyPressedEvent* event);
-	void OnKeyReleased(Battery::KeyReleasedEvent* event);
+	void OnKeyPressed(sf::Event event);
+	void OnKeyReleased(sf::Event event);
 	void OnMouseClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);
 	void OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel);
 	void OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);

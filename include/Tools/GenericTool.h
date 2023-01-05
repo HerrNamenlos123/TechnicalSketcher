@@ -1,7 +1,6 @@
 #pragma once
 
-#include "pch.h"
-#include "Layer.h"
+#include "SketchLayer.h"
 #include "Shapes/GenericShape.h"
 
 enum class ToolType {

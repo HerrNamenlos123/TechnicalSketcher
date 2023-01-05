@@ -1,7 +1,6 @@
 
 #include "pch.h"
 #include "Updater.h"
-#include "Battery/AllegroDeps.h"
 
 /*
  * In November 2021, the installer system was changed from Visual Studio installer projects 
@@ -36,8 +35,11 @@ std::pair<std::string, std::string> GetLatestGithubRelease(const std::string& ur
 
 	logger->info("Accessing api.github.com...");
 
-	auto res = Battery::GetHttpRequest(url);
-	if (!res.has_value()) {
+	sf::Http http;
+	sf::Http::Request request;
+	http.setHost(url);
+	auto result = http.sendRequest(request);
+	if (result.getStatus() != sf::Http::Response::Accepted) {
 		logger->info("Connection failed");
 
 		if (attempt < UPDATE_MAX_ATTEMPTS) {
@@ -55,7 +57,7 @@ std::pair<std::string, std::string> GetLatestGithubRelease(const std::string& ur
 	std::string latestVersion;
 	std::string downloadLink;
 	try {
-		nlohmann::json api = nlohmann::json::parse(res->body);
+		nlohmann::json api = nlohmann::json::parse(result.getBody());
 		latestVersion = api["tag_name"];
 
 		for (nlohmann::json asset : api["assets"]) {
@@ -76,7 +78,7 @@ std::pair<std::string, std::string> GetLatestGithubRelease(const std::string& ur
 }
 
 bool DownloadUpdate(const std::string& url, const std::string& targetFile, int attempt = 0) {
-	size_t cnt = 0;
+	/*size_t cnt = 0;
 	logger->info("Downloading {} to {}", url, targetFile);
 	if (!Battery::DownloadUrlToFile(url, targetFile, true,
 		[&](uint64_t progress, uint64_t total) {				// This is a lambda function!
@@ -95,7 +97,8 @@ bool DownloadUpdate(const std::string& url, const std::string& targetFile, int a
 			logger->info("Too many attempts, stopping download");
 			return false;
 		}
-	}
+	}*/
+	LOG_ERROR("Download update");
 
 	return true;
 }
@@ -278,7 +281,8 @@ void RunUpdater() {
 		// Will be deleted when the application is opened the next time
 
 	}
-	catch (const Battery::Exception& e) {
+	catch (...) {}
+	/*catch (const Battery::Exception& e) {
 		LOG_CORE_CRITICAL(std::string("The Updater thread threw Battery::Exception: ") + e.what());
 		Battery::ShowErrorMessageBox(std::string("The Updater thread threw Battery::Exception: ") + e.what());
 		Navigator::GetInstance()->updateStatus = UpdateStatus::NOTHING;
@@ -289,5 +293,5 @@ void RunUpdater() {
 		Battery::ShowErrorMessageBox("The Updater thread threw unknown Exception: No further information");
 		Navigator::GetInstance()->updateStatus = UpdateStatus::NOTHING;
 		return;
-	}
+	}*/
 }

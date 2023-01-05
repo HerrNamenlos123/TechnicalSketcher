@@ -1,23 +1,15 @@
 
 #include "pch.h"
-#include "Battery/AllegroDeps.h"
 
-#include "Application.h"
+#include "BatteryApp.h"
 #include "UserInterface.h"
 #include "Updater.h"
 #include "NavigatorLayer.h"
 #include "../resource/resource.h"
 
-App::App() : Battery::Application(0, 0, APPLICATION_NAME) {
-	//LOG_SET_BATTERY_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
-	SetWindowFlag(WindowFlags::FRAMELESS);
-	SetWindowFlag(WindowFlags::NO_TASKBAR);
-	SetWindowFlag(WindowFlags::HIDDEN);
-}
+void BatteryApp::OnStartup() {
 
-bool App::OnStartup() {
-
-	Battery::Bitmap bitmap(500, 500);
+	/*Battery::Bitmap bitmap(500, 500);
 
 	// Show splash screen
 	Battery::Bitmap splash;
@@ -29,10 +21,8 @@ bool App::OnStartup() {
 		window.FlipDisplay();
 		window.Show();
 		window.Focus();
-	}
-
-	// Initialize the renderer
-	ApplicationRenderer::Load();
+	}*/
+	LOG_ERROR("SPLASHSCREEN NOW");
 
 	// Various layers
 	PushLayer(std::make_shared<NavigatorLayer>());
@@ -44,8 +34,8 @@ bool App::OnStartup() {
 	}
 	
 	// Set the icon and title of the window
-	window.SetWindowExecutableIcon(DB_ICON1);
-	window.SetTitle(APPLICATION_NAME);
+	//Battery::LoadExecutableIcon(DB_ICON1);
+	window.setTitle(APPLICATION_NAME);
 	
 	// Check if file to open was supplied
 	std::string openFile = "";
@@ -73,88 +63,58 @@ bool App::OnStartup() {
 	}
 
 	// Set the window size and position
-	window.Hide();
 	glm::vec2 monitorSize = GetPrimaryMonitorSize();	// If screen is too small with a little margin, maximize the window				
 	if (monitorSize.x / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_WIDTH || monitorSize.y / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_HEIGHT) {
-		window.SetSize(monitorSize / SCREEN_SIZE_MARGIN);
-		window.SetScreenPosition((monitorSize - glm::vec2(window.GetSize())) / 2.f + glm::vec2(0, -30));
-		window.Maximize();
+		window.setSize({ (uint16_t)(monitorSize.x / SCREEN_SIZE_MARGIN), (uint16_t)(monitorSize.y / SCREEN_SIZE_MARGIN) });
+		glm::uvec2 v = (monitorSize - glm::vec2(window.getSize().x, window.getSize().y)) / 2.f + glm::vec2(0, -30);
+		window.setPosition({ (uint16_t)v.x, (uint16_t)v.y });
+		//window.Maximize();
 	}
 	else {	// Set up window normally
-		window.SetScreenPosition((monitorSize - glm::vec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)) / 2.f + glm::vec2(0, -30));
-		window.SetSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
+		glm::vec2 v = (monitorSize - glm::vec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)) / 2.f + glm::vec2(0, -30);
+		window.setPosition({ (uint16_t)v.x, (uint16_t)v.y });
+		window.setSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
 	}
 
 	// Finalize display
-	window.SetFrameless(false);
-	Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
-	window.FlipDisplay();
-	window.ShowInTaskbar();
-	window.Show();
-	window.Focus();
+	//window.SetFrameless(false);
+	//Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
+	window.requestFocus();
 
 	// Now start updater thread
 	PushLayer(std::make_shared<UpdaterLayer>(noUpdate));
-
-	return true;
 }
 
-void App::OnUpdate() {
+void BatteryApp::OnUpdate() {
 	using namespace Battery;
 
 	// Only refresh the screen eventually to save cpu power
 	// Allow the first 60 frames to let everything initialize
 	// and only if the program runs in the background
-	if (GetRuntime() < (lastScreenRefresh + passiveScreenTime) && 
+	/*if (GetRuntime() < (lastScreenRefresh + passiveScreenTime) &&
 		framecount > 60 && !window.IsFocused() && Navigator::GetInstance()->updateStatus == UpdateStatus::NOTHING)
 	{
-		DiscardFrame();
+		//DiscardFrame();
 		return;
 	}
 	else {
 		lastScreenRefresh = GetRuntime();
-	}
+	}*/
 }
 
-void App::OnRender() {
-	using namespace Battery;
-}
+void BatteryApp::OnEvent(sf::Event e, bool& handled) {
 
-void App::OnShutdown() {
-	// Unload the renderer
-	if (ApplicationRenderer::IsLoaded()) {
-		ApplicationRenderer::Unload();
-	}
-}
+	lastScreenRefresh = sf::seconds(0);		// Force a screen update on every event
 
-void App::OnEvent(Battery::Event* e) {
-	using namespace Battery;
-
-	lastScreenRefresh = 0;	// Force a screen update
-
-	switch (e->GetType()) {
-
-	case EventType::KeyPressed:
-
-		if (static_cast<KeyPressedEvent*>(e)->keycode == ALLEGRO_KEY_H) {
-			e->SetHandled();
-
-
-		}
-		break;
-
-	case EventType::WindowClose:
+	switch (e.type) {
+	case sf::Event::Closed:
 		Navigator::GetInstance()->CloseApplication();
-		e->SetHandled();
+		handled = true;
 		break;
 
 	default:
 		break;
 	}
-}
-
-Battery::Application* Battery::CreateApplication() {
-	return new App();
 }
 
 
@@ -201,7 +161,7 @@ public:
 
 };
 
-class App : public Battery::Application {
+class BatteryApp : public Battery::Application {
 public:
 
 	Battery::Scene* scene = nullptr;
@@ -213,7 +173,7 @@ public:
 	float falloff = 1;
 	glm::vec4 color = { 0, 0, 0, 255 };
 
-	App() : Battery::Application(800, 600, "MyApplication") {
+	BatteryApp() : Battery::Application(800, 600, "MyApplication") {
 		//LOG_SET_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
 	}
 
@@ -371,7 +331,7 @@ public:
 };
 
 Battery::Application* Battery::CreateApplication() {
-	return new App();
+	return new BatteryApp();
 }
 
 */

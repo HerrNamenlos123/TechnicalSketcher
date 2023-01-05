@@ -1,12 +1,12 @@
 #pragma once
 
 #include "pch.h"
-#include "Layer.h"
+#include "SketchLayer.h"
 
 class FileContent {
 
-	std::vector<Layer> layers;
-	size_t activeLayer = -1;	// This is the std::vector index!!!
+	std::vector<SketchLayer> layers;
+	size_t activeLayerIndex = -1;
 
 public:
 	FileContent(bool init = true) {
@@ -16,12 +16,12 @@ public:
 		}
 	}
 
-	Layer& GetActiveLayer() {
+	SketchLayer& GetActiveLayer() {
 		p_CorrectLayers();
-		return layers[activeLayer];
+		return layers[activeLayerIndex];
 	}
 
-	std::vector<Layer>& GetLayers() {
+	std::vector<SketchLayer>& GetLayers() {
 		p_CorrectLayers();
 		return layers;
 	}
@@ -40,7 +40,7 @@ public:
 		do {
 			repeat = false;
 
-			for (Layer& layer : layers) {
+			for (SketchLayer& layer : layers) {
 				if (layer.name == name) {	// Name already exists
 					repeat = true;
 
@@ -58,12 +58,12 @@ public:
 	}
 
 	void PushLayer(const std::string& name) {
-		layers.push_back(Layer(name));
+		layers.push_back(SketchLayer(name));
 		ActivateLayer(layers[layers.size() - 1].GetID()); // Select just created layer
 		GeneratePreviews();
 	}
 
-	void PushLayer(Layer&& layer) {
+	void PushLayer(SketchLayer&& layer) {
 		layers.push_back(layer);
 		ActivateLayer(layers[layers.size() - 1].GetID()); // Select just created layer
 		GeneratePreviews();
@@ -73,7 +73,7 @@ public:
 
 		for (size_t i = 0; i < layers.size(); i++) {
 			if (layers[i].GetID() == id) {
-				activeLayer = i;
+				activeLayerIndex = i;
 				return true;
 			}
 		}
@@ -96,10 +96,10 @@ public:
 		return false;
 	}
 
-	std::optional<std::reference_wrapper<Layer>> FindLayer(LayerID id) {
-		for (Layer& layer : layers) {
+	std::optional<std::reference_wrapper<SketchLayer>> FindLayer(LayerID id) {
+		for (SketchLayer& layer : layers) {
 			if (layer.GetID() == id) {
-				return std::make_optional<std::reference_wrapper<Layer>>(layer);
+				return std::make_optional<std::reference_wrapper<SketchLayer>>(layer);
 			}
 		}
 
@@ -132,24 +132,24 @@ public:
 	}
 
 	void GeneratePreviews() {
-		for (auto& layer : layers) {
-			layer.GeneratePreview();
-		}
+		//for (auto& layer : layers) {
+		//	layer.GeneratePreview();
+		//}
 	}
 
 public:
-	// Correct activeLayer, if it's -1 or too large
+	// Correct activeLayerIndex, if it's -1 or too large
 	void p_CorrectLayers() {
 
 		if (layers.size() == 0) {
 			PushLayer();
 		}
 
-		if (activeLayer == -1) {
-			activeLayer = 0;
+		if (activeLayerIndex == -1) {
+			activeLayerIndex = 0;
 		}
-		else if (activeLayer >= layers.size()) {
-			activeLayer = layers.size() - 1;
+		else if (activeLayerIndex >= layers.size()) {
+			activeLayerIndex = layers.size() - 1;
 		}
 	}
 

@@ -2,12 +2,10 @@
 
 class ApplicationRenderer {
 
-    std::unique_ptr<Battery::Scene> scene;
-
-    ApplicationRenderer();
+    ApplicationRenderer() {}
 
 public:
-    ~ApplicationRenderer();
+    ~ApplicationRenderer() {}
 
     // Visuals
     float gridLineColor = 0;	// Grayscale
@@ -25,13 +23,6 @@ public:
     glm::vec4 selectionBoxFillColor = glm::vec4(200, 20, 0, 15);
 
     float previewPointSize = 4;
-
-    static void Load();
-    static bool IsLoaded();
-    static void Unload();
-
-    static void BeginFrame();
-    static void EndFrame();
 
     static void DrawLineWorkspace(const glm::vec2& point1, const glm::vec2& point2, float thickness, 
         const glm::vec4& color, float falloff = BATTERY_ANTIALIASING_LINE_FALLOFF);

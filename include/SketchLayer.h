@@ -7,7 +7,7 @@
 
 typedef size_t LayerID;
 
-class Layer {
+class SketchLayer {
 
 	LayerState state;
 	LayerHistory<MAX_NUMBER_OF_UNDOS> history;
@@ -16,14 +16,14 @@ class Layer {
 
 public:
 	std::string name;
-	Battery::Bitmap previewImage;
+	//sf::RenderTexture previewImage;
 	bool layerChanged = false;
 
-	Layer(const std::string& name);
+	SketchLayer(const std::string& name);
 
 	LayerState GetState();
 	void LoadState(const LayerState& state);
-	Layer Duplicate();
+	SketchLayer Duplicate();
 
 	LayerID GetID() const;
 	void SetID(LayerID id);
@@ -52,15 +52,15 @@ public:
 	void SaveState();
 	void UndoAction();
 
-	void SetPreviewImage(const Battery::Bitmap& image);
-	void GeneratePreview();
+	//void SetPreviewImage(const sf::Image& image);
+	//void GeneratePreview();
 
 	std::optional<std::reference_wrapper<GenericShape>> FindShape(const ShapeID& shape);
 	bool ShapeExists(const ShapeID& id) const;
 	std::pair<glm::vec2, glm::vec2> GetBoundingBox() const;
 
 	float MapFloat(float x, float in_min, float in_max, float out_min, float out_max);
-	void RenderLayerToBitmap(ALLEGRO_BITMAP* bitmap);
+	void RenderLayerToBitmap(sf::RenderTexture texture);
 
 	bool LoadJson(nlohmann::json json);
 	nlohmann::json GetJson();

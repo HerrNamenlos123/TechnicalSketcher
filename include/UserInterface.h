@@ -4,12 +4,7 @@
 #include "config.h"
 #include "Navigator.h"
 #include "Tools/GenericTool.h"
-#include "GuiTheme.h"
-#include "Fonts/FontLoader.h"
 #include "Fonts/Fonts.h"
-
-//#define SPLASHSCREEN_FONT	"C:\\Windows\\Fonts\\consola.ttf"
-//#define SPLASHSCREEN_FONT_SIZE	14
 
 // TODO: Fix user interface with new Battery panels
 
@@ -97,7 +92,7 @@ static void Spinner(const char* label, double radius, int thickness, const ImU32
 	window->DrawList->PathClear();
 
 	int num_segments = 30;
-	int start = abs(std::sin(Battery::GetRuntime() * 1.8) * (num_segments - 5.0));
+	int start = abs(std::sin(Battery::GetRuntime().asSeconds() * 1.8) * (num_segments - 5.0));
 
 	double a_min = IM_PI * 2.0 * ((double)start) / (float)num_segments;
 	double a_max = IM_PI * 2.0 * ((double)num_segments - 3) / (float)num_segments;
@@ -107,8 +102,8 @@ static void Spinner(const char* label, double radius, int thickness, const ImU32
 	for (int i = 0; i < num_segments; i++) {
 		double a = a_min + ((double)i / (double)num_segments) * (a_max - a_min);
 		window->DrawList->PathLineTo(ImVec2(
-			(double)centre.x + std::cos(a + Battery::GetRuntime() * 14.0) * radius,
-			(double)centre.y + std::sin(a + Battery::GetRuntime() * 14.0) * radius));
+			(double)centre.x + std::cos(a + Battery::GetRuntime().asSeconds() * 14.0) * radius,
+			(double)centre.y + std::sin(a + Battery::GetRuntime().asSeconds() * 14.0) * radius));
 	}
 
 	window->DrawList->PathStroke(color, false, thickness);
@@ -134,7 +129,7 @@ public:
 	}
 
 	void OnUpdate() override {
-		size.x = Battery::GetMainWindow().GetWidth();
+		size.x = Battery::GetApp().window.getSize().x;
 		size.y = GUI_RIBBON_HEIGHT;
 
 		if (fileToOpen != "") {
@@ -230,7 +225,7 @@ public:
 		OptionsPopup();
 	}
 
-	bool IsItemActiveLastFrame() {
+	/*bool IsItemActiveLastFrame() {
 		ImGuiContext& g = *GImGui;
 		if (g.ActiveIdPreviousFrame)
 			return g.ActiveIdPreviousFrame == g.CurrentWindow->DC.LastItemId;
@@ -239,44 +234,44 @@ public:
 
 	bool IsItemReleased() {
 		return IsItemActiveLastFrame() && !ImGui::IsItemActive();
-	}
+	}*/
 
 	void MainButtons() {
 
 		Navigator::GetInstance()->popupExportOpen = false;
 
-		ImGui::PushFont(GetFontContainer<FontContainer>()->segoeFont22);
+		ImGui::PushFont(Fonts::segoeFont22);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
 
 		if (ImGui::Button("\uE7C3##NewFile")) {
 			Navigator::GetInstance()->OpenEmptyFile();
 		}
-		ToolTip("Create an empty file", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Create an empty file", Fonts::sansFont17);
 		ImGui::SameLine();
 
 		if (ImGui::Button("\uEC50##Open")) {
 			Navigator::GetInstance()->OpenFile();
 		}
-		ToolTip("Open an existing file", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Open an existing file", Fonts::sansFont17);
 		ImGui::SameLine();
 
 		if (ImGui::Button("\uE74E##Save")) {
 			Navigator::GetInstance()->SaveFile();
 		}
-		ToolTip("Save the current file", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Save the current file", Fonts::sansFont17);
 		ImGui::SameLine();
 
 		if (ImGui::Button("\uE792##SaveAs")) {
 			Navigator::GetInstance()->SaveFileAs();
 		}
-		ToolTip("Save the file with a new name", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Save the file with a new name", Fonts::sansFont17);
 		ImGui::SameLine();
 
 		if (ImGui::Button("\uE77F##Export")) {
 			ImGui::OpenPopup("Export rendering");
 		}
-		ToolTip("Copy a rendering of the file to the clipboard", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Copy a rendering of the file to the clipboard", Fonts::sansFont17);
 		ImGui::SameLine();
 
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 35);
@@ -284,7 +279,7 @@ public:
 		if (ImGui::Button("\uE7A7##Undo")) {
 			Navigator::GetInstance()->UndoAction();
 		}
-		ToolTip("Undo the last action", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Undo the last action", Fonts::sansFont17);
 		ImGui::SameLine();
 
 
@@ -293,7 +288,7 @@ public:
 		// Export popup
 		bool save = false;
 		bool exp = false;
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+		ImGui::PushFont(Fonts::sansFont17);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		if (ImGui::BeginPopupModal("Export rendering", NULL, 
 			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
@@ -301,7 +296,7 @@ public:
 			Navigator::GetInstance()->popupExportOpen = true;
 
 			ImGui::Checkbox("Transparent background", &Navigator::GetInstance()->exportTransparent);
-			ToolTip("Transparency is not supported by programs like Paint or MathCAD", GetFontContainer<FontContainer>()->sansFont17);
+			ToolTip("Transparency is not supported by programs like Paint or MathCAD", Fonts::sansFont17);
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15);
 			ImGui::Separator();
 
@@ -348,14 +343,14 @@ public:
 		}
 
 
-		ImGui::SetCursorPosX(Battery::GetMainWindow().GetWidth() - 600);
+		ImGui::SetCursorPosX(Battery::GetApp().window.getSize().x - 600);
 
 
 
 		if (ImGui::Button("\uE7AD##ResetViewport")) {
 			Navigator::GetInstance()->ResetViewport();
 		}
-		ToolTip("Reset the camera to the origin", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Reset the camera to the origin", Fonts::sansFont17);
 		ImGui::SameLine();
 
 
@@ -367,7 +362,7 @@ public:
 		if (ImGui::Button("\uE80A##ToggleGrid")) {
 			Navigator::GetInstance()->gridShown = !Navigator::GetInstance()->gridShown;
 		}
-		ToolTip("Show or hide the grid", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Show or hide the grid", Fonts::sansFont17);
 		ImGui::SameLine();
 		if (pop) {
 			ImGui::PopStyleColor();
@@ -387,7 +382,7 @@ public:
 		if (ImGui::Button("\uE14E##ToggleInfiniteGrid")) {
 			Navigator::GetInstance()->infiniteSheet = !Navigator::GetInstance()->infiniteSheet;
 		}
-		ToolTip("Toggle A4/infinite grid", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Toggle A4/infinite grid", Fonts::sansFont17);
 		ImGui::SameLine();
 		if (pop) {
 			ImGui::PopStyleColor();
@@ -399,19 +394,19 @@ public:
 		ImGui::PopStyleVar();
 
 		// Background color
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+		ImGui::PushFont(Fonts::sansFont17);
 		ImGui::Text("Background");
 		ImGui::SameLine();
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10);
 
-		glm::vec4 color = Navigator::GetInstance()->file.backgroundColor;
+		glm::vec4 color = Navigator::GetInstance()->file.canvasColor;
 		color /= 255;
 		ImGui::ColorEdit4("##BackgroundColor", (float*)&color.x, ImGuiColorEditFlags_NoInputs);
 		color *= 255;
 
-		if (color != Navigator::GetInstance()->file.backgroundColor) {
+		if (color != Navigator::GetInstance()->file.canvasColor) {
 			Navigator::GetInstance()->file.FileChanged();
-			Navigator::GetInstance()->file.backgroundColor = color;
+			Navigator::GetInstance()->file.canvasColor = color;
 		}
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 10);
@@ -423,11 +418,11 @@ public:
 
 
 		// SnapSize slider
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+		ImGui::PushFont(Fonts::sansFont17);
 
 		float xpos = 660;
 		float ypos = 15;
-		ImGui::SetCursorPosX(Battery::GetMainWindow().GetWidth() - 1000 + xpos);
+		ImGui::SetCursorPosX(Battery::GetApp().window.getSize().x - 1000 + xpos);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 25 + ypos);
 		ImGui::Text("Snap size");
 		ImGui::SameLine();
@@ -435,7 +430,7 @@ public:
 		ImGui::PushItemWidth(150);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 7);
 		int oldSnap = snap;
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+		ImGui::PushFont(Fonts::sansFont17);
 		ImGui::SliderInt("##SnapSizeSlider", &snap, -4, 4, "");
 		ImGui::SameLine();
 		ImGui::PopFont();
@@ -465,7 +460,7 @@ public:
 
 	void OnRender() override {
 
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+		ImGui::PushFont(Fonts::sansFont17);
 
 		// Show the main menu bar
 		MenuBar();
@@ -482,7 +477,7 @@ class LayerWindow : public Battery::ImGuiPanel<> {
 
 	bool wasMouseOnWindow = false;	// For the mouse enter event
 	bool firstContext = true;
-	Layer newLayer;
+	//SketchLayer newLayer;
 	bool duplicateLayer = false;
 
 public:
@@ -502,7 +497,7 @@ public:
 	bool mouseEnteredWindowFlag = false;
 
 	LayerWindow() : ImGuiPanel<>("LayerWindow", { 0, GUI_RIBBON_HEIGHT }, { GUI_LEFT_BAR_WIDTH, GUI_LAYER_WINDOW_HEIGHT }, 
-		DEFAULT_IMGUI_PANEL_FLAGS | ImGuiWindowFlags_NoBringToFrontOnFocus), newLayer(std::string("")) {
+		DEFAULT_IMGUI_PANEL_FLAGS | ImGuiWindowFlags_NoBringToFrontOnFocus) {
 	}
 
 	void OnAttach() {
@@ -513,10 +508,10 @@ public:
 	}
 
 	void OnUpdate() override {
-		if (duplicateLayer) {
-			duplicateLayer = false;
-			Navigator::GetInstance()->file.PushLayer(std::move(newLayer));
-		}
+		//if (duplicateLayer) {
+		//	duplicateLayer = false;
+		//	Navigator::GetInstance()->file.PushLayer(std::move(newLayer));
+		//}
 	}
 
 	void OnRender() override {
@@ -525,12 +520,12 @@ public:
 			Navigator::GetInstance()->file.GeneratePreviews();
 		}
 
-		ImGui::PushFont(GetFontContainer<FontContainer>()->segoeFont22);
+		ImGui::PushFont(Fonts::segoeFont22);
 		ImGui::Text("\uE81E"); ImGui::SameLine();
 		ImGui::PopFont();
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont22);
+		ImGui::PushFont(Fonts::sansFont22);
 		ImGui::Text("Layers"); ImGui::SameLine();
-		HelpMarker("Drag the layers up or down to change the order", GetFontContainer<FontContainer>()->sansFont17);
+		HelpMarker("Drag the layers up or down to change the order", Fonts::sansFont17);
 		ImGui::SameLine();
 
 		// Add button now
@@ -539,7 +534,7 @@ public:
 		// Set flag, which will be read and acted on in the main loop event handler
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 		ImGui::PushItemWidth(30);
-		ImGui::PushFont(GetFontContainer<FontContainer>()->materialFont22);
+		ImGui::PushFont(Fonts::materialFont22);
 		addLayerFlag = ImGui::Button("\uE02E##AddLayer", ImVec2(35, 25));
 		ImGui::PopFont();
 		ImGui::PopItemWidth();
@@ -589,17 +584,14 @@ public:
 			}
 		
 			// Draw the preview of the layer
-			if (ImGui::IsItemHovered()) {
-				if (layer.previewImage) {
+			/*if (ImGui::IsItemHovered()) {
+				if (layer.previewImage.getTexture().getNativeHandle()) {
 					ImGui::BeginTooltip();
-					ImGui::Image(layer.previewImage.GetAllegroBitmap(), 
+					ImGui::Image((ImTextureID)layer.previewImage.getTexture().getNativeHandle(),
 						ImVec2(GUI_PREVIEWWINDOW_SIZE, GUI_PREVIEWWINDOW_SIZE));
 					ImGui::EndTooltip();
 				}
-				else {
-					LOG_WARN("Bitmap is nullptr");
-				}
-			}
+			}*/
 		}
 
 		if (anyActive) {
@@ -615,22 +607,22 @@ public:
 		ImGui::PopFont();
 	}
 
-	void ContextMenu(const Layer& layer) {
+	void ContextMenu(const SketchLayer& layer) {
 
 		if (ImGui::BeginPopupContextItem()) {
 
-			ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+			ImGui::PushFont(Fonts::sansFont17);
 			float buttonWidth = 80;
 
 			// Duplicate layer
-			char duplicate[32];
+			/*char duplicate[32];
 			snprintf(duplicate, 32, "Duplicate##%zu", (size_t)layer.GetID());
 			if (ImGui::Button(duplicate, ImVec2(buttonWidth, 0))) {
 				// Duplicate the layer now
 				newLayer = Navigator::GetInstance()->file.DuplicateActiveLayer();
 				duplicateLayer = true;
 				ImGui::CloseCurrentPopup();
-			}
+			}*/
 
 			// Rename layer
 			char rename[32];
@@ -685,7 +677,7 @@ public:
 					firstContext = false;
 				}
 
-				ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+				ImGui::PushFont(Fonts::sansFont17);
 				ImGui::Text("Edit name:");
 
 				if (ImGui::InputText("##edit", tempName, IM_ARRAYSIZE(tempName), ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -729,7 +721,7 @@ public:
 
 	void OnRender() override {
 
-		ImGui::PushFont(GetFontContainer<FontContainer>()->materialFont35);
+		ImGui::PushFont(Fonts::materialFont35);
 		float buttonDistance = 8;
 		ImVec2 buttonSize = { ImGui::GetFont()->FontSize, ImGui::GetFont()->FontSize };
 
@@ -744,7 +736,7 @@ public:
 		if (ImGui::Selectable("\uEF52##SelectionTool", toolType == ToolType::SELECT, 0, buttonSize)) {
 			Navigator::GetInstance()->UseTool(ToolType::SELECT);
 		}
-		ToolTip("Selection tool", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Selection tool", Fonts::sansFont17);
 		ImGui::SetCursorPos(pos1);
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonDistance);
@@ -754,7 +746,7 @@ public:
 		if (ImGui::Selectable("\uF108##LineTool", toolType == ToolType::LINE, 0, buttonSize)) {
 			Navigator::GetInstance()->UseTool(ToolType::LINE);
 		}
-		ToolTip("Line tool", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Line tool", Fonts::sansFont17);
 		ImGui::SetCursorPos(pos2);
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonDistance);
@@ -764,7 +756,7 @@ public:
 		if (ImGui::Selectable("\uE922##LineStripTool", toolType == ToolType::LINE_STRIP, 0, buttonSize)) {
 			Navigator::GetInstance()->UseTool(ToolType::LINE_STRIP);
 		}
-		ToolTip("Line strip tool", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Line strip tool", Fonts::sansFont17);
 		ImGui::SetCursorPos(pos3);
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(pos1.x);
@@ -775,7 +767,7 @@ public:
 		if (ImGui::Selectable("\uE3FA##CircleTool", toolType == ToolType::CIRCLE, 0, buttonSize)) {
 			Navigator::GetInstance()->UseTool(ToolType::CIRCLE);
 		}
-		ToolTip("Circle tool", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Circle tool", Fonts::sansFont17);
 		ImGui::SetCursorPos(pos4);
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonDistance);
@@ -785,7 +777,7 @@ public:
 		if (ImGui::Selectable("\uE3FC##ArcTool", toolType == ToolType::ARC, 0, buttonSize)) {
 			Navigator::GetInstance()->UseTool(ToolType::ARC);
 		}
-		ToolTip("Arc tool", GetFontContainer<FontContainer>()->sansFont17);
+		ToolTip("Arc tool", Fonts::sansFont17);
 		ImGui::SetCursorPos(pos5);
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonDistance);
@@ -809,12 +801,12 @@ public:
 	}
 
 	void OnUpdate() override {
-		position.x = Battery::GetMainWindow().GetWidth() - GUI_PROPERTIES_WINDOW_WIDTH;
+		position.x = Battery::GetApp().window.getSize().x - GUI_PROPERTIES_WINDOW_WIDTH;
 	}
 
 	void OnRender() override {
 
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+		ImGui::PushFont(Fonts::sansFont17);
 
 		if (Navigator::GetInstance()->selectedTool) {
 			Navigator::GetInstance()->selectedTool->ShowPropertiesWindow();
@@ -835,16 +827,16 @@ public:
 	}
 
 	void OnDetach() {
-		// Font does not need to be deleted
+	
 	}
 
 	void OnUpdate() override {
-		position.y = Battery::GetMainWindow().GetHeight() - GUI_MOUSEINFO_WINDOW_HEIGHT;
+		position.y = Battery::GetApp().window.getSize().y - GUI_MOUSEINFO_WINDOW_HEIGHT;
 	}
 
 	void OnRender() override {
 
-		ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont17);
+		ImGui::PushFont(Fonts::sansFont17);
 		auto nav = Navigator::GetInstance();
 
 		char str[1024];
@@ -877,25 +869,24 @@ public:
 		else if (Navigator::GetInstance()->updateStatus == UpdateStatus::DONE) {
 			size.x = 200;
 			size.y = 105;
-			if (Battery::GetRuntime() > Navigator::GetInstance()->timeSincePopup + POPUP_TIME) {
+			if (Battery::GetRuntime().asSeconds() > Navigator::GetInstance()->timeSincePopup.load().asSeconds() + POPUP_TIME) {
 				Navigator::GetInstance()->updateStatus = UpdateStatus::NOTHING;
 			}
 		}
 		else if (Navigator::GetInstance()->updateStatus == UpdateStatus::FAILED) {
 			size.x = 205;
 			size.y = 65;
-			if (Battery::GetRuntime() > Navigator::GetInstance()->timeSincePopup + POPUP_TIME) {
+			if (Battery::GetRuntime().asSeconds() > Navigator::GetInstance()->timeSincePopup.load().asSeconds() + POPUP_TIME) {
 				Navigator::GetInstance()->updateStatus = UpdateStatus::NOTHING;
 			}
 		}
 
-		position.x = Battery::GetMainWindow().GetWidth() - size.x;
-		position.y = Battery::GetMainWindow().GetHeight() - size.y;
+		position.x = Battery::GetApp().window.getSize().x - size.x;
+		position.y = Battery::GetApp().window.getSize().y - size.y;
 	}
 
 	void OnRender() override {
-		auto fonts = GetFontContainer<FontContainer>();
-		ImGui::PushFont(fonts->sansFont22);
+		ImGui::PushFont(Fonts::sansFont22);
 
 		std::string info = "";
 		float progress = 0.f;
@@ -948,7 +939,7 @@ public:
 					auto ret = Battery::ExecuteShellCommandSilent("start " + Navigator::GetInstance()->restartExecutablePath, true);
 					Navigator::GetInstance()->updateStatus = UpdateStatus::NOTHING;
 					if (!ret.first) {	// New version failed to launch
-						Battery::GetApp().shouldClose = false;		// TODO: Do this properly
+						Battery::GetApp().InterceptShutdownRequest();
 					}
 				}
 			}
@@ -971,7 +962,7 @@ public:
 	}
 };
 
-class UserInterface : public Battery::ImGuiLayer<FontContainer> {
+class UserInterface : public Battery::Layer {
 public:
 
 	RibbonWindow ribbon;
@@ -982,12 +973,9 @@ public:
 	UpdateInfoWindow updateInfoWindow;
 	bool wasPropertiesWindowShown = false;
 
-	int mouseCursor;
-
 	UserInterface();
 
-	void OnImGuiAttach() override {
-		SetImGuiTheme();
+	void OnAttach() override {
 		
 		if (Navigator::GetInstance()->imguiFileLocation != "")
 			ImGui::GetIO().IniFilename = Navigator::GetInstance()->imguiFileLocation.c_str();
@@ -1002,7 +990,7 @@ public:
 		updateInfoWindow.OnAttach();
 	}
 
-	void OnImGuiDetach() override {
+	void OnDetach() override {
 
 		ribbon.OnDetach();
 		layers.OnDetach();
@@ -1012,7 +1000,7 @@ public:
 		updateInfoWindow.OnDetach();
 	}
 
-	void OnImGuiUpdate() override {
+	void OnUpdate() override {
 		ribbon.Update();
 		layers.Update();
 		toolbox.Update();
@@ -1021,7 +1009,7 @@ public:
 		propertiesWindow.Update();
 	}
 
-	void OnImGuiRender() override;
+	void OnRender() override;
 
 	void DrawTabInfoBox() {
 		if (Navigator::GetInstance()->tabbedShapeInfo) {
@@ -1031,7 +1019,7 @@ public:
 				auto opt = Navigator::GetInstance()->file.FindShape(hovered);
 		
 				if (hovered != -1 && opt.has_value()) {
-					ImGui::PushFont(GetFontContainer<FontContainer>()->sansFont14);
+					ImGui::PushFont(Fonts::sansFont14);
 					ImGui::BeginTooltip();
 					ImGui::Text("Shape #%d, Type: %s", opt.value().get().GetID(), opt.value().get().GetTypeString().c_str());
 					ImGui::EndTooltip();
@@ -1041,28 +1029,28 @@ public:
 		}
 	}
 
-	void OnImGuiEvent(Battery::Event* e) override {
+	void OnEvent(sf::Event e, bool& handled) override {
 
 		// Prevent events from propagating through to the application
-		switch (e->GetType()) {
+		switch (e.type) {
 		
 			// Mouse related events
-		case Battery::EventType::MouseButtonPressed:
-		case Battery::EventType::MouseButtonReleased:
-		case Battery::EventType::MouseMoved:
-		case Battery::EventType::MouseScrolled:
-			if (io.WantCaptureMouse) {
-				e->SetHandled();
+		case sf::Event::MouseButtonPressed:
+		case sf::Event::MouseButtonReleased:
+		case sf::Event::MouseMoved:
+		case sf::Event::MouseWheelScrolled:
+			if (ImGui::GetIO().WantCaptureMouse) {
+				handled = true;
 				return;
 			}
 			break;
 		
 			// Keyboard related events
-		case Battery::EventType::KeyPressed:
-		case Battery::EventType::KeyReleased:
-		case Battery::EventType::TextInput:
-			if (io.WantCaptureKeyboard || io.WantTextInput) {
-				e->SetHandled();
+		case sf::Event::KeyPressed:
+		case sf::Event::KeyReleased:
+		case sf::Event::TextEntered:
+			if (ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantTextInput) {
+				handled = true;
 				return;
 			}
 			break;

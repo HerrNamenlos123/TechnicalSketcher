@@ -3,7 +3,6 @@
 #include "pch.h"
 #include "config.h"
 #include "FileContent.h"
-#include "Layer.h"
 
 /// <summary>
 /// This class guarantees, that always at least 1 layer exists
@@ -17,11 +16,9 @@ class SketchFile {
 	std::string fileLocation = "";
 
 public:
-	glm::vec4 backgroundColor = DEFAULT_BACKGROUND_COLOR;
+	glm::vec4 canvasColor = DEFAULT_BACKGROUND_COLOR;
 
-	SketchFile() {
-
-	}
+	SketchFile() {}
 
 	void PushLayer() {
 		content.PushLayer();
@@ -33,7 +30,7 @@ public:
 		fileChanged = true;
 	}
 
-	void PushLayer(Layer&& layer) {
+	void PushLayer(SketchLayer&& layer) {
 		content.PushLayer(std::move(layer));
 		fileChanged = true;
 	}
@@ -42,15 +39,15 @@ public:
 		content.GeneratePreviews();
 	}
 
-	const std::vector<Layer>& GetLayers() {
+	const std::vector<SketchLayer>& GetLayers() {
 		return content.GetLayers();
 	}
 
-	const Layer& GetActiveLayer() {
+	const SketchLayer& GetActiveLayer() {
 		return content.GetActiveLayer();
 	}
 
-	Layer DuplicateActiveLayer() {
+	SketchLayer DuplicateActiveLayer() {
 		return content.GetActiveLayer().Duplicate();
 	}
 
@@ -213,17 +210,17 @@ public:
 	bool OpenEmptyFile();
 	bool OpenFile(const std::string& path, bool silent = false);
 	
-	Battery::Bitmap ExportImage(bool transparent = true, float dpi = 300);
+	sf::Image ExportImage(bool transparent = true, float dpi = 300);
 
 	nlohmann::json GetJson() {
 		nlohmann::json j = nlohmann::json();
 
 		nlohmann::json layers = nlohmann::json::array();
-		for (Layer& layer : content.GetLayers()) {
+		for (SketchLayer& layer : content.GetLayers()) {
 			layers.push_back(layer.GetJson());
 		}
 		j["layers"] = layers;
-		j["background_color"] = nlohmann::json::array({ backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a });
+		j["background_color"] = nlohmann::json::array({ canvasColor.r, canvasColor.g, canvasColor.b, canvasColor.a });
 		j["file_type"] = JSON_FILE_TYPE;
 		j["file_version"] = JSON_FILE_VERSION;
 

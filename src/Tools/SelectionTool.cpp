@@ -3,7 +3,6 @@
 #include "pch.h"
 #include "Tools/SelectionTool.h"
 #include "Navigator.h"
-#include "Application.h"
 #include "Shapes/GenericShape.h"
 
 void SelectionTool::OnToolChanged() {
@@ -50,10 +49,10 @@ void SelectionTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& s
 
 void SelectionTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
 	// Move selection box
-	if (Battery::GetMainWindow().GetLeftMouseButton()) {
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		selectionBoxPointB = position;
 	} 
-	else if (Battery::GetMainWindow().GetMouseWheel()) {
+	else if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
 		Navigator::GetInstance()->panOffset += glm::vec2(dx, dy);
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
 	}
@@ -97,7 +96,8 @@ void SelectionTool::CopyClipboard() {
 	if (selectionHandler.GetSelectedShapes().size() != 0) {
 		LOG_INFO("Copying selected shapes to clipboard");
 		nlohmann::json j = Navigator::GetInstance()->file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
-		Battery::GetMainWindow().SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
+		//Battery::GetMainWindow().SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
+		LOG_ERROR("CLIPBOARD MISSING");
 	}
 	else {
 		LOG_WARN("Nothing copied to clipboard: No shapes selected");
@@ -109,7 +109,7 @@ void SelectionTool::CutClipboard() {
 	if (selectionHandler.GetSelectedShapes().size() != 0) {
 		LOG_INFO("Cutting selected shapes to clipboard");
 		nlohmann::json j = Navigator::GetInstance()->file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
-		Battery::GetMainWindow().SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
+		//Battery::GetMainWindow().SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
 		Navigator::GetInstance()->file.RemoveShapes(selectionHandler.GetSelectedShapes());
 		selectionHandler.ClearSelection();
 	}
@@ -120,7 +120,7 @@ void SelectionTool::CutClipboard() {
 
 void SelectionTool::PasteClipboard() {
 
-	auto opt = Battery::GetMainWindow().GetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat);
+	/*auto opt = Battery::GetMainWindow().GetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat);
 
 	if (!opt.has_value()) {
 		LOG_WARN("Nothing usable on the clipboard");
@@ -171,7 +171,7 @@ void SelectionTool::PasteClipboard() {
 	selectionHandler.ClearSelection();
 	for (ShapeID& id : ids) {
 		selectionHandler.SelectShape(id);
-	}
+	}*/
 }
 
 bool SelectionTool::StepToolBack() {

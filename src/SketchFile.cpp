@@ -2,7 +2,6 @@
 #include "pch.h"
 #include "SketchFile.h"
 #include "Navigator.h"
-#include "Battery/AllegroDeps.h"
 
 void SketchFile::UpdateWindowTitle() {
 	std::string file = Battery::GetBasename(filename);
@@ -20,12 +19,12 @@ void SketchFile::UpdateWindowTitle() {
 		title += " - " + version;
 	}
 
-	Battery::GetMainWindow().SetTitle(title);
+	Battery::GetApp().window.setTitle(title);
 }
 
 bool SketchFile::SaveFile(bool saveAs) {
 
-	auto& window = Battery::GetMainWindow();
+	auto& window = Battery::GetApp().window;
 
 	// First get the file content
 	std::string content = GetJson().dump(4);
@@ -34,7 +33,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 	// Get file location if not known already
 	if (tempLocation == "" || saveAs) {
 		while (true) {
-			tempLocation = Battery::PromptFileSaveDialog({ "*.*", "*.tsk" }, window);
+			tempLocation = Battery::PromptFileSaveDialog({ "*.*", "*.tsk" }, window.getSystemHandle());
 
 			// If location is still invalid, abort
 			if (tempLocation == "") {
@@ -47,7 +46,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 			}
 
 			// Warn and repeat if the file already exists
-			if (Battery::FileExists(tempLocation)) {
+			/*if (Battery::FileExists(tempLocation)) {
 				if (!Battery::ShowWarningMessageBoxYesNo("The file '" +
 					Battery::GetFilename(tempLocation) +
 					"' already exists, are you sure you want to overwrite it?",
@@ -55,7 +54,8 @@ bool SketchFile::SaveFile(bool saveAs) {
 				{
 					continue;	// Repeat from top
 				}
-			}
+			}*/
+			LOG_ERROR("SHOWWARNINGMESSAGEBOX NOW");
 
 			break;
 		}
@@ -66,15 +66,17 @@ bool SketchFile::SaveFile(bool saveAs) {
 		tempLocation += ".tsk";
 	}
 
-	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
+	sf::Cursor cursor;
+	(void)cursor.loadFromSystem(sf::Cursor::ArrowWait);
+	window.setMouseCursor(cursor);
 
 	// Now save the file
-	if (!Battery::WriteFile(tempLocation, content)) {
+	/*if (!Battery::WriteFile(tempLocation, content)) {
 		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 		Battery::ShowErrorMessageBox("The file '" + tempLocation + "' could not be saved!",
 			window.allegroDisplayPointer);
 		return false;
-	}
+	}*/
 
 	// Saving was successful
 	fileChanged = false;
@@ -83,7 +85,9 @@ bool SketchFile::SaveFile(bool saveAs) {
 
 	UpdateWindowTitle();
 	Navigator::GetInstance()->AppendRecentFile(fileLocation);
-	Battery::GetMainWindow().SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+
+	(void)cursor.loadFromSystem(sf::Cursor::Arrow);
+	window.setMouseCursor(cursor);
 
 	return true;
 }
@@ -91,7 +95,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 bool SketchFile::OpenFile() {
 
 	// Now open a new one
-	std::string path = Battery::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetMainWindow());
+	std::string path = Battery::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetApp().window.getSystemHandle());
 
 	if (path == "") {
 		return false;
@@ -103,7 +107,7 @@ bool SketchFile::OpenFile() {
 bool SketchFile::OpenEmptyFile() {
 
 	// First save the file
-	if (ContainsChanges()) {
+	/*if (ContainsChanges()) {
 
 		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
 			"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
@@ -113,7 +117,7 @@ bool SketchFile::OpenEmptyFile() {
 				return false;
 			}
 		}
-	}
+	}*/
 
 	UpdateWindowTitle();
 
@@ -123,7 +127,7 @@ bool SketchFile::OpenEmptyFile() {
 	fileChanged = false;
 	filename = DEFAULT_FILENAME;	// Filename contains extension
 	fileLocation = "";
-	backgroundColor = DEFAULT_BACKGROUND_COLOR;
+	canvasColor = DEFAULT_BACKGROUND_COLOR;
 
 	Navigator::GetInstance()->ResetViewport();
 
@@ -132,20 +136,20 @@ bool SketchFile::OpenEmptyFile() {
 
 bool SketchFile::OpenFile(const std::string& path, bool silent) {
 
-	auto& window = Battery::GetMainWindow();
+	auto& window = Battery::GetApp().window;
 
-	if (Battery::GetExtension(path) != ".tsk") {
+	/*if (Battery::GetExtension(path) != ".tsk") {
 		if (!silent) {
 			Battery::ShowErrorMessageBox("Can't load file '" + path + "': Unsupported file format, only .tsk files are supported",
 				window.allegroDisplayPointer);
 		}
 		return false;
-	}
+	}*/
 
 	UpdateWindowTitle();
 
 	// First save the file
-	if (ContainsChanges()) {
+	/*if (ContainsChanges()) {
 
 		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
 			"Do you want to save the file?", window.allegroDisplayPointer);
@@ -155,11 +159,11 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 				return false;
 			}
 		}
-	}
+	}*/
 
 	UpdateWindowTitle();
 
-	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
+	/*window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_BUSY);
 
 	// Now load the new file
 	auto file = Battery::ReadFile(path);
@@ -243,7 +247,7 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 
 		fileChanged = false;
 		fileLocation = path;
-		backgroundColor = bCol;
+		canvasColor = bCol;
 		filename = Battery::GetFilename(path);
 
 		UpdateWindowTitle();
@@ -262,10 +266,10 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 		}
 	}
 
-	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);*/
 	return false;
 }
-
+/*
 Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 
 	// Calculate the bounding box
@@ -328,4 +332,4 @@ Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 	Battery::Renderer2D::EndScene();
 	//LOG_WARN("Export finished");
 	return image;
-}
+}*/
