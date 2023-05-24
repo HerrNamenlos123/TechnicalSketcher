@@ -1,5 +1,11 @@
 # TechnicalSketcher
 
+# WARNING
+
+This branch and commit is a backup of the legacy version of TechnicalSketcher. It is not maintained, as the battery version is massively outdated and will not compile. It is only here for archival purposes. Please switch to the master branch for an up-to-date version.
+
+# About
+
 <div>Icons made by <a href="http://www.freepik.com/" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div> 
 
 
