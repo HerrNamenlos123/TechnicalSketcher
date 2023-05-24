@@ -59,16 +59,16 @@ bool LayerState::ShapeExists(const ShapeID& id) const {
 	return false;
 }
 
-std::pair<glm::vec2, glm::vec2> LayerState::GetBoundingBox() const {
+std::pair<ImVec2, ImVec2> LayerState::GetBoundingBox() const {
 
-	glm::vec2 min = { 0, 0 };
-	glm::vec2 max = { 0, 0 };
+	ImVec2 min = { 0, 0 };
+	ImVec2 max = { 0, 0 };
 
 	for (auto& shape : shapes) {
 		auto bound = shape->GetBoundingBox();
 
-		min = glm::min(min, bound.first);
-		max = glm::max(max, bound.second);
+		min = { std::min(min.x, bound.first.x), std::min(min.y, bound.second.y) };
+		max = { std::max(max.x, bound.second.x), std::max(max.y, bound.first.y) };
 	}
 
 	return std::make_pair(min, max);
@@ -100,7 +100,7 @@ bool LayerState::LoadJson(nlohmann::json json) {
 		return true;
 	}
 	catch (...) {
-		LOG_ERROR(__FUNCTION__"(): Can't parse JSON: Invalid format!");
+		b::log::error(__FUNCTION__"(): Can't parse JSON: Invalid format!");
 	}
 
 	return false;

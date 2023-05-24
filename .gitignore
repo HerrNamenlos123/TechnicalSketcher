@@ -40,8 +40,10 @@
 *.spec
 
 # Miscellaneous
+.idea/
 bin/
 build/
+cmake-build-*/
 !premake5.exe
 !premake5/**
 !resource/**

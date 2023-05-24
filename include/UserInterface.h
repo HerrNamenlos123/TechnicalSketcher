@@ -399,7 +399,7 @@ public:
 		ImGui::SameLine();
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10);
 
-		glm::vec4 color = Navigator::GetInstance()->file.canvasColor;
+		ImVec4 color = Navigator::GetInstance()->file.canvasColor;
 		color /= 255;
 		ImGui::ColorEdit4("##BackgroundColor", (float*)&color.x, ImGuiColorEditFlags_NoInputs);
 		color *= 255;

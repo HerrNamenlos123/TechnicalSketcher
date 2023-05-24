@@ -11,7 +11,7 @@ void SelectionTool::OnToolChanged() {
 	selectionHandler.ClearSelection();
 }
 
-void SelectionTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
+void SelectionTool::OnSpaceClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel) {
 	
 	if (left) {
 		// Start a selection box
@@ -30,7 +30,7 @@ void SelectionTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& s
 	}
 }
 
-void SelectionTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
+void SelectionTool::OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
 	if (left) {
 		if (Navigator::GetInstance()->controlKeyPressed) {
 			selectionHandler.ToggleSelection(shape);
@@ -42,23 +42,23 @@ void SelectionTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& s
 	}
 }
 
-void SelectionTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void SelectionTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 	selectionBoxActive = false;
 	selectionHandler.GetHoveredShape(position);
 }
 
-void SelectionTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void SelectionTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 	// Move selection box
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		selectionBoxPointB = position;
 	} 
 	else if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
-		Navigator::GetInstance()->panOffset += glm::vec2(dx, dy);
+		Navigator::GetInstance()->panOffset += ImVec2(dx, dy);
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
 	}
 }
 
-void SelectionTool::OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) {
+void SelectionTool::OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel) {
 	// Finish selection box
 	if (left) {
 		if (selectionBoxActive) {
@@ -97,10 +97,10 @@ void SelectionTool::CopyClipboard() {
 		LOG_INFO("Copying selected shapes to clipboard");
 		nlohmann::json j = Navigator::GetInstance()->file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
 		//Battery::GetMainWindow().SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
-		LOG_ERROR("CLIPBOARD MISSING");
+		b::log::error("CLIPBOARD MISSING");
 	}
 	else {
-		LOG_WARN("Nothing copied to clipboard: No shapes selected");
+		b::log::warn("Nothing copied to clipboard: No shapes selected");
 	}
 }
 
@@ -114,7 +114,7 @@ void SelectionTool::CutClipboard() {
 		selectionHandler.ClearSelection();
 	}
 	else {
-		LOG_WARN("Nothing cut to clipboard: No shapes selected");
+		b::log::warn("Nothing cut to clipboard: No shapes selected");
 	}
 }
 
@@ -123,7 +123,7 @@ void SelectionTool::PasteClipboard() {
 	/*auto opt = Battery::GetMainWindow().GetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat);
 
 	if (!opt.has_value()) {
-		LOG_WARN("Nothing usable on the clipboard");
+		b::log::warn("Nothing usable on the clipboard");
 		return;
 	}
 
@@ -139,12 +139,12 @@ void SelectionTool::PasteClipboard() {
 		}
 	}
 	catch (...) {
-		LOG_ERROR("Can't paste clipboard shapes: JSON format is invalid!");
+		b::log::error("Can't paste clipboard shapes: JSON format is invalid!");
 		return;
 	}
 	
 	// Calculate the average center position as long as they're here
-	glm::vec2 averagePos = { 0, 0 };
+	ImVec2 averagePos = { 0, 0 };
 	for (ShapePTR& shape : shapes) {
 		averagePos += shape->GetCenterPosition();
 	}
@@ -157,7 +157,7 @@ void SelectionTool::PasteClipboard() {
 	}
 	
 	// Move the shapes to the mouse position
-	glm::vec2 moveAmount = Navigator::GetInstance()->mousePosition - averagePos;
+	ImVec2 moveAmount = Navigator::GetInstance()->mousePosition - averagePos;
 	float snap = Navigator::GetInstance()->snapSize;
 	moveAmount = round(moveAmount / snap) * snap;
 	for (ShapePTR& shape : shapes) {

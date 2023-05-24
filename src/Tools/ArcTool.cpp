@@ -3,12 +3,12 @@
 #include "Tools/ArcTool.h"
 #include "Navigator.h"
 
-static float mag(const glm::vec2& v) {
+static float mag(const ImVec2& v) {
 	return sqrt(pow(v.x, 2) + pow(v.y, 2));
 }
 
 //
-// double angle(const glm::vec2& v);
+// double angle(const ImVec2& v);
 //
 // Angle from X-Axis to vector, range 0 to 360 counterclockwise
 //
@@ -20,7 +20,7 @@ static float mag(const glm::vec2& v) {
 //       | / a |
 //       |------------------X
 //
-static float angle(const glm::vec2& v) {
+static float angle(const ImVec2& v) {
 	if (mag(v) > 0) {
 		if (v.y >= 0) {
 			return glm::degrees(acos(v.x / mag(v)));
@@ -41,7 +41,7 @@ void ArcTool::OnToolChanged() {
 	Navigator::GetInstance()->previewPointPosition = Navigator::GetInstance()->mouseSnapped;
 }
 
-void ArcTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
+void ArcTool::OnSpaceClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel) {
 	if (left) {
 		if (!arcStarted) {			// Start the arc
 			previewArc.SetCenter(snapped);
@@ -59,7 +59,7 @@ void ArcTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped
 				arcSecondStage = true;
 				previewArc.SetRadius(glm::distance(snapped, previewArc.GetCenter()));
 
-				glm::vec2 toMouse = Navigator::GetInstance()->mouseSnapped - previewArc.GetCenter();
+				ImVec2 toMouse = Navigator::GetInstance()->mouseSnapped - previewArc.GetCenter();
 				toMouse.y *= -1;
 				previewArc.SetStartAngle(angle(toMouse));
 			}
@@ -74,17 +74,17 @@ void ArcTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped
 	}
 }
 
-void ArcTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
+void ArcTool::OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
 
 }
 
-void ArcTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void ArcTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 	if (arcStarted) {
 		if (!arcSecondStage) {	// First stage
 			previewCircle.SetRadius(glm::distance(snapped, previewArc.GetCenter()));
 		}
 		else {					// Second stage
-			glm::vec2 toMouse = Navigator::GetInstance()->mouseSnapped - previewArc.GetCenter();
+			ImVec2 toMouse = Navigator::GetInstance()->mouseSnapped - previewArc.GetCenter();
 			toMouse.y *= -1;
 			previewArc.SetEndAngle(angle(toMouse));
 		}
@@ -93,11 +93,11 @@ void ArcTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped
 	Navigator::GetInstance()->previewPointPosition = Navigator::GetInstance()->mouseSnapped;
 }
 
-void ArcTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void ArcTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 
 }
 
-void ArcTool::OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) {
+void ArcTool::OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel) {
 
 }
 
@@ -159,19 +159,19 @@ void ArcTool::RenderPreview() {
 			previewCircle.RenderPreview();
 
 			// Draw an arrow to indicate the arc direction
-			glm::vec2 pos = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(previewCircle.GetCenter());
-			glm::vec2 toMouse = Navigator::GetInstance()->mouseSnapped - previewArc.GetCenter();
+			ImVec2 pos = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(previewCircle.GetCenter());
+			ImVec2 toMouse = Navigator::GetInstance()->mouseSnapped - previewArc.GetCenter();
 			float start = angle({ toMouse.x, -toMouse.y });
-			glm::vec2 mouse = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(Navigator::GetInstance()->mouseSnapped);
+			ImVec2 mouse = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(Navigator::GetInstance()->mouseSnapped);
 			float rad = glm::distance(pos, mouse) + 20;
 			float arcLength = 25;
 			float end = start + glm::degrees(arcLength) / rad;
 			ApplicationRenderer::DrawArcScreenspace(pos, rad, start, end, 4, { 0, 0, 0, 255 });
 
-			glm::vec2 endPoint = pos + glm::vec2(cos(glm::radians(end)), -sin(glm::radians(end))) * rad;
+			ImVec2 endPoint = pos + ImVec2(cos(glm::radians(end)), -sin(glm::radians(end))) * rad;
 			float ang2 = start + glm::degrees(arcLength) / rad * 0.7;
-			glm::vec2 p1 = pos + glm::vec2(cos(glm::radians(ang2)), -sin(glm::radians(ang2))) * (rad - 5);
-			glm::vec2 p2 = pos + glm::vec2(cos(glm::radians(ang2)), -sin(glm::radians(ang2))) * (rad + 5);
+			ImVec2 p1 = pos + ImVec2(cos(glm::radians(ang2)), -sin(glm::radians(ang2))) * (rad - 5);
+			ImVec2 p2 = pos + ImVec2(cos(glm::radians(ang2)), -sin(glm::radians(ang2))) * (rad + 5);
 			ApplicationRenderer::DrawLineScreenspace(endPoint, p1, 4, { 0, 0, 0, 255 });
 			ApplicationRenderer::DrawLineScreenspace(endPoint, p2, 4, { 0, 0, 0, 255 });
 		}

@@ -22,7 +22,7 @@ const std::vector<ShapeID>& SelectionHandler::GetSelectedShapes() {
 
 
 
-ShapeID SelectionHandler::GetHoveredShape(const glm::vec2& mousePosition) {
+ShapeID SelectionHandler::GetHoveredShape(const ImVec2& mousePosition) {
 	std::vector<ShapeID> possible;
 
 	for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayer().GetShapes()) {

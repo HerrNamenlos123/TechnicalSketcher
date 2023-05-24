@@ -6,11 +6,11 @@
 #include "Fonts/Fonts.h"
 
 
-static float mag(const glm::vec2& v) {
+static float mag(const ImVec2& v) {
 	return sqrt(pow(v.x, 2) + pow(v.y, 2));
 }
 //
-// double angle(const glm::vec2& v);
+// double angle(const ImVec2& v);
 //
 // Angle from X-Axis to vector, range 0 to 360 counterclockwise
 //
@@ -22,7 +22,7 @@ static float mag(const glm::vec2& v) {
 //       | / a |
 //       |------------------X
 //
-static float angle(const glm::vec2& v) {
+static float angle(const ImVec2& v) {
 	if (mag(v) > 0) {
 		if (v.y >= 0) {
 			return glm::degrees(acos(v.x / mag(v)));
@@ -35,12 +35,12 @@ static float angle(const glm::vec2& v) {
 	return 0;
 }
 /*
-float arcCircleDistance(glm::vec2 P, glm::vec2 center, float radius) {
+float arcCircleDistance(ImVec2 P, ImVec2 center, float radius) {
 	float distanceToCenter = glm::distance(P, center);
 	return abs(radius - distanceToCenter);
 }
 
-float distanceAroundArc(glm::vec2 P, glm::vec2 center, float radius, float startAngle, float endAngle) {
+float distanceAroundArc(ImVec2 P, ImVec2 center, float radius, float startAngle, float endAngle) {
 	float a = angle(P - center);
 
 	startAngle = fmod(startAngle, 360);
@@ -58,8 +58,8 @@ float distanceAroundArc(glm::vec2 P, glm::vec2 center, float radius, float start
 	}
 	return 100;
 
-	glm::vec2 p1 = center + glm::vec2(cos(startAngle), -sin(startAngle)) * radius;
-	glm::vec2 p2 = center + glm::vec2(cos(endAngle), -sin(endAngle)) * radius;
+	ImVec2 p1 = center + ImVec2(cos(startAngle), -sin(startAngle)) * radius;
+	ImVec2 p2 = center + ImVec2(cos(endAngle), -sin(endAngle)) * radius;
 
 	float distance1 = distance(P, p1);
 	float distance2 = distance(P, p2);
@@ -74,7 +74,7 @@ ArcShape::ArcShape() {
 
 }
 
-ArcShape::ArcShape(const glm::vec2& center, float radius, float startAngle, float endAngle, float thickness, const glm::vec4& color) {
+ArcShape::ArcShape(const ImVec2& center, float radius, float startAngle, float endAngle, float thickness, const ImVec4& color) {
 	this->center = center;
 	this->radius = radius;
 	this->startAngle = startAngle;
@@ -98,16 +98,16 @@ std::string ArcShape::GetTypeString() const {
 
 
 
-std::pair<glm::vec2, glm::vec2> ArcShape::GetBoundingBox() const {
+std::pair<ImVec2, ImVec2> ArcShape::GetBoundingBox() const {
 
 	float u = abs(thickness) / 2.f;
-	glm::vec2 min = center - glm::vec2(abs(radius) + u, abs(radius) + u);
-	glm::vec2 max = center + glm::vec2(abs(radius) + u, abs(radius) + u);
+	ImVec2 min = center - ImVec2(abs(radius) + u, abs(radius) + u);
+	ImVec2 max = center + ImVec2(abs(radius) + u, abs(radius) + u);
 
 	return std::make_pair(min, max);
 }
 
-bool ArcShape::IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) const {
+bool ArcShape::IsInSelectionBox(const ImVec2& s1, const ImVec2& s2) const {
 
 	// Should be selected if the center of the arc is in the selection
 	return IsInbetween(center.x, s1.x, s2.x) && IsInbetween(center.y, s1.y, s2.y);
@@ -116,24 +116,24 @@ bool ArcShape::IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) const 
 bool ArcShape::ShouldBeRendered(float screenWidth, float screenHeight) const {
 
 	auto pair = GetBoundingBox();
-	glm::vec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
-	glm::vec2 max = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.second);
+	ImVec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
+	ImVec2 max = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.second);
 
 	return	!((min.x < 0 && max.x < 0) || (min.x > screenWidth && max.x > screenWidth) ||
 		      (min.y < 0 && max.y < 0) || (min.y > screenHeight && max.y > screenHeight));
 }
 
-float ArcShape::GetDistanceToCursor(const glm::vec2& p) const {
+float ArcShape::GetDistanceToCursor(const ImVec2& p) const {
 	float centerDist = dist(Navigator::GetInstance()->mousePosition, center);
 	float arcDist = abs(centerDist - radius);
 	return std::min(arcDist, centerDist);
 }
 
-bool ArcShape::IsShapeHovered(const glm::vec2& cursor, float thresholdDistance) const {
+bool ArcShape::IsShapeHovered(const ImVec2& cursor, float thresholdDistance) const {
 	return GetDistanceToCursor(cursor) <= thresholdDistance;
 }
 
-void ArcShape::SetCenter(const glm::vec2& position) {
+void ArcShape::SetCenter(const ImVec2& position) {
 	this->center = position;
 }
 
@@ -153,11 +153,11 @@ void ArcShape::SetThickness(float thickness) {
 	this->thickness = thickness;
 }
 
-void ArcShape::SetColor(const glm::vec4& color) {
+void ArcShape::SetColor(const ImVec4& color) {
 	this->color = color;
 }
 
-glm::vec2 ArcShape::GetCenter() const {
+ImVec2 ArcShape::GetCenter() const {
 	return center;
 }
 
@@ -177,11 +177,11 @@ float ArcShape::GetThickness() const {
 	return thickness;
 }
 
-glm::vec4 ArcShape::GetColor() const {
+ImVec4 ArcShape::GetColor() const {
 	return color;
 }
 
-glm::vec2 ArcShape::GetCenterPosition() const {
+ImVec2 ArcShape::GetCenterPosition() const {
 	return center;
 }
 
@@ -228,11 +228,11 @@ void ArcShape::MoveDown(float amount) {
 	center.y += amount;
 }
 
-void ArcShape::Move(glm::vec2 amount) {
+void ArcShape::Move(ImVec2 amount) {
 	center += amount;
 }
 
-void ArcShape::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped) {
+void ArcShape::OnMouseHovered(const ImVec2& position, const ImVec2& snapped) {
 	radius = dist(center, snapped);
 }
 
@@ -243,7 +243,7 @@ void ArcShape::RenderPreview() const {
 void ArcShape::Render(bool layerSelected, bool shapeSelected, bool shapeHovered) const {
 
 	auto& ref = ApplicationRenderer::GetInstance();
-	glm::vec4 col = ref.disabledLineColor;
+	ImVec4 col = ref.disabledLineColor;
 
 	if (layerSelected) { // Shape is selected
 		if (shapeSelected) {
@@ -267,7 +267,7 @@ void ArcShape::Render(bool layerSelected, bool shapeSelected, bool shapeHovered)
 	ApplicationRenderer::DrawArcWorkspace(center, radius, startAngle, endAngle, thickness, col);
 }
 
-void ArcShape::RenderExport(glm::vec2 min, glm::vec2 max, float width, float height) const {
+void ArcShape::RenderExport(ImVec2 min, ImVec2 max, float width, float height) const {
 	ApplicationRenderer::DrawArcExport(center, radius, startAngle, endAngle, thickness, color, min, max, width, height);
 }
 
@@ -293,12 +293,12 @@ bool ArcShape::LoadJson(const nlohmann::json& j) {
 			return false;
 		}
 
-		glm::vec2 center = glm::vec2(j["center"][0], j["center"][1]);
+		ImVec2 center = ImVec2(j["center"][0], j["center"][1]);
 		float radius = j["radius"];
 		float startAngle = j["start_angle"];
 		float endAngle = j["end_angle"];
 		float thickness = j["thickness"];
-		glm::vec4 color = glm::vec4(j["color"][0], j["color"][1], j["color"][2], j["color"][3]);
+		ImVec4 color = ImVec4(j["color"][0], j["color"][1], j["color"][2], j["color"][3]);
 
 		this->color = color;
 		this->thickness = thickness;

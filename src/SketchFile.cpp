@@ -55,7 +55,7 @@ bool SketchFile::SaveFile(bool saveAs) {
 					continue;	// Repeat from top
 				}
 			}*/
-			LOG_ERROR("SHOWWARNINGMESSAGEBOX NOW");
+			b::log::error("SHOWWARNINGMESSAGEBOX NOW");
 
 			break;
 		}
@@ -221,7 +221,7 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 		}
 
 		// And finally, load the background color
-		glm::vec4 bCol;
+		ImVec4 bCol;
 		if (j.contains("background_color")) {
 			std::vector<float> col = j["background_color"];
 
@@ -273,8 +273,8 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 
 	// Calculate the bounding box
-	glm::vec2 min = GetActiveLayer().GetBoundingBox().first;
-	glm::vec2 max = GetActiveLayer().GetBoundingBox().second;
+	ImVec2 min = GetActiveLayer().GetBoundingBox().first;
+	ImVec2 max = GetActiveLayer().GetBoundingBox().second;
 	for (auto& layer : GetLayers()) {
 		auto bound = layer.GetBoundingBox();
 
@@ -286,8 +286,8 @@ Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 	float margin = 0.08;
 	float sizeX = abs(max.x - min.x);
 	float sizeY = abs(max.y - min.y);
-	min -= glm::vec2(sizeX, sizeY) * margin;
-	max += glm::vec2(sizeX, sizeY) * margin;
+	min -= ImVec2(sizeX, sizeY) * margin;
+	max += ImVec2(sizeX, sizeY) * margin;
 
 	// Calculate image size
 	float dpmm = dpi / 25.4;	// Convert dots per inch to dots per mm
@@ -300,7 +300,7 @@ Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 	// Initialize texture image to render on
 	Battery::Bitmap image(width, height);
 	std::unique_ptr<Battery::Scene> scene = std::make_unique<Battery::Scene>(Battery::GetMainWindow(), image);
-	//LOG_WARN("Created Battery::Texture2D");
+	//b::log::warn("Created Battery::Texture2D");
 
 	// Initialize the renderer
 	Battery::Renderer2D::BeginScene(scene.get());
@@ -308,12 +308,12 @@ Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 	if (transparent) {
 		al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
 		Battery::Renderer2D::DrawBackground(COLOR_TRANSPARENT);
-		//LOG_WARN("Transparent mode");
+		//b::log::warn("Transparent mode");
 	}
 	else {
 		Battery::Renderer2D::DrawBackground(EXPORT_BACKGROUND_COLOR);
-		//Battery::Renderer2D::DrawBackground(glm::vec4(255, 0, 255, 255));
-		//LOG_WARN("Non-transparent mode");
+		//Battery::Renderer2D::DrawBackground(ImVec4(255, 0, 255, 255));
+		//b::log::warn("Non-transparent mode");
 	}
 
 	// Render layers in reverse order
@@ -325,11 +325,11 @@ Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 
 			// Render the shape
 			shape->RenderExport(min, max, width, height);
-			//LOG_ERROR("Rendering shape #{}", shape->GetID());
+			//b::log::error("Rendering shape #{}", shape->GetID());
 		}
 	}
 
 	Battery::Renderer2D::EndScene();
-	//LOG_WARN("Export finished");
+	//b::log::warn("Export finished");
 	return image;
 }*/

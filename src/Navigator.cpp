@@ -33,7 +33,7 @@ void Navigator::OnAttach() {
 
 	// Register the clipboard format
 	//clipboardShapeFormat = Battery::GetApp().window.RegisterClipboardFormat(CLIPBOARD_FORMAT);
-	LOG_ERROR("CLIPBOARD");
+	b::log::error("CLIPBOARD");
 
 	// Load the location of the ImGui .ini file
 	imguiFileLocation = GetSettingsDirectory() + IMGUI_FILENAME;
@@ -124,13 +124,13 @@ void Navigator::OnEvent(sf::Event e, bool& handled) {
 
 
 
-glm::vec2 Navigator::ConvertScreenToWorkspaceCoords(const glm::vec2& v) {
-	return (v - panOffset - glm::vec2(Battery::GetApp().window.getSize().x, 
+ImVec2 Navigator::ConvertScreenToWorkspaceCoords(const ImVec2& v) {
+	return (v - panOffset - ImVec2(Battery::GetApp().window.getSize().x, 
 		Battery::GetApp().window.getSize().y) * 0.5f) / scale;
 }
 
-glm::vec2 Navigator::ConvertWorkspaceToScreenCoords(const glm::vec2& v) {
-	return panOffset + v * scale + glm::vec2(Battery::GetApp().window.getSize().x,
+ImVec2 Navigator::ConvertWorkspaceToScreenCoords(const ImVec2& v) {
+	return panOffset + v * scale + ImVec2(Battery::GetApp().window.getSize().x,
 		Battery::GetApp().window.getSize().y) * 0.5f;
 }
 
@@ -166,7 +166,7 @@ void Navigator::MouseScrolled(float amount) {
 	}
 
 	auto mPos = sf::Mouse::getPosition();
-	glm::vec2 mouseToCenter = glm::vec2(panOffset.x - mPos.x + windowSize.x / 2.f,
+	ImVec2 mouseToCenter = ImVec2(panOffset.x - mPos.x + windowSize.x / 2.f,
 										panOffset.y - mPos.y + windowSize.y / 2.f);
 
 	if (scroll > 0)
@@ -179,8 +179,8 @@ void Navigator::UpdateEvents() {
 
 	for (sf::Event event : eventBuffer) {
 
-		glm::vec2 position = ConvertScreenToWorkspaceCoords({ event.mouseButton.x, event.mouseButton.y });	// Allow smooth positioning when CTRL is pressed
-		glm::vec2 snapped = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) ? round(position / snapSize) * snapSize : position;
+		ImVec2 position = ConvertScreenToWorkspaceCoords({ event.mouseButton.x, event.mouseButton.y });	// Allow smooth positioning when CTRL is pressed
+		ImVec2 snapped = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) ? round(position / snapSize) * snapSize : position;
 		
 		bool left = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 		bool right = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
@@ -234,7 +234,7 @@ void Navigator::UseTool(enum class ToolType tool) {
 	switch (tool) {
 
 	case ToolType::NONE:
-		LOG_WARN("Can't choose tool 'NONE'");
+		b::log::warn("Can't choose tool 'NONE'");
 		selectedTool = &selectionTool;
 		break;
 
@@ -259,7 +259,7 @@ void Navigator::UseTool(enum class ToolType tool) {
 		break;
 
 	default:
-		LOG_WARN("Unsupported tool type was selected");
+		b::log::warn("Unsupported tool type was selected");
 		selectedTool = &selectionTool;
 		break;
 	}
@@ -270,10 +270,10 @@ void Navigator::UseTool(enum class ToolType tool) {
 void Navigator::PrintShapes() {
 	
 	// Print all shapes in the currently selected Layer
-	LOG_WARN("Layer #{}: Name '{}'", file.GetActiveLayer().GetID(), file.GetActiveLayer().name);
+	b::log::warn("Layer #{}: Name '{}'", file.GetActiveLayer().GetID(), file.GetActiveLayer().name);
 	for (const auto& shape : file.GetActiveLayer().GetShapes()) {
-		LOG_WARN("Shape #{}: ", shape->GetID());
-		LOG_ERROR("Shape JSON Content: \n{}", shape->GetJson().dump(4));
+		b::log::warn("Shape #{}: ", shape->GetID());
+		b::log::error("Shape JSON Content: \n{}", shape->GetJson().dump(4));
 	}
 }
 
@@ -470,7 +470,7 @@ void Navigator::OnKeyReleased(sf::Event event) {
 	}
 }
 
-void Navigator::OnMouseClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
+void Navigator::OnMouseClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel) {
 
 	ShapeID shapeClicked = -1;
 
@@ -488,13 +488,13 @@ void Navigator::OnMouseClicked(const glm::vec2& position, const glm::vec2& snapp
 	}
 }
 
-void Navigator::OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) {
+void Navigator::OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel) {
 	if (selectedTool) {
 		selectedTool->OnMouseReleased(position, left, right, wheel);
 	}
 }
 
-void Navigator::OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void Navigator::OnMouseMoved(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 	using namespace Battery;
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) ||
@@ -517,25 +517,25 @@ void Navigator::OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped
 	}
 }
 
-void Navigator::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void Navigator::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 	if (selectedTool) {
 		selectedTool->OnMouseHovered(position, snapped, dx, dy);
 	}
 }
 
-void Navigator::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void Navigator::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 	if (selectedTool) {
 		selectedTool->OnMouseDragged(position, snapped, dx, dy);
 	}
 }
 
-void Navigator::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
+void Navigator::OnSpaceClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel) {
 	if (selectedTool) {
 		selectedTool->OnSpaceClicked(position, snapped, left, right, wheel);
 	}
 }
 
-void Navigator::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
+void Navigator::OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
 	if (selectedTool) {
 		selectedTool->OnShapeClicked(position, snapped, left, right, wheel, shape);
 	}
@@ -651,7 +651,7 @@ bool Navigator::ExportToClipboard() {
 		return false;
 
 	//bool success = Battery::SetClipboardImage(image.value());
-	LOG_ERROR("CLIPBOARD NOW");
+	b::log::error("CLIPBOARD NOW");
 	Battery::SetMouseCursor(sf::Cursor::Type::Arrow);
 	//return success;
 	return false;
@@ -675,7 +675,7 @@ bool Navigator::ExportToFile() {
 	/*bool success = image.SaveToFile(filename);
 	Battery::ExecuteShellCommand("explorer.exe /select," + filename);	// TODO: Make for linux
 	return success;*/
-	LOG_ERROR("EXPORT NOW");
+	b::log::error("EXPORT NOW");
 	return false;
 }
 
@@ -686,18 +686,18 @@ bool Navigator::LoadSettings() {
 		auto file = Battery::ReadFile(path);
 
 		if (file.fail()) {
-			LOG_ERROR("Failed to load settings file!");
+			b::log::error("Failed to load settings file!");
 			return false;
 		}
 
 		nlohmann::json json = nlohmann::json::parse(file.content());
 
 		if (json["settings_type"] != JSON_SETTINGS_TYPE) {
-			LOG_ERROR("Can't load settings file: Invalid settings type!");
+			b::log::error("Can't load settings file: Invalid settings type!");
 			return false;
 		}
 		if (json["settings_version"] != JSON_SETTINGS_VERSION) {
-			LOG_ERROR("Can't load settings file: Invalid settings type!");
+			b::log::error("Can't load settings file: Invalid settings type!");
 			return false;
 		}
 
@@ -708,7 +708,7 @@ bool Navigator::LoadSettings() {
 		return true;
 	}
 	catch (...) {
-		LOG_WARN("Failed to load settings file!");
+		b::log::warn("Failed to load settings file!");
 	}
 
 	return false;
@@ -730,7 +730,7 @@ bool Navigator::SaveSettings() {
 		return Battery::WriteFile(file, json.dump(4));
 	}
 	catch (...) {
-		LOG_WARN("Failed to save settings file!");
+		b::log::warn("Failed to save settings file!");
 	}
 
 	return false;
@@ -757,7 +757,7 @@ std::vector<std::string> Navigator::GetRecentFiles() {
 	auto file = Battery::ReadFile(GetSettingsDirectory() + RECENT_FILES_FILENAME);
 
 	if (file.fail()) {
-		LOG_ERROR("Can't read file with recent files: '{}'!", file.path());
+		b::log::error("Can't read file with recent files: '{}'!", file.path());
 		return std::vector<std::string>();
 	}
 
@@ -807,7 +807,7 @@ void Navigator::OpenNewWindowFile(const std::string& file) {
 		system(std::string("start " + Battery::GetApp().args[0] + " " + file).c_str());
 	}
 	else {
-		LOG_ERROR("File can not be found: '{}'", file);
+		b::log::error("File can not be found: '{}'", file);
 		//Battery::ShowInfoMessageBox("The file '" + file + "' can not be found!");
 	}
 }
@@ -824,7 +824,7 @@ bool Navigator::CloseApplication() {
 	// Skip if a popup is open
 
 	if (popupDeleteLayerOpen || popupExportOpen || popupSettingsOpen) {
-		LOG_WARN("Can't exit: A popup is still open!");
+		b::log::warn("Can't exit: A popup is still open!");
 		return false;
 	}
 
@@ -865,7 +865,7 @@ void Navigator::AddLine(const LineShape& line) {
 
 	// Safety check
 	if (line.GetPoint1() == line.GetPoint2()) {
-		LOG_WARN(__FUNCTION__ "(): Line is not added to buffer: Start and end points are identical!");
+		b::log::warn(__FUNCTION__ "(): Line is not added to buffer: Start and end points are identical!");
 		return;
 	}
 
@@ -878,7 +878,7 @@ void Navigator::AddCircle(const CircleShape& circle) {
 
 	// Safety check
 	if (circle.GetRadius() == 0) {
-		LOG_WARN(__FUNCTION__ "(): Circle is not added to buffer: Radius is 0!");
+		b::log::warn(__FUNCTION__ "(): Circle is not added to buffer: Radius is 0!");
 		return;
 	}
 
@@ -891,7 +891,7 @@ void Navigator::AddArc(const ArcShape& arc) {
 
 	// Safety check
 	if (arc.GetRadius() == 0) {
-		LOG_WARN(__FUNCTION__ "(): Arc is not added to buffer: Radius is 0!");
+		b::log::warn(__FUNCTION__ "(): Arc is not added to buffer: Radius is 0!");
 		return;
 	}
 

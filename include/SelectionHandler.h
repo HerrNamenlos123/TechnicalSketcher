@@ -14,7 +14,7 @@ public:
 
 	const std::vector<ShapeID>& GetSelectedShapes();
 
-	ShapeID GetHoveredShape(const glm::vec2& mousePosition);
+	ShapeID GetHoveredShape(const ImVec2& mousePosition);
 	ShapeID GetLastHoveredShape();
 	void SelectNextPossibleShape();
 

@@ -6,19 +6,19 @@
 class SelectionTool : public GenericTool {
 public:
 
-	glm::vec2 selectionBoxPointA = { 0, 0 };
-	glm::vec2 selectionBoxPointB = { 0, 0 };
+	ImVec2 selectionBoxPointA = { 0, 0 };
+	ImVec2 selectionBoxPointB = { 0, 0 };
 	bool selectionBoxActive = false;
 	SelectionHandler selectionHandler;
 
 	SelectionTool() : GenericTool(ToolType::SELECT) {}
 
 	void OnToolChanged();
-	void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);
-	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape);
-	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
-	void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
-	void OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel);
+	void OnSpaceClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel);
+	void OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape);
+	void OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy);
+	void OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy);
+	void OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel);
 	void OnLayerSelected(LayerID layer);
 	void CancelShape();
 

@@ -9,7 +9,7 @@ CircleShape::CircleShape() {
 
 }
 
-CircleShape::CircleShape(const glm::vec2& center, float radius, float thickness, const glm::vec4& color) {
+CircleShape::CircleShape(const ImVec2& center, float radius, float thickness, const ImVec4& color) {
 	this->center = center;
 	this->radius = radius;
 	this->thickness = thickness;
@@ -31,16 +31,16 @@ std::string CircleShape::GetTypeString() const {
 
 
 
-std::pair<glm::vec2, glm::vec2> CircleShape::GetBoundingBox() const {
+std::pair<ImVec2, ImVec2> CircleShape::GetBoundingBox() const {
 
 	float u = abs(thickness) / 2.f;
-	glm::vec2 min = center - glm::vec2(abs(radius) + u, abs(radius) + u);
-	glm::vec2 max = center + glm::vec2(abs(radius) + u, abs(radius) + u);
+	ImVec2 min = center - ImVec2(abs(radius) + u, abs(radius) + u);
+	ImVec2 max = center + ImVec2(abs(radius) + u, abs(radius) + u);
 	
 	return std::make_pair(min, max);
 }
 
-bool CircleShape::IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) const {
+bool CircleShape::IsInSelectionBox(const ImVec2& s1, const ImVec2& s2) const {
 	
 	// Should be selected if the center of the circle is in the selection
 	return IsInbetween(center.x, s1.x, s2.x) && IsInbetween(center.y, s1.y, s2.y);
@@ -49,23 +49,23 @@ bool CircleShape::IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) con
 bool CircleShape::ShouldBeRendered(float screenWidth, float screenHeight) const {
 
 	auto pair = GetBoundingBox();
-	glm::vec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
-	glm::vec2 max = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.second);
+	ImVec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
+	ImVec2 max = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.second);
 
 	return	!((min.x < 0 && max.x < 0) || (min.x > screenWidth && max.x > screenWidth) ||
 		(min.y < 0 && max.y < 0) || (min.y > screenHeight && max.y > screenHeight));
 }
 
-float CircleShape::GetDistanceToCursor(const glm::vec2& p) const {
+float CircleShape::GetDistanceToCursor(const ImVec2& p) const {
 	float centerDist = dist(Navigator::GetInstance()->mousePosition, center);
 	return std::min(abs(centerDist - radius), centerDist);
 }
 
-bool CircleShape::IsShapeHovered(const glm::vec2& cursor, float thresholdDistance) const {
+bool CircleShape::IsShapeHovered(const ImVec2& cursor, float thresholdDistance) const {
 	return GetDistanceToCursor(cursor) <= thresholdDistance;
 }
 
-void CircleShape::SetCenter(const glm::vec2& position) {
+void CircleShape::SetCenter(const ImVec2& position) {
 	this->center = position;
 }
 
@@ -77,11 +77,11 @@ void CircleShape::SetThickness(float thickness) {
 	this->thickness = thickness;
 }
 
-void CircleShape::SetColor(const glm::vec4& color) {
+void CircleShape::SetColor(const ImVec4& color) {
 	this->color = color;
 }
 
-glm::vec2 CircleShape::GetCenter() const {
+ImVec2 CircleShape::GetCenter() const {
 	return center;
 }
 
@@ -93,11 +93,11 @@ float CircleShape::GetThickness() const {
 	return thickness;
 }
 
-glm::vec4 CircleShape::GetColor() const {
+ImVec4 CircleShape::GetColor() const {
 	return color;
 }
 
-glm::vec2 CircleShape::GetCenterPosition() const {
+ImVec2 CircleShape::GetCenterPosition() const {
 	return center;
 }
 
@@ -144,11 +144,11 @@ void CircleShape::MoveDown(float amount) {
 	center.y += amount;
 }
 
-void CircleShape::Move(glm::vec2 amount) {
+void CircleShape::Move(ImVec2 amount) {
 	center += amount;
 }
 
-void CircleShape::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped) {
+void CircleShape::OnMouseHovered(const ImVec2& position, const ImVec2& snapped) {
 	radius = dist(center, snapped);
 }
 
@@ -159,7 +159,7 @@ void CircleShape::RenderPreview() const {
 void CircleShape::Render(bool layerSelected, bool shapeSelected, bool shapeHovered) const {
 
 	auto& ref = ApplicationRenderer::GetInstance();
-	glm::vec4 col = ref.disabledLineColor;
+	ImVec4 col = ref.disabledLineColor;
 
 	if (layerSelected) { // Shape is selected
 		if (shapeSelected) {
@@ -183,7 +183,7 @@ void CircleShape::Render(bool layerSelected, bool shapeSelected, bool shapeHover
 	ApplicationRenderer::DrawCircleWorkspace(center, radius, thickness, col);
 }
 
-void CircleShape::RenderExport(glm::vec2 min, glm::vec2 max, float width, float height) const {
+void CircleShape::RenderExport(ImVec2 min, ImVec2 max, float width, float height) const {
 	ApplicationRenderer::DrawCircleExport(center, radius, thickness, color, min, max, width, height);
 }
 
@@ -207,10 +207,10 @@ bool CircleShape::LoadJson(const nlohmann::json& j) {
 			return false;
 		}
 
-		glm::vec2 center = glm::vec2(j["center"][0], j["center"][1]);
+		ImVec2 center = ImVec2(j["center"][0], j["center"][1]);
 		float radius = j["radius"];
 		float thickness = j["thickness"];
-		glm::vec4 color = glm::vec4(j["color"][0], j["color"][1], j["color"][2], j["color"][3]);
+		ImVec4 color = ImVec4(j["color"][0], j["color"][1], j["color"][2], j["color"][3]);
 
 		this->color = color;
 		this->thickness = thickness;

@@ -50,7 +50,7 @@ bool SketchLayer::AddShape(const nlohmann::json& json) {
 	return false;
 }
 
-void SketchLayer::AddShape(enum class ShapeType type, glm::vec2 p1, glm::vec2 p2, float thickness, const glm::vec4& color) {
+void SketchLayer::AddShape(enum class ShapeType type, ImVec2 p1, ImVec2 p2, float thickness, const ImVec4& color) {
 	SaveState();
 	ShapePTR shape = GenericShape::MakeShape(type, p1, p2, thickness, color);
 	if (shape) {
@@ -59,7 +59,7 @@ void SketchLayer::AddShape(enum class ShapeType type, glm::vec2 p1, glm::vec2 p2
 	}
 }
 
-void SketchLayer::AddShape(enum class ShapeType type, glm::vec2 center, float radius, float thickness, const glm::vec4& color) {
+void SketchLayer::AddShape(enum class ShapeType type, ImVec2 center, float radius, float thickness, const ImVec4& color) {
 	SaveState();
 	ShapePTR shape = GenericShape::MakeShape(type, center, radius, thickness, color);
 	if (shape) {
@@ -68,7 +68,7 @@ void SketchLayer::AddShape(enum class ShapeType type, glm::vec2 center, float ra
 	}
 }
 
-void SketchLayer::AddShape(enum class ShapeType type, glm::vec2 center, float radius, float startAngle, float endAngle, float thickness, const glm::vec4& color) {
+void SketchLayer::AddShape(enum class ShapeType type, ImVec2 center, float radius, float startAngle, float endAngle, float thickness, const ImVec4& color) {
 	SaveState();
 	ShapePTR shape = GenericShape::MakeShape(type, center, radius, startAngle, endAngle, thickness, color);
 	if (shape) {
@@ -247,7 +247,7 @@ bool SketchLayer::MoveShapesDown(const std::vector<ShapeID>& ids, float amount) 
 	return !failed;
 }
 
-bool SketchLayer::MoveShapes(const std::vector<ShapeID>& ids, glm::vec2 amount) {
+bool SketchLayer::MoveShapes(const std::vector<ShapeID>& ids, ImVec2 amount) {
 	SaveState();
 
 	bool failed = false;
@@ -278,7 +278,7 @@ void SketchLayer::UndoAction() {
 		LoadState(pair.first);
 	}
 	else {
-		LOG_WARN("Can't undo action: No more actions are stored!");
+		b::log::warn("Can't undo action: No more actions are stored!");
 	}
 }
 
@@ -301,7 +301,7 @@ bool SketchLayer::ShapeExists(const ShapeID& id) const {
 	return state.ShapeExists(id);
 }
 
-std::pair<glm::vec2, glm::vec2> SketchLayer::GetBoundingBox() const {
+std::pair<ImVec2, ImVec2> SketchLayer::GetBoundingBox() const {
 	return state.GetBoundingBox();
 }
 
@@ -327,8 +327,8 @@ void SketchLayer::RenderLayerToBitmap(sf::RenderTexture texture) {
 	}
 
 	// Calculate the encapsulated frame
-	glm::vec2 min = shapes[0]->GetBoundingBox().first;
-	glm::vec2 max = shapes[0]->GetBoundingBox().second;
+	ImVec2 min = shapes[0]->GetBoundingBox().first;
+	ImVec2 max = shapes[0]->GetBoundingBox().second;
 
 	for (const auto& s : shapes) {
 
@@ -342,7 +342,7 @@ void SketchLayer::RenderLayerToBitmap(sf::RenderTexture texture) {
 	}
 
 	float brim = 1.2f;
-	glm::vec2 center = { (max.x + min.x) / 2.f, (max.y + min.y) / 2.f };
+	ImVec2 center = { (max.x + min.x) / 2.f, (max.y + min.y) / 2.f };
 	int width = al_get_bitmap_width(bitmap);
 	int height = al_get_bitmap_height(bitmap);
 	float range = 0;
@@ -383,7 +383,7 @@ bool SketchLayer::LoadJson(nlohmann::json json) {
 		}
 	}
 	catch (...) {
-		LOG_ERROR("Can't parse json: Invalid format!");
+		b::log::error("Can't parse json: Invalid format!");
 	}*/
 
 	return false;

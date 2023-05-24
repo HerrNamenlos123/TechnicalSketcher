@@ -98,7 +98,7 @@ bool DownloadUpdate(const std::string& url, const std::string& targetFile, int a
 			return false;
 		}
 	}*/
-	LOG_ERROR("Download update");
+	b::log::error("Download update");
 
 	return true;
 }

@@ -38,11 +38,11 @@ public:
 	std::string applicationVersion;
 	std::string imguiFileLocation;
 
-	glm::ivec2 windowSize = glm::vec2(0, 0);	// Retrieve every frame, to be consistent through the update loop
+	glm::ivec2 windowSize = ImVec2(0, 0);	// Retrieve every frame, to be consistent through the update loop
 	//Battery::ClipboardFormatID clipboardShapeFormat = 0;	// TODO: windowSize is maybe unnecessary
 
 	// User interface
-	glm::vec2 panOffset = { 0, 0 };
+	ImVec2 panOffset = { 0, 0 };
 	float scrollFactor = 0.2f;
 	float scale = 7;
 	float defaultSnapSize = 5;
@@ -68,12 +68,12 @@ public:
 	std::vector<sf::Event> eventBuffer;
 
 	// Controls
-	glm::vec2 mousePosition = { 0, 0 };			// Those mouse positions are in workspace coordinates
-	glm::vec2 mouseSnapped = { 0, 0 };
+	ImVec2 mousePosition = { 0, 0 };			// Those mouse positions are in workspace coordinates
+	ImVec2 mouseSnapped = { 0, 0 };
 	bool controlKeyPressed = false;
 	bool shiftKeyPressed = false;
 
-	glm::vec2 previewPointPosition = { 0, 0 };
+	ImVec2 previewPointPosition = { 0, 0 };
 	bool previewPointShown = false;
 
 	SelectionTool selectionTool;
@@ -95,8 +95,8 @@ public:
 	void OnEvent(sf::Event e, bool& handled);
 
 
-	glm::vec2 ConvertScreenToWorkspaceCoords(const glm::vec2& v);
-	glm::vec2 ConvertWorkspaceToScreenCoords(const glm::vec2& v);
+	ImVec2 ConvertScreenToWorkspaceCoords(const ImVec2& v);
+	ImVec2 ConvertWorkspaceToScreenCoords(const ImVec2& v);
 	float ConvertWorkspaceToScreenDistance(float distance);
 	float ConvertScreenToWorkspaceDistance(float distance);
 
@@ -114,13 +114,13 @@ public:
 
 	void OnKeyPressed(sf::Event event);
 	void OnKeyReleased(sf::Event event);
-	void OnMouseClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);
-	void OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel);
-	void OnMouseMoved(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
-	void OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
-	void OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy);
-	void OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel);
-	void OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape);
+	void OnMouseClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel);
+	void OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel);
+	void OnMouseMoved(const ImVec2& position, const ImVec2& snapped, float dx, float dy);
+	void OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy);
+	void OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy);
+	void OnSpaceClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel);
+	void OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape);
 	void OnToolChanged();
 	void OnLayerSelected(LayerID layer);
 	void OnEscapePressed();

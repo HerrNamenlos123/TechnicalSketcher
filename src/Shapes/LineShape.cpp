@@ -10,7 +10,7 @@ LineShape::LineShape() {
 
 }
 
-LineShape::LineShape(const glm::vec2& p1, const glm::vec2& p2, float thickness, const glm::vec4& color) {
+LineShape::LineShape(const ImVec2& p1, const ImVec2& p2, float thickness, const ImVec4& color) {
 	this->p1 = p1;
 	this->p2 = p2;
 	this->thickness = thickness;
@@ -32,16 +32,16 @@ std::string LineShape::GetTypeString() const {
 
 
 
-std::pair<glm::vec2, glm::vec2> LineShape::GetBoundingBox() const {
+std::pair<ImVec2, ImVec2> LineShape::GetBoundingBox() const {
 
 	float u = thickness / 2.f;
-	glm::vec2 _min = { std::min(p1.x, p2.x) - u, std::min(p1.y, p2.y) - u };
-	glm::vec2 _max = { std::max(p1.x, p2.x) + u, std::max(p1.y, p2.y) + u };
+	ImVec2 _min = { std::min(p1.x, p2.x) - u, std::min(p1.y, p2.y) - u };
+	ImVec2 _max = { std::max(p1.x, p2.x) + u, std::max(p1.y, p2.y) + u };
 
 	return std::make_pair(_min, _max);
 }
 
-bool LineShape::IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) const {
+bool LineShape::IsInSelectionBox(const ImVec2& s1, const ImVec2& s2) const {
 
 	// Should be selected if at least one of the two points is within the selection box
 	return (IsInbetween(p1.x, s1.x, s2.x) && IsInbetween(p1.y, s1.y, s2.y)) ||
@@ -51,18 +51,18 @@ bool LineShape::IsInSelectionBox(const glm::vec2& s1, const glm::vec2& s2) const
 bool LineShape::ShouldBeRendered(float screenWidth, float screenHeight) const {
 
 	auto pair = GetBoundingBox();
-	glm::vec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
-	glm::vec2 max = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.second);
+	ImVec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
+	ImVec2 max = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.second);
 
 	return	!((min.x < 0 && max.x < 0) || (min.x > screenWidth && max.x > screenWidth) ||
 			  (min.y < 0 && max.y < 0) || (min.y > screenHeight && max.y > screenHeight));
 }
 
-float LineShape::GetDistanceToCursor(const glm::vec2& p) const {
-	glm::vec2 aToB = p2 - p1;
-	glm::vec2 aToP = p - p1;
-	glm::vec2 bToA = p1 - p2;
-	glm::vec2 bToP = p - p2;
+float LineShape::GetDistanceToCursor(const ImVec2& p) const {
+	ImVec2 aToB = p2 - p1;
+	ImVec2 aToP = p - p1;
+	ImVec2 bToA = p1 - p2;
+	ImVec2 bToP = p - p2;
 
 	if (aToB.length() == 0)
 		return (float)aToP.length();
@@ -78,15 +78,15 @@ float LineShape::GetDistanceToCursor(const glm::vec2& p) const {
 	}
 }
 
-bool LineShape::IsShapeHovered(const glm::vec2& cursor, float thresholdDistance) const {
+bool LineShape::IsShapeHovered(const ImVec2& cursor, float thresholdDistance) const {
 	return GetDistanceToCursor(cursor) <= thresholdDistance;
 }
 
-void LineShape::SetPoint1(const glm::vec2& position) {
+void LineShape::SetPoint1(const ImVec2& position) {
 	p1 = position;
 }
 
-void LineShape::SetPoint2(const glm::vec2& position) {
+void LineShape::SetPoint2(const ImVec2& position) {
 	p2 = position;
 }
 
@@ -94,15 +94,15 @@ void LineShape::SetThickness(float thickness) {
 	this->thickness = thickness;
 }
 
-void LineShape::SetColor(const glm::vec4& color) {
+void LineShape::SetColor(const ImVec4& color) {
 	this->color = color;
 }
 
-glm::vec2 LineShape::GetPoint1() const {
+ImVec2 LineShape::GetPoint1() const {
 	return p1;
 }
 
-glm::vec2 LineShape::GetPoint2() const {
+ImVec2 LineShape::GetPoint2() const {
 	return p2;
 }
 
@@ -110,11 +110,11 @@ float LineShape::GetThickness() const {
 	return thickness;
 }
 
-glm::vec4 LineShape::GetColor() const {
+ImVec4 LineShape::GetColor() const {
 	return color;
 }
 
-glm::vec2 LineShape::GetCenterPosition() const {
+ImVec2 LineShape::GetCenterPosition() const {
 	return (p1 + p2) / 2.f;
 }
 
@@ -165,12 +165,12 @@ void LineShape::MoveDown(float amount) {
 	p2.y += amount;
 }
 
-void LineShape::Move(glm::vec2 amount) {
+void LineShape::Move(ImVec2 amount) {
 	p1 += amount;
 	p2 += amount;
 }
 
-void LineShape::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped) {
+void LineShape::OnMouseHovered(const ImVec2& position, const ImVec2& snapped) {
 	p2 = snapped;
 }
 
@@ -181,7 +181,7 @@ void LineShape::RenderPreview() const {
 void LineShape::Render(bool layerSelected, bool shapeSelected, bool shapeHovered) const {
 
 	auto& ref = ApplicationRenderer::GetInstance();
-	glm::vec4 col = ref.disabledLineColor;
+	ImVec4 col = ref.disabledLineColor;
 
 	if (layerSelected) { // Shape is selected
 		if (shapeSelected) {
@@ -206,7 +206,7 @@ void LineShape::Render(bool layerSelected, bool shapeSelected, bool shapeHovered
 
 }
 
-void LineShape::RenderExport(glm::vec2 min, glm::vec2 max, float width, float height) const {
+void LineShape::RenderExport(ImVec2 min, ImVec2 max, float width, float height) const {
 	ApplicationRenderer::DrawLineExport(p1, p2, thickness, color, min, max, width, height);
 }
 
@@ -230,10 +230,10 @@ bool LineShape::LoadJson(const nlohmann::json& j) {
 			return false;
 		}
 
-		glm::vec2 p1 = glm::vec2(j["p1"][0], j["p1"][1]);
-		glm::vec2 p2 = glm::vec2(j["p2"][0], j["p2"][1]);
+		ImVec2 p1 = ImVec2(j["p1"][0], j["p1"][1]);
+		ImVec2 p2 = ImVec2(j["p2"][0], j["p2"][1]);
 		float thickness = j["thickness"];
-		glm::vec4 color = glm::vec4(j["color"][0], j["color"][1], j["color"][2], j["color"][3]);
+		ImVec4 color = ImVec4(j["color"][0], j["color"][1], j["color"][2], j["color"][3]);
 
 		this->color = color;
 		this->thickness = thickness;

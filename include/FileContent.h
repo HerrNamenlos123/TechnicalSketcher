@@ -78,7 +78,7 @@ public:
 			}
 		}
 
-		LOG_WARN(__FUNCTION__"(): Can't activate Layer #{}: Does not exist!", id);
+		b::log::warn(__FUNCTION__"(): Can't activate Layer #{}: Does not exist!", id);
 		return false;
 	}
 

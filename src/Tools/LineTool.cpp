@@ -9,7 +9,7 @@ void LineTool::OnToolChanged() {
 	Navigator::GetInstance()->previewPointPosition = Navigator::GetInstance()->mouseSnapped;
 }
 
-void LineTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel) {
+void LineTool::OnSpaceClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel) {
 	if (left) {
 		if (!lineStarted) {				// Start a line
 			previewLine.SetPoint1(snapped);
@@ -28,11 +28,11 @@ void LineTool::OnSpaceClicked(const glm::vec2& position, const glm::vec2& snappe
 	}
 }
 
-void LineTool::OnShapeClicked(const glm::vec2& position, const glm::vec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
+void LineTool::OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
 
 }
 
-void LineTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void LineTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 	if (lineStarted) {
 		previewLine.SetPoint2(snapped);
 	}
@@ -41,11 +41,11 @@ void LineTool::OnMouseHovered(const glm::vec2& position, const glm::vec2& snappe
 	}
 }
 
-void LineTool::OnMouseDragged(const glm::vec2& position, const glm::vec2& snapped, float dx, float dy) {
+void LineTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
 
 }
 
-void LineTool::OnMouseReleased(const glm::vec2& position, bool left, bool right, bool wheel) {
+void LineTool::OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel) {
 
 }
 

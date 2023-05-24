@@ -5,56 +5,56 @@
 #include "Shapes/CircleShape.h"
 #include "Shapes/ArcShape.h"
 
-ShapePTR GenericShape::MakeShape(enum class ShapeType type, glm::vec2 p1,
-	glm::vec2 p2, float thickness, const glm::vec4& color) {
+ShapePTR GenericShape::MakeShape(enum class ShapeType type, ImVec2 p1,
+	ImVec2 p2, float thickness, const ImVec4& color) {
 
 	switch (type) {
 
 	case ShapeType::NONE:
-		LOG_WARN(__FUNCTION__"(): Can't add shape of type 'NONE'");
+		b::log::warn("{}(): Can't add shape of type 'NONE'", std::source_location::current().function_name());
 		return std::unique_ptr<GenericShape>();
 
 	case ShapeType::LINE:
 		return std::make_unique<LineShape>(p1, p2, thickness, color);
 
 	default:
-		LOG_WARN(__FUNCTION__"(): Unsupported shape type");
+		b::log::warn("{}(): Unsupported shape type", std::source_location::current().function_name());
 		return std::unique_ptr<GenericShape>();
 	}
 }
 
-ShapePTR GenericShape::MakeShape(enum class ShapeType type, glm::vec2 center,
-	float radius, float thickness, const glm::vec4& color) {
+ShapePTR GenericShape::MakeShape(enum class ShapeType type, ImVec2 center,
+	float radius, float thickness, const ImVec4& color) {
 
 	switch (type) {
 
 	case ShapeType::NONE:
-		LOG_WARN(__FUNCTION__"(): Can't add shape of type 'NONE'");
+		b::log::warn("{}(): Can't add shape of type 'NONE'", std::source_location::current().function_name());
 		return std::unique_ptr<GenericShape>();
 
 	case ShapeType::CIRCLE:
 		return std::make_unique<CircleShape>(center, radius, thickness, color);
 
 	default:
-		LOG_WARN(__FUNCTION__"(): Unsupported shape type");
+		b::log::warn("{}(): Unsupported shape type", std::source_location::current().function_name());
 		return std::unique_ptr<GenericShape>();
 	}
 }
 
-ShapePTR GenericShape::MakeShape(enum class ShapeType type, glm::vec2 center,
-	float radius, float startAngle, float endAngle, float thickness, const glm::vec4& color) {
+ShapePTR GenericShape::MakeShape(enum class ShapeType type, ImVec2 center,
+	float radius, float startAngle, float endAngle, float thickness, const ImVec4& color) {
 
 	switch (type) {
 
 	case ShapeType::NONE:
-		LOG_WARN(__FUNCTION__"(): Can't add shape of type 'NONE'");
+		b::log::warn("{}(): Can't add shape of type 'NONE'", std::source_location::current().function_name());
 		return std::unique_ptr<GenericShape>();
 
 	case ShapeType::ARC:
 		return std::make_unique<ArcShape>(center, radius, startAngle, endAngle, thickness, color);
 
 	default:
-		LOG_WARN(__FUNCTION__"(): Unsupported shape type");
+		b::log::warn("{}(): Unsupported shape type", std::source_location::current().function_name());
 		return std::unique_ptr<GenericShape>();
 	}
 }
@@ -86,12 +86,12 @@ ShapePTR GenericShape::MakeShape(const nlohmann::json& json) {
 			}
 		}
 		else {
-			LOG_ERROR("Can't parse shape from JSON: Invalid shape type!");
+			b::log::error("Can't parse shape from JSON: Invalid shape type!");
 			return std::unique_ptr<GenericShape>();
 		}
 	}
 	catch (...) {}
 
-	LOG_ERROR("Can't parse shape from JSON: Invalid JSON format!");
+	b::log::error("Can't parse shape from JSON: Invalid JSON format!");
 	return std::unique_ptr<GenericShape>();
 }

@@ -9,7 +9,27 @@ CPMAddPackage("gh:batterycenter/battery#master")
 
 # Define the executable and all the source files
 battery_add_executable(${PROJECT_NAME}
-        src/main.cpp
+        src/Shapes/ArcShape.cpp
+        src/Shapes/CircleShape.cpp
+        src/Shapes/GenericShape.cpp
+        src/Shapes/LineShape.cpp
+
+        src/Tools/ArcTool.cpp
+        src/Tools/CircleTool.cpp
+        src/Tools/LineStripTool.cpp
+        src/Tools/LineTool.cpp
+        src/Tools/SelectionTool.cpp
+
+        src/ApplicationRenderer.cpp
+        src/BatteryApp.cpp
+        src/Layer.cpp
+        src/LayerList.cpp
+        src/LayerState.cpp
+        src/Navigator.cpp
+        src/SelectionHandler.cpp
+        src/SketchFile.cpp
+        src/Updater.cpp
+        src/UserInterface.cpp
 )
 
 # Include directory
@@ -21,7 +41,7 @@ battery_add_module(json)
 target_link_libraries(${PROJECT_NAME} battery::core battery::graphics battery::json)
 
 # Enable precompiled headers for faster compilation
-battery_precompile_headers(${PROJECT_NAME} "${CMAKE_CURRENT_LIST_DIR}/include/pch.hpp")
+battery_precompile_headers(${PROJECT_NAME} "${CMAKE_CURRENT_LIST_DIR}/include/pch.h")
 
 # What project to start Visual Studio with
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})

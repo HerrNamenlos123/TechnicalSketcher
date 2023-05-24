@@ -22,7 +22,7 @@ void BatteryApp::OnStartup() {
 		window.Show();
 		window.Focus();
 	}*/
-	LOG_ERROR("SPLASHSCREEN NOW");
+	b::log::error("SPLASHSCREEN NOW");
 
 	// Various layers
 	PushLayer(std::make_shared<NavigatorLayer>());
@@ -63,15 +63,15 @@ void BatteryApp::OnStartup() {
 	}
 
 	// Set the window size and position
-	glm::vec2 monitorSize = GetPrimaryMonitorSize();	// If screen is too small with a little margin, maximize the window				
+	ImVec2 monitorSize = GetPrimaryMonitorSize();	// If screen is too small with a little margin, maximize the window				
 	if (monitorSize.x / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_WIDTH || monitorSize.y / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_HEIGHT) {
 		window.setSize({ (uint16_t)(monitorSize.x / SCREEN_SIZE_MARGIN), (uint16_t)(monitorSize.y / SCREEN_SIZE_MARGIN) });
-		glm::uvec2 v = (monitorSize - glm::vec2(window.getSize().x, window.getSize().y)) / 2.f + glm::vec2(0, -30);
+		glm::uvec2 v = (monitorSize - ImVec2(window.getSize().x, window.getSize().y)) / 2.f + ImVec2(0, -30);
 		window.setPosition({ (uint16_t)v.x, (uint16_t)v.y });
 		//window.Maximize();
 	}
 	else {	// Set up window normally
-		glm::vec2 v = (monitorSize - glm::vec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)) / 2.f + glm::vec2(0, -30);
+		ImVec2 v = (monitorSize - ImVec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)) / 2.f + ImVec2(0, -30);
 		window.setPosition({ (uint16_t)v.x, (uint16_t)v.y });
 		window.setSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
 	}
@@ -150,7 +150,7 @@ public:
 		case Battery::EventType::MouseMoved:
 		case Battery::EventType::MouseScrolled:
 			if (io.WantCaptureMouse) {
-				LOG_ERROR("ImGui clicked");
+				b::log::error("ImGui clicked");
 				e->SetHandled();
 				return;
 			}
@@ -167,11 +167,11 @@ public:
 	Battery::Scene* scene = nullptr;
 	Battery::ShaderProgram* shader = nullptr;
 
-	glm::vec2 p1 = { 100, 100 };
-	glm::vec2 p2 = { 300, 300 };
+	ImVec2 p1 = { 100, 100 };
+	ImVec2 p2 = { 300, 300 };
 	float thickness = 5;
 	float falloff = 1;
-	glm::vec4 color = { 0, 0, 0, 255 };
+	ImVec4 color = { 0, 0, 0, 255 };
 
 	BatteryApp() : Battery::Application(800, 600, "MyApplication") {
 		//LOG_SET_LOGLEVEL(BATTERY_LOG_LEVEL_TRACE);
@@ -270,15 +270,15 @@ public:
 
 		Renderer2D::BeginQuads(shader, 0);
 
-		VertexData v1 = { glm::vec3(100, 100, 0), glm::vec2(0, 0), glm::vec4(255, 0, 0, 255) };
-		VertexData v2 = { glm::vec3(300, 100, 0), glm::vec2(1, 0), glm::vec4(0, 255, 0, 255) };
-		VertexData v3 = { glm::vec3(300, 300, 0), glm::vec2(1, 1), glm::vec4(0, 0, 255, 255) };
-		VertexData v4 = { glm::vec3(100, 300, 0), glm::vec2(0, 1), glm::vec4(255, 0, 255, 255) };
+		VertexData v1 = { glm::vec3(100, 100, 0), ImVec2(0, 0), ImVec4(255, 0, 0, 255) };
+		VertexData v2 = { glm::vec3(300, 100, 0), ImVec2(1, 0), ImVec4(0, 255, 0, 255) };
+		VertexData v3 = { glm::vec3(300, 300, 0), ImVec2(1, 1), ImVec4(0, 0, 255, 255) };
+		VertexData v4 = { glm::vec3(100, 300, 0), ImVec2(0, 1), ImVec4(255, 0, 255, 255) };
 
-		VertexData v5 = { glm::vec3(400, 400, 0), glm::vec2(0, 0), glm::vec4(255, 0, 0, 255) };
-		VertexData v6 = { glm::vec3(500, 400, 0), glm::vec2(1, 0), glm::vec4(0, 255, 0, 255) };
-		VertexData v7 = { glm::vec3(500, 500, 0), glm::vec2(1, 1), glm::vec4(0, 0, 255, 255) };
-		VertexData v8 = { glm::vec3(400, 500, 0), glm::vec2(0, 1), glm::vec4(255, 0, 255, 255) };
+		VertexData v5 = { glm::vec3(400, 400, 0), ImVec2(0, 0), ImVec4(255, 0, 0, 255) };
+		VertexData v6 = { glm::vec3(500, 400, 0), ImVec2(1, 0), ImVec4(0, 255, 0, 255) };
+		VertexData v7 = { glm::vec3(500, 500, 0), ImVec2(1, 1), ImVec4(0, 0, 255, 255) };
+		VertexData v8 = { glm::vec3(400, 500, 0), ImVec2(0, 1), ImVec4(255, 0, 255, 255) };
 
 		Renderer2D::DrawQuad(v1, v2, v3, v4);
 		Renderer2D::DrawQuad(v5, v6, v7, v8);

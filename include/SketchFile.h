@@ -16,7 +16,7 @@ class SketchFile {
 	std::string fileLocation = "";
 
 public:
-	glm::vec4 canvasColor = DEFAULT_BACKGROUND_COLOR;
+	ImVec4 canvasColor = DEFAULT_BACKGROUND_COLOR;
 
 	SketchFile() {}
 
@@ -99,17 +99,17 @@ public:
 		return content.ActivateLayer(id);
 	}
 
-	void AddShape(enum class ShapeType type, glm::vec2 p1, glm::vec2 p2, float thickness, const glm::vec4& color) {
+	void AddShape(enum class ShapeType type, ImVec2 p1, ImVec2 p2, float thickness, const ImVec4& color) {
 		content.GetActiveLayer().AddShape(type, p1, p2, thickness, color);
 		fileChanged = true;
 	}
 
-	void AddShape(enum class ShapeType type, glm::vec2 center, float radius, float thickness, const glm::vec4& color) {
+	void AddShape(enum class ShapeType type, ImVec2 center, float radius, float thickness, const ImVec4& color) {
 		content.GetActiveLayer().AddShape(type, center, radius, thickness, color);
 		fileChanged = true;
 	}
 
-	void AddShape(enum class ShapeType type, glm::vec2 center, float radius, float startAngle, float endAngle, float thickness, const glm::vec4& color) {
+	void AddShape(enum class ShapeType type, ImVec2 center, float radius, float startAngle, float endAngle, float thickness, const ImVec4& color) {
 		content.GetActiveLayer().AddShape(type, center, radius, startAngle, endAngle, thickness, color);
 		fileChanged = true;
 	}
@@ -159,7 +159,7 @@ public:
 		return false;
 	}
 
-	bool MoveShapes(const std::vector<ShapeID>& ids, glm::vec2 amount) {
+	bool MoveShapes(const std::vector<ShapeID>& ids, ImVec2 amount) {
 		if (content.GetActiveLayer().MoveShapes(ids, amount)) {
 			fileChanged = true;
 			return true;
