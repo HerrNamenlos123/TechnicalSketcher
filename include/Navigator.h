@@ -33,16 +33,16 @@ public:
 	Navigator(Navigator const&) = delete;
 	void operator=(Navigator const&) = delete;
 
-	SketchFile file;
+	SketchFile m_file;
 	bool fileChanged = false;
-	std::string applicationVersion;
-	std::string imguiFileLocation;
+	semver::version m_applicationVersion;
+	b::fs::path m_imguiFileLocation;
 
-	glm::ivec2 windowSize = ImVec2(0, 0);	// Retrieve every frame, to be consistent through the update loop
+	ImVec2 m_windowSize = ImVec2(0, 0);	// Retrieve every frame, to be consistent through the update loop
 	//Battery::ClipboardFormatID clipboardShapeFormat = 0;	// TODO: windowSize is maybe unnecessary
 
 	// User interface
-	ImVec2 panOffset = { 0, 0 };
+	ImVec2 m_panOffset = { 0, 0 };
 	float scrollFactor = 0.2f;
 	float scale = 7;
 	float defaultSnapSize = 5;
@@ -54,14 +54,14 @@ public:
 	std::atomic<enum class UpdateStatus> updateStatus = UpdateStatus::NOTHING;
 	std::atomic<sf::Time> timeSincePopup;		// Timestamp when the popup was created, set by Updater
 	std::atomic<double> updateProgress = 0.0;		// 0.0 to 1.0
-	std::string restartExecutablePath;
+	b::fs::path restartExecutablePath;
 
-	float exportDPI = 300;
-	bool exportTransparent = true;
-	bool popupExportOpen = false;
+	float exportDPI = 300;              // To be implemented
+	bool exportTransparent = true;      // To be implemented
+	bool popupExportOpen = false;       // To be implemented
 	bool popupDeleteLayerOpen = false;
 	bool popupSettingsOpen = false;
-	bool keepUpToDate = true;
+	bool keepUpToDate = true;           // To be implemented
 	bool tabbedShapeInfo = false;
 
 	// Buffers to store event data
@@ -116,9 +116,9 @@ public:
 	void OnKeyReleased(sf::Event event);
 	void OnMouseClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel);
 	void OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel);
-	void OnMouseMoved(const ImVec2& position, const ImVec2& snapped, float dx, float dy);
-	void OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy);
-	void OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy);
+	void OnMouseMoved(const ImVec2& position, const ImVec2& snapped, int dx, int dy);
+	void OnMouseHovered(const ImVec2& position, const ImVec2& snapped, int dx, int dy);
+	void OnMouseDragged(const ImVec2& position, const ImVec2& snapped, int dx, int dy);
 	void OnSpaceClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel);
 	void OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape);
 	void OnToolChanged();
@@ -132,23 +132,16 @@ public:
 	void PasteClipboard();
 	bool OpenFile();
 	bool OpenEmptyFile();
-	bool OpenFile(const std::string& path, bool silent = false);
+	bool OpenFile(const b::fs::path& path, bool silent = false);
 	bool SaveFile();
 	bool SaveFileAs();
 	void ResetGui();
 	void ResetViewport();
 	bool ExportToClipboard();
 	bool ExportToFile();
-	bool LoadSettings();
-	bool SaveSettings();
 
-	std::string GetMostRecentFile();
-	std::vector<std::string> GetRecentFiles();
-	bool AppendRecentFile(std::string recentFile);
-	bool SaveRecentFiles(std::vector<std::string> recentFiles);
-	std::string GetSettingsDirectory();
-	std::string GetApplicationVersion();
-	void OpenNewWindowFile(const std::string& file);
+	semver::version GetApplicationVersion();
+	void OpenNewWindowFile(const b::fs::path& filepath);
 	void StartNewApplicationInstance();
 	bool CloseApplication();
 

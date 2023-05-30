@@ -11,9 +11,9 @@ class SketchFile {
 
 	FileContent content;
 
-	bool fileChanged = false;
-	std::string filename = DEFAULT_FILENAME;	// Filename contains extension
-	std::string fileLocation = "";
+	bool m_fileChanged = false;
+    b::fs::path m_filename = DEFAULT_FILENAME;	// Filename contains extension
+	b::fs::path m_filepath = "";
 
 public:
 	ImVec4 canvasColor = DEFAULT_BACKGROUND_COLOR;
@@ -22,17 +22,17 @@ public:
 
 	void PushLayer() {
 		content.PushLayer();
-		fileChanged = true;
+		m_fileChanged = true;
 	}
 
 	void PushLayer(const std::string& name) {
 		content.PushLayer(name);
-		fileChanged = true;
+        m_fileChanged = true;
 	}
 
 	void PushLayer(SketchLayer&& layer) {
 		content.PushLayer(std::move(layer));
-		fileChanged = true;
+        m_fileChanged = true;
 	}
 
 	void GeneratePreviews() {
@@ -56,7 +56,7 @@ public:
 
 		if (layer.has_value()) {	// Layer was found
 			layer->get().name = name;
-			fileChanged = true;
+            m_fileChanged = true;
 			return true;
 		}
 
@@ -75,7 +75,7 @@ public:
 		if (!content.MoveLayerFront(id)) {
 			return false;
 		}
-		fileChanged = true;
+        m_fileChanged = true;
 		return true;
 	}
 
@@ -83,7 +83,7 @@ public:
 		if (!content.MoveLayerBack(id)) {
 			return false;
 		}
-		fileChanged = true;
+        m_fileChanged = true;
 		return true;
 	}
 
@@ -91,7 +91,7 @@ public:
 		if (!content.RemoveLayer(id)) {
 			return false;
 		}
-		fileChanged = true;
+        m_fileChanged = true;
 		return true;
 	}
 
@@ -101,27 +101,27 @@ public:
 
 	void AddShape(enum class ShapeType type, ImVec2 p1, ImVec2 p2, float thickness, const ImVec4& color) {
 		content.GetActiveLayer().AddShape(type, p1, p2, thickness, color);
-		fileChanged = true;
+        m_fileChanged = true;
 	}
 
 	void AddShape(enum class ShapeType type, ImVec2 center, float radius, float thickness, const ImVec4& color) {
 		content.GetActiveLayer().AddShape(type, center, radius, thickness, color);
-		fileChanged = true;
+        m_fileChanged = true;
 	}
 
 	void AddShape(enum class ShapeType type, ImVec2 center, float radius, float startAngle, float endAngle, float thickness, const ImVec4& color) {
 		content.GetActiveLayer().AddShape(type, center, radius, startAngle, endAngle, thickness, color);
-		fileChanged = true;
+        m_fileChanged = true;
 	}
 
 	void AddShapes(std::vector<ShapePTR>&& shapes) {
 		content.GetActiveLayer().AddShapes(std::move(shapes));
-		fileChanged = true;
+        m_fileChanged = true;
 	}
 
 	bool RemoveShapes(const std::vector<ShapeID>& ids) {
 		if (content.GetActiveLayer().RemoveShapes(ids)) {
-			fileChanged = true;
+            m_fileChanged = true;
 			return true;
 		}
 		return false;
@@ -129,7 +129,7 @@ public:
 
 	bool MoveShapesLeft(const std::vector<ShapeID>& ids, float amount) {
 		if (content.GetActiveLayer().MoveShapesLeft(ids, amount)) {
-			fileChanged = true;
+            m_fileChanged = true;
 			return true;
 		}
 		return false;
@@ -137,7 +137,7 @@ public:
 
 	bool MoveShapesRight(const std::vector<ShapeID>& ids, float amount) {
 		if (content.GetActiveLayer().MoveShapesRight(ids, amount)) {
-			fileChanged = true;
+            m_fileChanged = true;
 			return true;
 		}
 		return false;
@@ -145,7 +145,7 @@ public:
 
 	bool MoveShapesUp(const std::vector<ShapeID>& ids, float amount) {
 		if (content.GetActiveLayer().MoveShapesUp(ids, amount)) {
-			fileChanged = true;
+            m_fileChanged = true;
 			return true;
 		}
 		return false;
@@ -153,7 +153,7 @@ public:
 
 	bool MoveShapesDown(const std::vector<ShapeID>& ids, float amount) {
 		if (content.GetActiveLayer().MoveShapesDown(ids, amount)) {
-			fileChanged = true;
+            m_fileChanged = true;
 			return true;
 		}
 		return false;
@@ -161,7 +161,7 @@ public:
 
 	bool MoveShapes(const std::vector<ShapeID>& ids, ImVec2 amount) {
 		if (content.GetActiveLayer().MoveShapes(ids, amount)) {
-			fileChanged = true;
+            m_fileChanged = true;
 			return true;
 		}
 		return false;
@@ -172,7 +172,7 @@ public:
 
 		if (opt.has_value()) {
 			if (opt.value().get().ShowPropertiesWindow()) {
-				fileChanged = true;
+                m_fileChanged = true;
 			}
 		}
 	}
@@ -184,7 +184,7 @@ public:
 	void UpdateWindowTitle();
 
 	void FileChanged() {
-		fileChanged = true;
+        m_fileChanged = true;
 	}
 
 	nlohmann::json GetJsonFromShapes(const std::vector<ShapeID>& ids) {
@@ -202,13 +202,13 @@ public:
 	}
 
 	bool ContainsChanges() {
-		return fileChanged;
+		return m_fileChanged;
 	}
 
 	bool SaveFile(bool saveAs = false);
 	bool OpenFile();
 	bool OpenEmptyFile();
-	bool OpenFile(const std::string& path, bool silent = false);
+	bool OpenFile(const b::fs::path& path, bool silent = false);
 	
 	sf::Image ExportImage(bool transparent = true, float dpi = 300);
 
@@ -220,7 +220,7 @@ public:
 			layers.push_back(layer.GetJson());
 		}
 		j["layers"] = layers;
-		j["background_color"] = nlohmann::json::array({ canvasColor.r, canvasColor.g, canvasColor.b, canvasColor.a });
+		j["background_color"] = nlohmann::json::array({ canvasColor.x, canvasColor.y, canvasColor.z, canvasColor.w });  // TODO: Serialize ImVec4 in nlohmann::json directly
 		j["file_type"] = JSON_FILE_TYPE;
 		j["file_version"] = JSON_FILE_VERSION;
 

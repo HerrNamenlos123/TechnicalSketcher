@@ -1,5 +1,6 @@
 
 #include "battery/core/all.hpp"
+#include "App.hpp"
 #include "ApplicationRenderer.h"
 #include "Navigator.h"
 #include "config.h"
@@ -10,7 +11,7 @@
 
 
 void ApplicationRenderer::DrawLineWorkspace(const ImVec2& point1, const ImVec2& point2, float thickness, 
-	const ImVec4& color, float falloff) {
+	const ImColor& color) {
 	ImVec2 p1 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point1);
 	ImVec2 p2 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point2);
 	float thick = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(thickness);
@@ -18,22 +19,22 @@ void ApplicationRenderer::DrawLineWorkspace(const ImVec2& point1, const ImVec2& 
 }
 
 void ApplicationRenderer::DrawLineScreenspace(const ImVec2& point1, const ImVec2& point2, float thickness, 
-	const ImVec4& color, float falloff) {
+	const ImColor& color) {
 	//Battery::Renderer2D::DrawLine(point1, point2, thickness, color, falloff);
 }
 
 void ApplicationRenderer::DrawLineExport(const ImVec2& point1, const ImVec2& point2, float thickness,
 	const ImVec4& color, ImVec2 min, ImVec2 max, float width, float height) {
 	
-	ImVec2 p1 = Battery::MapVec2(point1, min, max, { 0, 0 }, { width, height });
-	ImVec2 p2 = Battery::MapVec2(point2, min, max, { 0, 0 }, { width, height });
-	float thick = Battery::Map<float>(thickness, 0, max.x - min.x, 0, width);
+	ImVec2 p1 = b::map(point1, min, max, { 0, 0 }, { width, height });
+	ImVec2 p2 = b::map(point2, min, max, { 0, 0 }, { width, height });
+	float thick = b::map(thickness, 0, max.x - min.x, 0, width);
 
 	//Battery::Renderer2D::DrawLine(p1, p2, thick, color, EXPORT_FALLOFF);
 }
 
 void ApplicationRenderer::DrawCircleWorkspace(const ImVec2& center, float radius, float thickness, 
-	const ImVec4& color, float falloff) {
+	const ImColor& color) {
 	ImVec2 c = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(center);
 	float r     = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(radius);
 	float t     = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(thickness);
@@ -41,22 +42,22 @@ void ApplicationRenderer::DrawCircleWorkspace(const ImVec2& center, float radius
 }
 
 void ApplicationRenderer::DrawCircleScreenspace(const ImVec2& center, float radius, float thickness,
-	const ImVec4& color, float falloff) {
+	const ImColor& color) {
 	//Battery::Renderer2D::DrawCircle(center, radius, thickness, color, { 0, 0, 0, 0 }, falloff);
 }
 
 void ApplicationRenderer::DrawCircleExport(const ImVec2& center, float radius, float thickness,
 	const ImVec4& color, ImVec2 min, ImVec2 max, float width, float height) {
 
-	ImVec2 c = Battery::MapVec2(center, min, max, { 0, 0 }, { width, height });
-	float r	    = Battery::Map<float>(radius, 0, max.x - min.x, 0, width);
-	float t     = Battery::Map<float>(thickness, 0, max.x - min.x, 0, width);
+	ImVec2 c = b::map(center, min, max, { 0, 0 }, { width, height });
+	float r	    = b::map(radius, 0, max.x - min.x, 0, width);
+	float t     = b::map(thickness, 0, max.x - min.x, 0, width);
 
 	//Battery::Renderer2D::DrawCircle(c, r, t, color, { 0, 0, 0, 0 }, EXPORT_FALLOFF);
 }
 
 void ApplicationRenderer::DrawArcWorkspace(const ImVec2& center, float radius, float startAngle, float endAngle, float thickness,
-	const ImVec4& color, float falloff) {
+	const ImColor& color) {
 	ImVec2 c = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(center);
 	float r     = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(radius);
 	float t     = Navigator::GetInstance()->ConvertWorkspaceToScreenDistance(thickness);
@@ -64,29 +65,29 @@ void ApplicationRenderer::DrawArcWorkspace(const ImVec2& center, float radius, f
 }
 
 void ApplicationRenderer::DrawArcScreenspace(const ImVec2& center, float radius, float startAngle, float endAngle, float thickness,
-	const ImVec4& color, float falloff) {
+	const ImColor& color) {
 	//Battery::Renderer2D::DrawArc(center, radius, startAngle, endAngle, thickness, color, falloff);
 }
 
 void ApplicationRenderer::DrawArcExport(const ImVec2& center, float radius, float startAngle, float endAngle, float thickness,
 	const ImVec4& color, ImVec2 min, ImVec2 max, float width, float height) {
 
-	ImVec2 c = Battery::MapVec2(center, min, max, { 0, 0 }, { width, height });
-	float r	    = Battery::Map<float>(radius, 0, max.x - min.x, 0, width);
-	float t     = Battery::Map<float>(thickness, 0, max.x - min.x, 0, width);
+	ImVec2 c = b::map(center, min, max, { 0, 0 }, { width, height });
+	float r	    = b::map(radius, 0, max.x - min.x, 0, width);
+	float t     = b::map(thickness, 0, max.x - min.x, 0, width);
 
 	//Battery::Renderer2D::DrawArc(c, r, startAngle, endAngle, t, color, EXPORT_FALLOFF);
 }
 
 void ApplicationRenderer::DrawRectangleWorkspace(const ImVec2& point1, const ImVec2& point2, float outlineThickness,
-	const ImVec4& outlineColor, const ImVec4& fillColor, float falloff) {
+	const ImColor& outlineColor, const ImColor& fillColor) {
 	ImVec2 p1 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point1);
 	ImVec2 p2 = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(point2);
 	//Battery::Renderer2D::DrawRectangle(p1, p2, outlineThickness, outlineColor, fillColor, falloff);
 }
 
 void ApplicationRenderer::DrawRectangleScreenspace(const ImVec2& point1, const ImVec2& point2, float outlineThickness,
-	const ImVec4& outlineColor, const ImVec4& fillColor, float falloff) {
+	const ImColor& outlineColor, const ImColor& fillColor) {
 	//Battery::Renderer2D::DrawRectangle(point1, point2, outlineThickness, outlineColor, fillColor, falloff);
 }
 
@@ -95,12 +96,12 @@ void ApplicationRenderer::DrawRectangleScreenspace(const ImVec2& point1, const I
 
 
 void ApplicationRenderer::DrawSelectionBoxInfillRectangle(const ImVec2& point1, const ImVec2& point2) {
-	ApplicationRenderer::DrawRectangleWorkspace(point1, point2, 0, { 0, 0, 0, 0 }, GetInstance().selectionBoxFillColor, 0);
+	ApplicationRenderer::DrawRectangleWorkspace(point1, point2, 0, { 0, 0, 0, 0 }, GetInstance().selectionBoxFillColor);
 }
 
 void ApplicationRenderer::DrawSelectionBoxOutlineRectangle(const ImVec2& point1, const ImVec2& point2) {
 	ApplicationRenderer::DrawRectangleWorkspace(point1, point2, 
-		GetInstance().selectionBoxOutlineThickness, GetInstance().selectionBoxOutlineColor, { 0, 0, 0, 0 }, 0);
+		GetInstance().selectionBoxOutlineThickness, GetInstance().selectionBoxOutlineColor, { 0, 0, 0, 0 });
 }
 
 void ApplicationRenderer::DrawPreviewPoint(const ImVec2& position) {
@@ -108,24 +109,22 @@ void ApplicationRenderer::DrawPreviewPoint(const ImVec2& position) {
 	ApplicationRenderer::DrawRectangleScreenspace(
 		p1 - ImVec2(GetInstance().previewPointSize / 2, GetInstance().previewPointSize / 2),
 		p1 + ImVec2(GetInstance().previewPointSize / 2, GetInstance().previewPointSize / 2),
-		1, { 0, 0, 0, 255 }, { 255, 255, 255, 255 }, 0);
+		1, { 0, 0, 0, 255 }, { 255, 255, 255, 255 });
 }
 
 void ApplicationRenderer::DrawGrid(bool infinite) {
-	using namespace Battery;
 	auto nav = Navigator::GetInstance();
 
-	float thickness = GetInstance().gridLineWidth;
-	float alpha = std::min(Navigator::GetInstance()->scale * GetInstance().gridAlphaFactor + GetInstance().gridAlphaOffset, GetInstance().gridAlphaMax);
+    auto thickness = GetInstance().gridLineWidth;
+    auto alpha = std::min(Navigator::GetInstance()->scale * GetInstance().gridAlphaFactor + GetInstance().gridAlphaOffset, GetInstance().gridAlphaMax);
 	ImVec4 color = ImVec4(GetInstance().gridLineColor, GetInstance().gridLineColor, GetInstance().gridLineColor, alpha);
 
-	int w = GetApp().window.getSize().x;
-	int h = GetApp().window.getSize().y;
+	auto [ w, h ] = App::s_mainWindow->getSize();
 
-	float right = w;
-	float left = 0;
-	float top = h;
-	float bottom = 0;
+	float right = static_cast<float>(w);
+    float left = 0;
+    float top = static_cast<float>(h);
+    float bottom = 0;
 
 	if (!infinite) {	// Draw an A4-sheet
 		ImVec2 sheetSize = { 210, 297 };
@@ -134,31 +133,31 @@ void ApplicationRenderer::DrawGrid(bool infinite) {
 		top    = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords( sheetSize / 2.f).y;
 		bottom = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(-sheetSize / 2.f).y;
 
-		for (float x = nav->panOffset.x + w / 2; x < right; x += nav->scale * nav->snapSize) {
+		for (float x = nav->m_panOffset.x + w / 2; x < right; x += nav->scale * nav->snapSize) {
 			//Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
 		}
-		for (float x = nav->panOffset.x + w / 2 - nav->scale * nav->snapSize; x > left; x -= nav->scale * nav->snapSize) {
+		for (float x = nav->m_panOffset.x + w / 2 - nav->scale * nav->snapSize; x > left; x -= nav->scale * nav->snapSize) {
 			//Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
 		}
-		for (float y = nav->panOffset.y + h / 2; y < top; y += nav->scale * nav->snapSize) {
+		for (float y = nav->m_panOffset.y + h / 2; y < top; y += nav->scale * nav->snapSize) {
 			//Renderer2D::DrawPrimitiveLine({ left, y }, { right, y }, thickness, color);
 		}
-		for (float y = nav->panOffset.y + h / 2 - nav->scale * nav->snapSize; y > bottom; y -= nav->scale * nav->snapSize) {
+		for (float y = nav->m_panOffset.y + h / 2 - nav->scale * nav->snapSize; y > bottom; y -= nav->scale * nav->snapSize) {
 			//Renderer2D::DrawPrimitiveLine({ left, y }, { right, y }, thickness, color);
 		}
 	}
 	else {
 
-		for (float x = nav->panOffset.x + w / 2; x < right; x += nav->scale * nav->snapSize) {
+		for (float x = nav->m_panOffset.x + w / 2; x < right; x += nav->scale * nav->snapSize) {
 			//Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
 		}
-		for (float x = nav->panOffset.x + w / 2; x > left; x -= nav->scale * nav->snapSize) {
+		for (float x = nav->m_panOffset.x + w / 2; x > left; x -= nav->scale * nav->snapSize) {
 			//Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
 		}
-		for (float y = nav->panOffset.y + h / 2; y < top; y += nav->scale * nav->snapSize) {
+		for (float y = nav->m_panOffset.y + h / 2; y < top; y += nav->scale * nav->snapSize) {
 			//Renderer2D::DrawPrimitiveLine({ left, y }, { right, y }, thickness, color);
 		}
-		for (float y = nav->panOffset.y + h / 2; y > bottom; y -= nav->scale * nav->snapSize) {
+		for (float y = nav->m_panOffset.y + h / 2; y > bottom; y -= nav->scale * nav->snapSize) {
 			//Renderer2D::DrawPrimitiveLine({ left, y }, { right, y }, thickness, color);
 		}
 	}

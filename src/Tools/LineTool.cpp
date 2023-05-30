@@ -32,7 +32,7 @@ void LineTool::OnShapeClicked(const ImVec2& position, const ImVec2& snapped, boo
 
 }
 
-void LineTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void LineTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 	if (lineStarted) {
 		previewLine.SetPoint2(snapped);
 	}
@@ -41,7 +41,7 @@ void LineTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, flo
 	}
 }
 
-void LineTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void LineTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 
 }
 

@@ -25,10 +25,10 @@ static float mag(const ImVec2& v) {
 static float angle(const ImVec2& v) {
 	if (mag(v) > 0) {
 		if (v.y >= 0) {
-			return glm::degrees(acos(v.x / mag(v)));
+			return b::degrees(acos(v.x / mag(v)));
 		}
 		else if (v.y <= 0) {
-			return 360 - glm::degrees(acos(v.x / mag(v)));
+			return 360 - b::degrees(acos(v.x / mag(v)));
 		}
 	}
 
@@ -113,7 +113,7 @@ bool ArcShape::IsInSelectionBox(const ImVec2& s1, const ImVec2& s2) const {
 	return IsInbetween(center.x, s1.x, s2.x) && IsInbetween(center.y, s1.y, s2.y);
 }
 
-bool ArcShape::ShouldBeRendered(float screenWidth, float screenHeight) const {
+bool ArcShape::ShouldBeRendered(int screenWidth, int screenHeight) const {
 
 	auto pair = GetBoundingBox();
 	ImVec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
@@ -197,7 +197,7 @@ bool ArcShape::ShowPropertiesWindow() {
 	auto oldThickness = thickness;
 
 	color /= 255;
-	ImGui::ColorEdit4("Arc color", (float*)&color[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit4("Arc color", (float*)&color.x, ImGuiColorEditFlags_NoInputs);
 	ImGui::DragFloat("Arc line thickness", &thickness, 0.1f, 0.f, 10.f);
 	color *= 255;
 
@@ -280,7 +280,7 @@ nlohmann::json ArcShape::GetJson() const {
 	j["start_angle"] = startAngle;
 	j["end_angle"] = endAngle;
 	j["thickness"] = thickness;
-	j["color"] = nlohmann::json::array({ color.r, color.g, color.b, color.a });
+	j["color"] = nlohmann::json::array({ color.x, color.y, color.z, color.w });
 
 	return j;
 }

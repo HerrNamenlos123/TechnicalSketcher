@@ -6,15 +6,15 @@
 
 extern void RunUpdater();
 
-class UpdaterLayer : public Battery::Layer {
+class UpdaterLayer {
 public:
 
-	std::thread updaterThread;
+	b::thread updaterThread;
 	bool noUpdate;
 
 	UpdaterLayer(bool noUpdate) : noUpdate(noUpdate) {}
 
-	void OnAttach() override {
+	void OnAttach() {
 
 #ifdef BATTERY_DEPLOY
 		if (Navigator::GetInstance()->keepUpToDate && !noUpdate) {
@@ -24,7 +24,7 @@ public:
 
 	}
 
-	void OnDetach() override {
+	void OnDetach() {
 		if (updaterThread.joinable()) {
 			updaterThread.join();
 		}

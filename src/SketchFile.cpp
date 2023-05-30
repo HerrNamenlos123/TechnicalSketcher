@@ -1,39 +1,35 @@
 
-#include "pch.h"
+#include "battery/core/all.hpp"
+#include "battery/filedialog/filedialog.hpp"
+#include "App.hpp"
 #include "SketchFile.h"
+#include "TskSettings.hpp"
 #include "Navigator.h"
 
 void SketchFile::UpdateWindowTitle() {
-	std::string file = Battery::GetBasename(filename);
-	const std::string& version = Navigator::GetInstance()->applicationVersion;
-	std::string title = "";
+	auto file = m_filename.stem().string();
 
-	if (fileChanged) {
-		title = "*" + file + " - " APPLICATION_NAME;
-	}
-	else {
-		title = file + " - " APPLICATION_NAME;
+	b::string title = b::format("{}{} - {}", m_fileChanged ? "*" : "", file, APPLICATION_NAME);
+
+    auto version = Navigator::GetInstance()->m_applicationVersion;
+	if (!version.to_string().empty()) {
+		title += b::format(" - {}", version.to_string());
 	}
 
-	if (!version.empty()) {
-		title += " - " + version;
-	}
-
-	Battery::GetApp().window.setTitle(title);
+	App::s_mainWindow->setTitle(title);
 }
 
 bool SketchFile::SaveFile(bool saveAs) {
 
-	auto& window = Battery::GetApp().window;
-
 	// First get the file content
-	std::string content = GetJson().dump(4);
-	std::string tempLocation = fileLocation;
+	auto content = GetJson().dump(4);
+	auto tempLocation = m_filepath;
 
 	// Get file location if not known already
 	if (tempLocation == "" || saveAs) {
 		while (true) {
-			tempLocation = Battery::PromptFileSaveDialog({ "*.*", "*.tsk" }, window.getSystemHandle());
+//			tempLocation = b::PromptFileSaveDialog({ "*.*", "*.tsk" }, window.getSystemHandle());
+            b::log::critical("PROMPTFILESAVEDIALOG NOW");
 
 			// If location is still invalid, abort
 			if (tempLocation == "") {
@@ -41,53 +37,52 @@ bool SketchFile::SaveFile(bool saveAs) {
 			}
 
 			// Append the extension
-			if (Battery::GetExtension(tempLocation) != ".tsk") {
+			if (tempLocation.extension().u8string() != u8".tsk") {
 				tempLocation += ".tsk";
 			}
 
 			// Warn and repeat if the file already exists
-			/*if (Battery::FileExists(tempLocation)) {
-				if (!Battery::ShowWarningMessageBoxYesNo("The file '" +
-					Battery::GetFilename(tempLocation) +
-					"' already exists, are you sure you want to overwrite it?",
-					window.allegroDisplayPointer))
-				{
-					continue;	// Repeat from top
-				}
-			}*/
-			b::log::error("SHOWWARNINGMESSAGEBOX NOW");
+//			if (b::fs::exists(tempLocation)) {
+//				if (!b::message_box_warning(
+//                        fmt::format("The file '{}' already exists, are you sure you want to overwrite it?",
+//                                    b::u8_as_str(tempLocation.filename().u8string()))))
+//				{
+//					continue;	// Repeat from top
+//				}
+//			}
+			b::log::error("SHOWWARNINGMESSAGEBOX WITH RETURN VALUE NOW");
 
 			break;
 		}
 	}
 
 	// Simply append the extension
-	if (Battery::GetExtension(tempLocation) != ".tsk") {
+	if (tempLocation.extension().u8string() != u8".tsk") {
 		tempLocation += ".tsk";
 	}
 
 	sf::Cursor cursor;
 	(void)cursor.loadFromSystem(sf::Cursor::ArrowWait);
-	window.setMouseCursor(cursor);
+	App::s_mainWindow->setMouseCursor(cursor);
 
 	// Now save the file
-	/*if (!Battery::WriteFile(tempLocation, content)) {
-		window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
-		Battery::ShowErrorMessageBox("The file '" + tempLocation + "' could not be saved!",
-			window.allegroDisplayPointer);
+	if (!b::fs::write_text_file_nothrow(tempLocation, content)) {
+        (void)cursor.loadFromSystem(sf::Cursor::Arrow);
+		App::s_mainWindow->setMouseCursor(cursor);
+		b::message_box_warning(b::format("The file '{}' could not be saved!", tempLocation));
 		return false;
-	}*/
+	}
 
 	// Saving was successful
-	fileChanged = false;
-	fileLocation = tempLocation;
-	filename = Battery::GetFilename(fileLocation);
+	m_fileChanged = false;
+	m_filepath = tempLocation;
+	m_filename = tempLocation.filename();
 
 	UpdateWindowTitle();
-	Navigator::GetInstance()->AppendRecentFile(fileLocation);
+	TskSettings::AddRecentFile(m_filepath);
 
 	(void)cursor.loadFromSystem(sf::Cursor::Arrow);
-	window.setMouseCursor(cursor);
+    App::s_mainWindow->setMouseCursor(cursor);
 
 	return true;
 }
@@ -95,9 +90,11 @@ bool SketchFile::SaveFile(bool saveAs) {
 bool SketchFile::OpenFile() {
 
 	// Now open a new one
-	std::string path = Battery::PromptFileOpenDialog({ "*.*", "*.tsk" }, Battery::GetApp().window.getSystemHandle());
+    b::filedialog dialog;
+    // TODO: Implement proper file dialog
+	std::string path = dialog.sync_open();
 
-	if (path == "") {
+	if (path.empty()) {
 		return false;
 	}
 
@@ -108,8 +105,7 @@ bool SketchFile::OpenEmptyFile() {
 
 	// First save the file
 	/*if (ContainsChanges()) {
-
-		bool save = Battery::ShowWarningMessageBoxYesNo("This file contains unsaved changes! "
+		bool save = b::message_box_warning("This file contains unsaved changes! "
 			"Do you want to save the file?", Battery::GetMainWindow().allegroDisplayPointer);
 
 		if (save) {	// File needs to be saved
@@ -118,15 +114,16 @@ bool SketchFile::OpenEmptyFile() {
 			}
 		}
 	}*/
+    b::log::error("SHOWWARNINGMESSAGEBOX WITH RETURN VALUE NOW");
 
 	UpdateWindowTitle();
 
 	// Now the file is saved and can be emptied
 	content = FileContent();
 
-	fileChanged = false;
-	filename = DEFAULT_FILENAME;	// Filename contains extension
-	fileLocation = "";
+	m_fileChanged = false;
+	m_filename = DEFAULT_FILENAME;	// Filename contains extension
+	m_filepath = "";
 	canvasColor = DEFAULT_BACKGROUND_COLOR;
 
 	Navigator::GetInstance()->ResetViewport();
@@ -134,9 +131,9 @@ bool SketchFile::OpenEmptyFile() {
 	return true;
 }
 
-bool SketchFile::OpenFile(const std::string& path, bool silent) {
+bool SketchFile::OpenFile(const b::fs::path& path, bool silent) {
 
-	auto& window = Battery::GetApp().window;
+//	auto& window = Battery::GetApp().window;
 
 	/*if (Battery::GetExtension(path) != ".tsk") {
 		if (!silent) {
@@ -269,8 +266,8 @@ bool SketchFile::OpenFile(const std::string& path, bool silent) {
 	window.SetMouseCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);*/
 	return false;
 }
-/*
-Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
+
+sf::Image SketchFile::ExportImage(bool transparent, float dpi) {
 
 	// Calculate the bounding box
 	ImVec2 min = GetActiveLayer().GetBoundingBox().first;
@@ -278,12 +275,12 @@ Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 	for (auto& layer : GetLayers()) {
 		auto bound = layer.GetBoundingBox();
 
-		min = glm::min(min, bound.first);
-		max = glm::max(max, bound.second);
+		min = b::min(min, bound.first);
+		max = b::max(max, bound.second);
 	}
 
 	// Apply a small margin around the image (% of the entire image)
-	float margin = 0.08;
+	float margin = 0.08f;
 	float sizeX = abs(max.x - min.x);
 	float sizeY = abs(max.y - min.y);
 	min -= ImVec2(sizeX, sizeY) * margin;
@@ -295,41 +292,43 @@ Battery::Bitmap SketchFile::ExportImage(bool transparent, float dpi) {
 	float height = width / sizeX * sizeY;
 
 	if (width <= 0.0 || height <= 0.0 || isnan(width) || isnan(height))
-		return Battery::Bitmap();
+		return {};
 
-	// Initialize texture image to render on
-	Battery::Bitmap image(width, height);
-	std::unique_ptr<Battery::Scene> scene = std::make_unique<Battery::Scene>(Battery::GetMainWindow(), image);
-	//b::log::warn("Created Battery::Texture2D");
+//	// Initialize texture image to render on
+//	Battery::Bitmap image(width, height);
+//	std::unique_ptr<Battery::Scene> scene = std::make_unique<Battery::Scene>(Battery::GetMainWindow(), image);
+//	//b::log::warn("Created Battery::Texture2D");
+//
+//	// Initialize the renderer
+//	Battery::Renderer2D::BeginScene(scene.get());
+//
+//	if (transparent) {
+//		al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
+//		Battery::Renderer2D::DrawBackground(COLOR_TRANSPARENT);
+//		//b::log::warn("Transparent mode");
+//	}
+//	else {
+//		Battery::Renderer2D::DrawBackground(EXPORT_BACKGROUND_COLOR);
+//		//Battery::Renderer2D::DrawBackground(ImVec4(255, 0, 255, 255));
+//		//b::log::warn("Non-transparent mode");
+//	}
+//
+//	// Render layers in reverse order
+//	auto& layers = GetLayers();
+//	for (size_t layerIndex = layers.size() - 1; layerIndex < layers.size(); layerIndex--) {
+//		auto& layer = layers[layerIndex];
+//
+//		for (auto& shape : layer.GetShapes()) {
+//
+//			// Render the shape
+//			shape->RenderExport(min, max, width, height);
+//			//b::log::error("Rendering shape #{}", shape->GetID());
+//		}
+//	}
+//
+//	Battery::Renderer2D::EndScene();
+//	//b::log::warn("Export finished");
 
-	// Initialize the renderer
-	Battery::Renderer2D::BeginScene(scene.get());
-	
-	if (transparent) {
-		al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
-		Battery::Renderer2D::DrawBackground(COLOR_TRANSPARENT);
-		//b::log::warn("Transparent mode");
-	}
-	else {
-		Battery::Renderer2D::DrawBackground(EXPORT_BACKGROUND_COLOR);
-		//Battery::Renderer2D::DrawBackground(ImVec4(255, 0, 255, 255));
-		//b::log::warn("Non-transparent mode");
-	}
-
-	// Render layers in reverse order
-	auto& layers = GetLayers();
-	for (size_t layerIndex = layers.size() - 1; layerIndex < layers.size(); layerIndex--) {
-		auto& layer = layers[layerIndex];
-
-		for (auto& shape : layer.GetShapes()) {
-
-			// Render the shape
-			shape->RenderExport(min, max, width, height);
-			//b::log::error("Rendering shape #{}", shape->GetID());
-		}
-	}
-
-	Battery::Renderer2D::EndScene();
-	//b::log::warn("Export finished");
-	return image;
-}*/
+    b::log::critical("EXPORT NOW");
+	return {};
+}

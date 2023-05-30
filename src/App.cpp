@@ -1,92 +1,82 @@
 
 #include "pch.h"
 
-#include "BatteryApp.h"
+#include "App.hpp"
 #include "UserInterface.h"
 #include "Updater.h"
+#include "TskSettings.hpp"
 #include "NavigatorLayer.h"
-#include "../resource/resource.h"
 
-void BatteryApp::OnStartup() {
+#include "resources/splashscreen_png.hpp"
 
-	/*Battery::Bitmap bitmap(500, 500);
+void MainWindow::setup() {
+    return;
 
 	// Show splash screen
-	Battery::Bitmap splash;
-	if (splash.LoadEmbeddedResource(DB_SPLASHSCREEN)) {
-		window.SetSize(splash.GetSize());
-		window.CenterOnPrimaryMonitor();
-		window.FlipDisplay();
-		al_draw_bitmap(splash.GetAllegroBitmap(), 0, 0, 0);
-		window.FlipDisplay();
-		window.Show();
-		window.Focus();
-	}*/
-	b::log::error("SPLASHSCREEN NOW");
-
-	// Various layers
-	PushLayer(std::make_shared<NavigatorLayer>());
-	PushOverlay(std::make_shared<UserInterface>());
-	
-	// Load the settings
-	if (!Navigator::GetInstance()->LoadSettings()) {
-		Navigator::GetInstance()->SaveSettings();	// If settings can't be loaded, save the default settings
+	sf::Texture splash;
+    auto splashResource = resources::splashscreen_png;
+	if (splash.loadFromMemory(splashResource.data(), splashResource.size())) {
+        App::s_mainWindow->setSize(splash.getSize());
+//		App::s_mainWindow->();
+        App::s_mainWindow->display();
+		//App::s_mainWindow->plash.GetAllegroBitmap(), 0, 0, 0);
+        App::s_mainWindow->display();
+//		App::s_mainWindow->hide();
+        App::s_mainWindow->requestFocus();
 	}
+
+    //b::sleep(5);
 	
 	// Set the icon and title of the window
 	//Battery::LoadExecutableIcon(DB_ICON1);
-	window.setTitle(APPLICATION_NAME);
+    App::s_mainWindow->setTitle(APPLICATION_NAME);
 	
 	// Check if file to open was supplied
-	std::string openFile = "";
+	b::fs::path openFile;
 	bool newFile = false;
 	bool noUpdate = false;
-	if (args.size() >= 2) {
-		if (args[1] == "new") {
+	if (App::get().m_args.size() >= 2) {
+		if (App::get().m_args[1] == "new") {
 			newFile = true;
 		}
-		else if (args[1] == "noupdate") {
+		else if (App::get().m_args[1] == "noupdate") {
 			noUpdate = true;
 		}
 	
-		openFile = args[1];
+		openFile = App::get().m_args[1];
 	}
 	
 	// Otherwise, open most recent 
-	if (openFile == "") {
-		openFile = Navigator::GetInstance()->GetMostRecentFile();
+	if (openFile.empty()) {
+//		openFile = TskSettings::GetMostRecentFile();
 	}
 	
 	// Now open it
-	if (openFile != "" && !newFile) {
+	if (!openFile.empty() && !newFile) {
 		Navigator::GetInstance()->OpenFile(openFile, true);
 	}
 
 	// Set the window size and position
-	ImVec2 monitorSize = GetPrimaryMonitorSize();	// If screen is too small with a little margin, maximize the window				
-	if (monitorSize.x / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_WIDTH || monitorSize.y / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_HEIGHT) {
-		window.setSize({ (uint16_t)(monitorSize.x / SCREEN_SIZE_MARGIN), (uint16_t)(monitorSize.y / SCREEN_SIZE_MARGIN) });
-		glm::uvec2 v = (monitorSize - ImVec2(window.getSize().x, window.getSize().y)) / 2.f + ImVec2(0, -30);
-		window.setPosition({ (uint16_t)v.x, (uint16_t)v.y });
-		//window.Maximize();
-	}
-	else {	// Set up window normally
-		ImVec2 v = (monitorSize - ImVec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)) / 2.f + ImVec2(0, -30);
-		window.setPosition({ (uint16_t)v.x, (uint16_t)v.y });
-		window.setSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
-	}
+//	ImVec2 monitorSize = GetPrimaryMonitorSize();	// If screen is too small with a little margin, maximize the window
+//	if (monitorSize.x / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_WIDTH || monitorSize.y / SCREEN_SIZE_MARGIN < DEFAULT_WINDOW_HEIGHT) {
+//		window.setSize({ (uint16_t)(monitorSize.x / SCREEN_SIZE_MARGIN), (uint16_t)(monitorSize.y / SCREEN_SIZE_MARGIN) });
+//		glm::uvec2 v = (monitorSize - ImVec2(window.getSize().x, window.getSize().y)) / 2.f + ImVec2(0, -30);
+//		window.setPosition({ (uint16_t)v.x, (uint16_t)v.y });
+//		//window.Maximize();
+//	}
+//	else {	// Set up window normally
+//		ImVec2 v = (monitorSize - ImVec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)) / 2.f + ImVec2(0, -30);
+//		window.setPosition({ (uint16_t)v.x, (uint16_t)v.y });
+//		window.setSize({ DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT });
+//	}
 
 	// Finalize display
 	//window.SetFrameless(false);
 	//Battery::Renderer2D::DrawBackground({ 255, 255, 255, 255 });
-	window.requestFocus();
-
-	// Now start updater thread
-	PushLayer(std::make_shared<UpdaterLayer>(noUpdate));
+    App::s_mainWindow->requestFocus();
 }
 
-void BatteryApp::OnUpdate() {
-	using namespace Battery;
+void MainWindow::update() {
 
 	// Only refresh the screen eventually to save cpu power
 	// Allow the first 60 frames to let everything initialize
@@ -102,20 +92,24 @@ void BatteryApp::OnUpdate() {
 	}*/
 }
 
-void BatteryApp::OnEvent(sf::Event e, bool& handled) {
+void MainWindow::cleanup() {
 
-	lastScreenRefresh = sf::seconds(0);		// Force a screen update on every event
-
-	switch (e.type) {
-	case sf::Event::Closed:
-		Navigator::GetInstance()->CloseApplication();
-		handled = true;
-		break;
-
-	default:
-		break;
-	}
 }
+
+//void App::OnEvent(sf::Event e, bool& handled) {
+//
+//	lastScreenRefresh = sf::seconds(0);		// Force a screen update on every event
+//
+//	switch (e.type) {
+//	case sf::Event::Closed:
+//		Navigator::GetInstance()->CloseApplication();
+//		handled = true;
+//		break;
+//
+//	default:
+//		break;
+//	}
+//}
 
 
 
@@ -303,7 +297,7 @@ public:
 		switch (e->GetType()) {
 
 		case EventType::TextInput:
-			//LOG_INFO(static_cast<TextInputEvent*>(e)->character);
+			//b::log::info(static_cast<TextInputEvent*>(e)->character);
 			break;
 
 		case EventType::KeyPressed:
@@ -328,13 +322,9 @@ public:
 			break;
 		}
 	}
-};
+};*/
 
-Battery::Application* Battery::CreateApplication() {
-	return new BatteryApp();
-}
 
-*/
 
 
 

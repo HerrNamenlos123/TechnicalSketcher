@@ -30,15 +30,15 @@ void CircleTool::OnShapeClicked(const ImVec2& position, const ImVec2& snapped, b
 
 }
 
-void CircleTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void CircleTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 	if (circleStarted) {
-		previewCircle.SetRadius(glm::distance(snapped, previewCircle.GetCenter()));
+		previewCircle.SetRadius(b::distance(snapped, previewCircle.GetCenter()));
 	}
 
 	Navigator::GetInstance()->previewPointPosition = Navigator::GetInstance()->mouseSnapped;
 }
 
-void CircleTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void CircleTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 
 }
 

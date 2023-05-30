@@ -16,13 +16,13 @@ struct Fonts {
 	inline static ImFont* segoeFont22 = nullptr;
 
 	static void load() {
-		sansFont9 = ADD_FONT(OpenSansFontData, 9);
-		sansFont14 = ADD_FONT(OpenSansFontData, 14);
-		sansFont17 = ADD_FONT(OpenSansFontData, 17);
-		sansFont22 = ADD_FONT(OpenSansFontData, 22);
-		materialFont35 = ADD_ICON_FONT(MaterialIconFontData, 35);
-		materialFont22 = ADD_ICON_FONT(MaterialIconFontData, 22);
-		segoeFont22 = ADD_ICON_FONT(SegoeMDL2FontData, 22);
+//		sansFont9 = ADD_FONT(OpenSansFontData, 9);
+//		sansFont14 = ADD_FONT(OpenSansFontData, 14);
+//		sansFont17 = ADD_FONT(OpenSansFontData, 17);
+//		sansFont22 = ADD_FONT(OpenSansFontData, 22);
+//		materialFont35 = ADD_ICON_FONT(MaterialIconFontData, 35);
+//		materialFont22 = ADD_ICON_FONT(MaterialIconFontData, 22);
+//		segoeFont22 = ADD_ICON_FONT(SegoeMDL2FontData, 22);
 	}
 	
 };

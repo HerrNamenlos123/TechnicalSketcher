@@ -26,8 +26,8 @@ public:
 	virtual void OnToolChanged() = 0;
 	virtual void OnSpaceClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel) = 0;
 	virtual void OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape) = 0;
-	virtual void OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) = 0;
-	virtual void OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) = 0;
+	virtual void OnMouseHovered(const ImVec2& position, const ImVec2& snapped, int dx, int dy) = 0;
+	virtual void OnMouseDragged(const ImVec2& position, const ImVec2& snapped, int dx, int dy) = 0;
 	virtual void OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel) = 0;
 	virtual void OnLayerSelected(LayerID layer) = 0;
 	virtual void CancelShape() = 0;

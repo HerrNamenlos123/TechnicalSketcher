@@ -1,8 +1,10 @@
 
-#include "pch.h"
-
+#include "App.hpp"
 #include "Navigator.h"
+#include "TskSettings.hpp"
 #include "config.h"
+
+#include "resources/tsk_version.hpp"
 
 #include "Tools/SelectionTool.h"
 #include "Tools/LineTool.h"
@@ -22,21 +24,21 @@ Navigator* Navigator::GetInstance() {
 		return instance.get();
 	}
 
-	throw Battery::Exception(__FUNCTION__"(): Can't return Navigator instance: Instance is nullptr!");
+	throw std::logic_error(fmt::format("{}(): Can't return Navigator instance: Instance is nullptr!", std::source_location::current().function_name()));
 }
 
 void Navigator::OnAttach() {
 	UseTool(ToolType::SELECT);
 
 	// Get the version of the application
-	applicationVersion = GetApplicationVersion();
+	m_applicationVersion = GetApplicationVersion();
 
 	// Register the clipboard format
 	//clipboardShapeFormat = Battery::GetApp().window.RegisterClipboardFormat(CLIPBOARD_FORMAT);
 	b::log::error("CLIPBOARD");
 
 	// Load the location of the ImGui .ini file
-	imguiFileLocation = GetSettingsDirectory() + IMGUI_FILENAME;
+    m_imguiFileLocation = TskSettings::SettingsDirectory() + IMGUI_FILENAME;
 }
 
 void Navigator::OnDetach() {
@@ -44,8 +46,8 @@ void Navigator::OnDetach() {
 
 void Navigator::OnUpdate() {
 	//windowSize = glm::ivec2(Battery::GetApp().window.getSize().x, Battery::GetApp().window.getSize().y);
-	mousePosition = ConvertScreenToWorkspaceCoords({ sf::Mouse::getPosition().x, sf::Mouse::getPosition().y });
-	mouseSnapped = round(mousePosition / snapSize) * snapSize;
+	mousePosition = ConvertScreenToWorkspaceCoords({ (float)sf::Mouse::getPosition().x, (float)sf::Mouse::getPosition().y });
+	mouseSnapped = b::round(mousePosition / snapSize) * snapSize;
 
 	// Key control
 	controlKeyPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl);
@@ -57,7 +59,7 @@ void Navigator::OnUpdate() {
 	}
 
 	// Update window title
-	file.UpdateWindowTitle();
+	m_file.UpdateWindowTitle();
 	
 	// Handle all queued events
 	UpdateEvents();
@@ -125,13 +127,11 @@ void Navigator::OnEvent(sf::Event e, bool& handled) {
 
 
 ImVec2 Navigator::ConvertScreenToWorkspaceCoords(const ImVec2& v) {
-	return (v - panOffset - ImVec2(Battery::GetApp().window.getSize().x, 
-		Battery::GetApp().window.getSize().y) * 0.5f) / scale;
+	return (v - m_panOffset - App::s_mainWindow->getSize() * 0.5f) / scale;
 }
 
 ImVec2 Navigator::ConvertWorkspaceToScreenCoords(const ImVec2& v) {
-	return panOffset + v * scale + ImVec2(Battery::GetApp().window.getSize().x,
-		Battery::GetApp().window.getSize().y) * 0.5f;
+	return m_panOffset + v * scale + App::s_mainWindow->getSize() * 0.5f;
 }
 
 float Navigator::ConvertWorkspaceToScreenDistance(float distance) {
@@ -166,21 +166,21 @@ void Navigator::MouseScrolled(float amount) {
 	}
 
 	auto mPos = sf::Mouse::getPosition();
-	ImVec2 mouseToCenter = ImVec2(panOffset.x - mPos.x + windowSize.x / 2.f,
-										panOffset.y - mPos.y + windowSize.y / 2.f);
+	ImVec2 mouseToCenter = ImVec2(m_panOffset.x - mPos.x + m_windowSize.x / 2.f,
+                                  m_panOffset.y - mPos.y + m_windowSize.y / 2.f);
 
 	if (scroll > 0)
-		panOffset += mouseToCenter * factor - mouseToCenter;
+        m_panOffset += mouseToCenter * factor - mouseToCenter;
 	else
-		panOffset -= mouseToCenter - mouseToCenter / factor;
+        m_panOffset -= mouseToCenter - mouseToCenter / factor;
 }
 
 void Navigator::UpdateEvents() {
 
 	for (sf::Event event : eventBuffer) {
 
-		ImVec2 position = ConvertScreenToWorkspaceCoords({ event.mouseButton.x, event.mouseButton.y });	// Allow smooth positioning when CTRL is pressed
-		ImVec2 snapped = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) ? round(position / snapSize) * snapSize : position;
+		ImVec2 position = ConvertScreenToWorkspaceCoords({ (float)event.mouseButton.x, (float)event.mouseButton.y });	// Allow smooth positioning when CTRL is pressed
+		ImVec2 snapped = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) ? b::round(position / snapSize) * snapSize : position;
 		
 		bool left = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 		bool right = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
@@ -225,7 +225,7 @@ void Navigator::CancelShape() {
 	if (selectedTool) {
 		selectedTool->CancelShape();
 	}
-	LOG_TRACE("Shape cancelled");
+	b::log::trace("Shape cancelled");
 
 }
 
@@ -270,8 +270,8 @@ void Navigator::UseTool(enum class ToolType tool) {
 void Navigator::PrintShapes() {
 	
 	// Print all shapes in the currently selected Layer
-	b::log::warn("Layer #{}: Name '{}'", file.GetActiveLayer().GetID(), file.GetActiveLayer().name);
-	for (const auto& shape : file.GetActiveLayer().GetShapes()) {
+	b::log::warn("Layer #{}: Name '{}'", m_file.GetActiveLayer().GetID(), m_file.GetActiveLayer().name);
+	for (const auto& shape : m_file.GetActiveLayer().GetShapes()) {
 		b::log::warn("Shape #{}: ", shape->GetID());
 		b::log::error("Shape JSON Content: \n{}", shape->GetJson().dump(4));
 	}
@@ -494,8 +494,7 @@ void Navigator::OnMouseReleased(const ImVec2& position, bool left, bool right, b
 	}
 }
 
-void Navigator::OnMouseMoved(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
-	using namespace Battery;
+void Navigator::OnMouseMoved(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) ||
 		sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) ||
@@ -517,13 +516,13 @@ void Navigator::OnMouseMoved(const ImVec2& position, const ImVec2& snapped, floa
 	}
 }
 
-void Navigator::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void Navigator::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 	if (selectedTool) {
 		selectedTool->OnMouseHovered(position, snapped, dx, dy);
 	}
 }
 
-void Navigator::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void Navigator::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 	if (selectedTool) {
 		selectedTool->OnMouseDragged(position, snapped, dx, dy);
 	}
@@ -553,7 +552,7 @@ void Navigator::OnToolChanged() {
 
 void Navigator::OnLayerSelected(LayerID layer) {
 
-	file.ActivateLayer(layer);
+    m_file.ActivateLayer(layer);
 
 	if (selectedTool) {
 		selectedTool->OnLayerSelected(layer);
@@ -585,7 +584,7 @@ void Navigator::SelectAll() {
 }
 
 void Navigator::UndoAction() {
-	file.UndoAction();
+    m_file.UndoAction();
 }
 
 void Navigator::CopyClipboard() {
@@ -610,130 +609,69 @@ void Navigator::PasteClipboard() {
 }
 
 bool Navigator::OpenFile() {
-	return file.OpenFile();
+	return m_file.OpenFile();
 }
 
 bool Navigator::OpenEmptyFile() {
-	return file.OpenEmptyFile();
+	return m_file.OpenEmptyFile();
 }
 
-bool Navigator::OpenFile(const std::string& path, bool silent) {
-	return file.OpenFile(path, silent);
+bool Navigator::OpenFile(const b::fs::path& path, bool silent) {
+	return m_file.OpenFile(path, silent);
 }
 
 bool Navigator::SaveFile() {
-	return file.SaveFile();
+	return m_file.SaveFile();
 }
 
 bool Navigator::SaveFileAs() {
-	return file.SaveFile(true);
+	return m_file.SaveFile(true);
 }
 
 void Navigator::ResetGui() {
 
 	// Simply delete the .ini file
-	if (Battery::FileExists(imguiFileLocation)) {
-		Battery::RemoveFile(imguiFileLocation);
+	if (b::fs::exists(m_imguiFileLocation)) {
+		b::fs::remove(m_imguiFileLocation);
 	}
 }
 
 void Navigator::ResetViewport() {
 
-	panOffset = { 0, 0 };
+    m_panOffset = {0, 0 };
 	scale = 7;
 
 }
 
 bool Navigator::ExportToClipboard() {
-	Battery::SetMouseCursor(sf::Cursor::Type::Wait);
-	std::optional<sf::Image> image = file.ExportImage(exportTransparent, exportDPI);
+//	b::windowed_application::get()->get_window(0)->getWindow().setMouseCursor(sf::Cursor::Type::Wait);
+	std::optional<sf::Image> image = m_file.ExportImage(exportTransparent, exportDPI);
 	if (image)
 		return false;
 
 	//bool success = Battery::SetClipboardImage(image.value());
 	b::log::error("CLIPBOARD NOW");
-	Battery::SetMouseCursor(sf::Cursor::Type::Arrow);
+//    b::windowed_application::get()->get_window(0)->getWindow().setMouseCursor(sf::Cursor::Type::Arrow);
 	//return success;
 	return false;
 }
 
 bool Navigator::ExportToFile() {
-	
-	std::string filename = Battery::PromptFileSaveDialog({ "*.png" }, Battery::GetApp().window.getSystemHandle());
-	if (filename == "")
-		return false;
 
-	if (Battery::GetExtension(filename) != ".png") {
-		filename += ".png";
-	}
+    b::filedialog dialog;
+    dialog.default_extension = "png";
+    dialog.filters = {{ "Image files", "*.png" }};
 
-	// TODO: Overwrite message if png is added
-	std::optional<sf::Image> image = file.ExportImage(exportTransparent, exportDPI);
+	auto filename = dialog.sync_save();
+	if (filename.empty()) return false;
+
+	std::optional<sf::Image> image = m_file.ExportImage(exportTransparent, exportDPI);
 	if (!image)
 		return false;
 
-	/*bool success = image.SaveToFile(filename);
-	Battery::ExecuteShellCommand("explorer.exe /select," + filename);	// TODO: Make for linux
-	return success;*/
-	b::log::error("EXPORT NOW");
-	return false;
-}
-
-bool Navigator::LoadSettings() {
-
-	try {
-		std::string path = GetSettingsDirectory() + SETTINGS_FILENAME;
-		auto file = Battery::ReadFile(path);
-
-		if (file.fail()) {
-			b::log::error("Failed to load settings file!");
-			return false;
-		}
-
-		nlohmann::json json = nlohmann::json::parse(file.content());
-
-		if (json["settings_type"] != JSON_SETTINGS_TYPE) {
-			b::log::error("Can't load settings file: Invalid settings type!");
-			return false;
-		}
-		if (json["settings_version"] != JSON_SETTINGS_VERSION) {
-			b::log::error("Can't load settings file: Invalid settings type!");
-			return false;
-		}
-
-		exportDPI = json["export_dpi"];
-		exportTransparent = json["export_transparent"];
-		keepUpToDate = json["keep_up_to_date"];
-
-		return true;
-	}
-	catch (...) {
-		b::log::warn("Failed to load settings file!");
-	}
-
-	return false;
-}
-
-bool Navigator::SaveSettings() {
-
-	try {
-		nlohmann::json json = nlohmann::json();
-
-		json["settings_type"] = JSON_SETTINGS_TYPE;
-		json["settings_version"] = JSON_SETTINGS_VERSION;
-
-		json["export_dpi"] = exportDPI;
-		json["export_transparent"] = exportTransparent;
-		json["keep_up_to_date"] = keepUpToDate;
-
-		std::string file = GetSettingsDirectory() + SETTINGS_FILENAME;
-		return Battery::WriteFile(file, json.dump(4));
-	}
-	catch (...) {
-		b::log::warn("Failed to save settings file!");
-	}
-
-	return false;
+	bool success = image->saveToFile(filename);
+	b::execute(b::format("explorer.exe /select,{}", filename.string()));	// TODO: Make for linux
+	return success;
 }
 
 
@@ -742,81 +680,29 @@ bool Navigator::SaveSettings() {
 
 
 
-
-std::string Navigator::GetMostRecentFile() {
-	auto files = GetRecentFiles();
-
-	if (files.size() > 0) {
-		return files[files.size() - 1];
-	}
-
-	return "";
+semver::version Navigator::GetApplicationVersion() {
+	return semver::from_string(resources::tsk_version.string());
 }
 
-std::vector<std::string> Navigator::GetRecentFiles() {
-	auto file = Battery::ReadFile(GetSettingsDirectory() + RECENT_FILES_FILENAME);
+void Navigator::OpenNewWindowFile(const b::fs::path& filepath) {
 
-	if (file.fail()) {
-		b::log::error("Can't read file with recent files: '{}'!", file.path());
-		return std::vector<std::string>();
-	}
-
-	return Battery::SplitString(file.content(), '\n');
-}
-
-bool Navigator::AppendRecentFile(std::string recentFile) {
-	auto files = GetRecentFiles();		// If the file can't be found and vector is empty, doesn't matter
-
-	// If it's already there, delete and append again
-	for (size_t i = 0; i < files.size(); i++) {
-		if (files[i] == recentFile) {
-			files.erase(files.begin() + i);
-			break;
-		}
-	}
-	files.push_back(recentFile);
-
-	// Delete first one, if there's too many
-	while (files.size() > MAX_NUMBER_OF_RECENT_FILES) {
-		files.erase(files.begin());
-	}
-
-	return SaveRecentFiles(files);
-}
-
-bool Navigator::SaveRecentFiles(std::vector<std::string> recentFiles) {
-	auto file = Battery::JoinStrings(recentFiles, "\n");
-	return Battery::WriteFile(GetSettingsDirectory() + RECENT_FILES_FILENAME, file);
-}
-
-std::string Navigator::GetSettingsDirectory() {
-	return "";
-	//return Battery::GetAllegroStandardPath(ALLEGRO_USER_SETTINGS_PATH);
-}
-
-std::string Navigator::GetApplicationVersion() {
-	return APP_VERSION;
-}
-
-void Navigator::OpenNewWindowFile(const std::string& file) {
-
-	if (Battery::FileExists(file)) {
-		LOG_INFO("Starting new application instance while opening file '{}'", file);
+	if (b::fs::exists(filepath)) {
+		b::log::info("Starting new application instance while opening file '{}'", filepath);
 
 		// Execute the first command line argument, which is always the path of the exe
-		system(std::string("start " + Battery::GetApp().args[0] + " " + file).c_str());
+		b::execute(b::format("start {} {}", App::get().m_args[0], filepath));     // TODO: Make for linux
 	}
 	else {
-		b::log::error("File can not be found: '{}'", file);
+		b::log::error("File can not be found: '{}'", filepath);
 		//Battery::ShowInfoMessageBox("The file '" + file + "' can not be found!");
 	}
 }
 
 void Navigator::StartNewApplicationInstance() {
-	LOG_INFO("Starting new instance of the application");
+	b::log::info("Starting new instance of the application");
 
 	// Execute the first command line argument, which is always the path of the exe
-	system(std::string("start " + Battery::GetApp().args[0] + " new").c_str());
+    b::execute(b::format("start {} new", App::get().m_args[0]));     // TODO: Make for linux
 }
 
 bool Navigator::CloseApplication() {
@@ -830,8 +716,8 @@ bool Navigator::CloseApplication() {
 
 	// Only close application, if file is saved
 
-	if (!file.ContainsChanges()) {
-		Battery::GetApp().CloseApplication();
+	if (!m_file.ContainsChanges()) {
+		App::get().stop_application();
 		return true;
 	}
 
@@ -840,12 +726,12 @@ bool Navigator::CloseApplication() {
 	bool save = false;
 
 	if (!save) {	// Discard changes and close the application
-		Battery::GetApp().CloseApplication();
+        App::get().stop_application();
 		return true;
 	}
 
 	if (SaveFile()) {
-		Battery::GetApp().CloseApplication();
+        App::get().stop_application();
 		return true;
 	}
 
@@ -858,46 +744,46 @@ bool Navigator::CloseApplication() {
 
 
 void Navigator::AddLayer() {
-	file.PushLayer();
+	m_file.PushLayer();
 }
 
 void Navigator::AddLine(const LineShape& line) {
 
 	// Safety check
 	if (line.GetPoint1() == line.GetPoint2()) {
-		b::log::warn(__FUNCTION__ "(): Line is not added to buffer: Start and end points are identical!");
+		b::log::warn("{}(): Line is not added to buffer: Start and end points are identical!", std::source_location::current().function_name());
 		return;
 	}
 
-	file.AddShape(ShapeType::LINE, line.GetPoint1(), line.GetPoint2(), line.GetThickness(), line.GetColor());
+	m_file.AddShape(ShapeType::LINE, line.GetPoint1(), line.GetPoint2(), line.GetThickness(), line.GetColor());
 
-	LOG_TRACE(__FUNCTION__"(): Line was added");
+	b::log::trace("{}(): Line was added", std::source_location::current().function_name());
 }
 
 void Navigator::AddCircle(const CircleShape& circle) {
 
 	// Safety check
 	if (circle.GetRadius() == 0) {
-		b::log::warn(__FUNCTION__ "(): Circle is not added to buffer: Radius is 0!");
+		b::log::warn("{}(): Circle is not added to buffer: Radius is 0!", std::source_location::current().function_name());
 		return;
 	}
 
-	file.AddShape(ShapeType::CIRCLE, circle.GetCenter(), circle.GetRadius(), circle.GetThickness(), circle.GetColor());
+    m_file.AddShape(ShapeType::CIRCLE, circle.GetCenter(), circle.GetRadius(), circle.GetThickness(), circle.GetColor());
 
-	LOG_TRACE(__FUNCTION__"(): Circle was added");
+	b::log::trace("{}(): Circle was added", std::source_location::current().function_name());
 }
 
 void Navigator::AddArc(const ArcShape& arc) {
 
 	// Safety check
 	if (arc.GetRadius() == 0) {
-		b::log::warn(__FUNCTION__ "(): Arc is not added to buffer: Radius is 0!");
+		b::log::warn("{}(): Arc is not added to buffer: Radius is 0!", std::source_location::current().function_name());
 		return;
 	}
 
-	file.AddShape(ShapeType::ARC, arc.GetCenter(), arc.GetRadius(), arc.GetStartAngle(), arc.GetEndAngle(), arc.GetThickness(), arc.GetColor());
+	m_file.AddShape(ShapeType::ARC, arc.GetCenter(), arc.GetRadius(), arc.GetStartAngle(), arc.GetEndAngle(), arc.GetThickness(), arc.GetColor());
 
-	LOG_TRACE(__FUNCTION__"(): Arc was added");
+	b::log::trace("{}(): Arc was added", std::source_location::current().function_name());
 }
 
 
@@ -933,22 +819,21 @@ void Navigator::AddArc(const ArcShape& arc) {
 
 
 void Navigator::RenderShapes() {
-	using namespace Battery;
-	
+
 	// Render in reverse order, except for the active layer
-	auto& layers = file.GetLayers();
+	auto& layers = m_file.GetLayers();
 	for (size_t layerIndex = layers.size() - 1; layerIndex < layers.size(); layerIndex--) {
 		auto& layer = layers[layerIndex];
 
-		if (file.GetActiveLayer().GetID() == layer.GetID()) {	// Layer is the active one, skip
+		if (m_file.GetActiveLayer().GetID() == layer.GetID()) {	// Layer is the active one, skip
 			continue;
 		}
 
 		for (auto& shape : layer.GetShapes()) {
 
 			// Skip the shape if it's not on the screen
-			if (shape->ShouldBeRendered(Battery::GetApp().window.getSize().x, 
-										Battery::GetApp().window.getSize().y))
+			if (shape->ShouldBeRendered(App::s_mainWindow->getSize().x,
+                                        App::s_mainWindow->getSize().y))
 			{
 				// Render the shape
 				ShapeID id = shape->GetID();
@@ -965,17 +850,17 @@ void Navigator::RenderShapes() {
 				shape->Render(false, shapeSelected, id == shapeHovered);
 			}
 			else {
-				LOG_TRACE(__FUNCTION__ "(): Skipping rendering shape #{}: Not on screen", shape->GetID());
+				b::log::trace("{}(): Skipping rendering shape #{}: Not on screen", std::source_location::current().function_name(), shape->GetID());
 			}
 		}
 	}
 
 	// Now render the active layer
-	for (auto& shape : file.GetActiveLayer().GetShapes()) {
+	for (auto& shape : m_file.GetActiveLayer().GetShapes()) {
 
 		// Skip the shape if it's not on the screen
-		if (shape->ShouldBeRendered(Battery::GetApp().window.getSize().x,
-			Battery::GetApp().window.getSize().y))
+		if (shape->ShouldBeRendered(App::s_mainWindow->getSize().x,
+                                    App::s_mainWindow->getSize().y))
 		{
 			// Render the shape
 			ShapeID id = shape->GetID();
@@ -992,17 +877,15 @@ void Navigator::RenderShapes() {
 			shape->Render(true, shapeSelected, id == shapeHovered);
 		}
 		else {
-			LOG_TRACE(__FUNCTION__ "(): Skipping rendering shape #{}: Not on screen", shape->GetID());
+			b::log::trace("{}(): Skipping rendering shape #{}: Not on screen", std::source_location::current().function_name(), shape->GetID());
 		}
 	}
 
 	// Now render all selected shapes again, so the highlighted ones are on top
-	for (const auto& shape : file.GetActiveLayer().GetShapes()) {
+	for (const auto& shape : m_file.GetActiveLayer().GetShapes()) {
 
 		// Skip the shape if it's not on the screen
-		if (shape->ShouldBeRendered(Battery::GetApp().window.getSize().x,
-			Battery::GetApp().window.getSize().y))
-		{
+		if (shape->ShouldBeRendered(App::s_mainWindow->getSize().x, App::s_mainWindow->getSize().y)) {
 			// Render the shape on top of all others
 			ShapeID id = shape->GetID();
 			bool shapeSelected = false;

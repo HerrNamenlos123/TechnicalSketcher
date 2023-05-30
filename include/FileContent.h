@@ -114,7 +114,7 @@ public:
 			return false;
 		}
 
-		LOG_TRACE("Moving Layer '{}' with id #{} front", layers[index].name, layers[index].GetID());
+		b::log::trace("Moving Layer '{}' with id #{} front", layers[index].name, layers[index].GetID());
 		std::iter_swap(layers.begin() + index, layers.begin() + index - 1);
 		return true;
 	}
@@ -126,7 +126,7 @@ public:
 			return false;
 		}
 
-		LOG_TRACE("Moving Layer '{}' with id #{} back", layers[index].name, layers[index].GetID());
+		b::log::trace("Moving Layer '{}' with id #{} back", layers[index].name, layers[index].GetID());
 		std::iter_swap(layers.begin() + index, layers.begin() + index + 1);
 		return true;
 	}

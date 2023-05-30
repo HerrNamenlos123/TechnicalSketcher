@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Battery/Battery.h"
 #include "Navigator.h"
 
-class NavigatorLayer : public Battery::Layer {
+class NavigatorLayer {
 public:
 
 	NavigatorLayer() {
@@ -14,23 +13,23 @@ public:
 		Navigator::DestroyInstance();
 	}
 
-	void OnAttach() override {
+	void OnAttach() {
 		Navigator::GetInstance()->OnAttach();
 	}
 
-	void OnDetach() override {
+	void OnDetach() {
 		Navigator::GetInstance()->OnDetach();
 	}
 
-	void OnUpdate() override {
+	void OnUpdate() {
 		Navigator::GetInstance()->OnUpdate();
 	}
 
-	void OnRender() override {
+	void OnRender() {
 		Navigator::GetInstance()->OnRender();
 	}
 
-	void OnEvent(sf::Event e, bool& handled) override {
+	void OnEvent(sf::Event e, bool& handled) {
 		Navigator::GetInstance()->OnEvent(e, handled);
 	}
 };

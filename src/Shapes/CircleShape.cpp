@@ -46,7 +46,7 @@ bool CircleShape::IsInSelectionBox(const ImVec2& s1, const ImVec2& s2) const {
 	return IsInbetween(center.x, s1.x, s2.x) && IsInbetween(center.y, s1.y, s2.y);
 }
 
-bool CircleShape::ShouldBeRendered(float screenWidth, float screenHeight) const {
+bool CircleShape::ShouldBeRendered(int screenWidth, int screenHeight) const {
 
 	auto pair = GetBoundingBox();
 	ImVec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
@@ -112,10 +112,10 @@ bool CircleShape::ShowPropertiesWindow() {
 	auto oldColor = color;
 	auto oldThickness = thickness;
 
-	color /= 255;
-	ImGui::ColorEdit4("Circle color", (float*)&color[0], ImGuiColorEditFlags_NoInputs);
+	color /= 255.f;
+	ImGui::ColorEdit4("Circle color", (float*)&color.x, ImGuiColorEditFlags_NoInputs);
 	ImGui::DragFloat("Circle line thickness", &thickness, 0.1f, 0.f, 10.f);
-	color *= 255;
+	color *= 255.f;
 
 	ImGui::PopFont();
 	ImGui::PopFont();
@@ -194,7 +194,7 @@ nlohmann::json CircleShape::GetJson() const {
 	j["center"] = nlohmann::json::array({ center.x, center.y });
 	j["radius"] = radius;
 	j["thickness"] = thickness;
-	j["color"] = nlohmann::json::array({ color.r, color.g, color.b, color.a });
+	j["color"] = nlohmann::json::array({ color.x, color.y, color.z, color.w });
 
 	return j;
 }

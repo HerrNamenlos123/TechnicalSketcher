@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pch.h"
+#include "battery/graphics/sfml.hpp"
 #include "Shapes/LineShape.h"
 #include "ApplicationRenderer.h"
 #include "Navigator.h"
@@ -48,7 +48,7 @@ bool LineShape::IsInSelectionBox(const ImVec2& s1, const ImVec2& s2) const {
 		(IsInbetween(p2.x, s1.x, s2.x) && IsInbetween(p2.y, s1.y, s2.y));
 }
 
-bool LineShape::ShouldBeRendered(float screenWidth, float screenHeight) const {
+bool LineShape::ShouldBeRendered(int screenWidth, int screenHeight) const {
 
 	auto pair = GetBoundingBox();
 	ImVec2 min = Navigator::GetInstance()->ConvertWorkspaceToScreenCoords(pair.first);
@@ -64,13 +64,13 @@ float LineShape::GetDistanceToCursor(const ImVec2& p) const {
 	ImVec2 bToA = p1 - p2;
 	ImVec2 bToP = p - p2;
 
-	if (aToB.length() == 0)
-		return (float)aToP.length();
+	if (b::length(aToB) == 0)
+		return b::length(aToP);
 
-	if (glm::dot(aToB, aToP) < 0) {
+	if (b::dot(aToB, aToP) < 0) {
 		return dist(p1, p);
 	}
-	else if (glm::dot(bToA, bToP) < 0) {
+	else if (b::dot(bToA, bToP) < 0) {
 		return dist(p2, p);
 	}
 	else {
@@ -130,7 +130,7 @@ bool LineShape::ShowPropertiesWindow() {
 	auto oldThickness = thickness;
 
 	color /= 255.f;
-	ImGui::ColorEdit4("Line color", (float*)&color[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit4("Line color", (float*)&color.x, ImGuiColorEditFlags_NoInputs);
 	ImGui::DragFloat("Line thickness", &thickness, 0.1f, 0.f, 10.f);
 	color *= 255.f;
 
@@ -217,7 +217,7 @@ nlohmann::json LineShape::GetJson() const {
 	j["p1"] = nlohmann::json::array({p1.x, p1.y});
 	j["p2"] = nlohmann::json::array({p2.x, p2.y});
 	j["thickness"] = thickness;
-	j["color"] = nlohmann::json::array({ color.r, color.g, color.b, color.a });
+	j["color"] = nlohmann::json::array({ color.x, color.y, color.z, color.w });
 
 	return j;
 }

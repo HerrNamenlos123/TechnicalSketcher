@@ -29,7 +29,7 @@ void LineStripTool::OnSpaceClicked(const ImVec2& position, const ImVec2& snapped
 void LineStripTool::OnShapeClicked(const ImVec2& position, const ImVec2& snapped, bool left, bool right, bool wheel, ShapeID shape) {
 }
 
-void LineStripTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void LineStripTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 	if (lineStarted) {
 		previewLine.SetPoint2(snapped);
 	}
@@ -38,7 +38,7 @@ void LineStripTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped
 	}
 }
 
-void LineStripTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void LineStripTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 }
 
 void LineStripTool::OnMouseReleased(const ImVec2& position, bool left, bool right, bool wheel) {

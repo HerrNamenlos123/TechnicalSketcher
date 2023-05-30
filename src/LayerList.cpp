@@ -9,7 +9,7 @@ void LayerList::AddLayerFront(const std::string& name) {
 	Layer layer(name);
 	LayerID id = layer.GetID();
 
-	LOG_TRACE("Added Layer " + name + " to front with id " + std::to_string(id));
+	b::log::trace("Added Layer " + name + " to front with id " + std::to_string(id));
 	layers.insert(layers.begin(), std::move(layer));
 }
 
@@ -17,7 +17,7 @@ void LayerList::AddLayerBack(const std::string& name) {
 	Layer layer(name);
 	LayerID id = layer.GetID();
 
-	LOG_TRACE("Added Layer " + name + " to back with id " + std::to_string(id.Get()));
+	b::log::trace("Added Layer " + name + " to back with id " + std::to_string(id.Get()));
 	layers.push_back(std::move(layer));
 	SelectLayer(id); // Select just created layer
 }

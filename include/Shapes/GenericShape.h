@@ -47,7 +47,7 @@ public:
 	virtual std::string GetTypeString() const = 0;
 
 	virtual std::pair<ImVec2, ImVec2> GetBoundingBox() const = 0;
-	virtual bool ShouldBeRendered(float screenWidth, float screenHeight) const = 0;
+	virtual bool ShouldBeRendered(int screenWidth, int screenHeight) const = 0;
 	virtual bool IsInSelectionBox(const ImVec2& s1, const ImVec2& s2) const = 0;
 	virtual bool IsShapeHovered(const ImVec2& cursor, float thresholdDistance) const = 0;
 

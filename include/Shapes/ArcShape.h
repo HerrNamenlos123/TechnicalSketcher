@@ -21,7 +21,7 @@ public:
 
 	std::pair<ImVec2, ImVec2> GetBoundingBox() const;
 	bool IsInSelectionBox(const ImVec2& s1, const ImVec2& s2) const;
-	bool ShouldBeRendered(float screenWidth, float screenHeight) const;
+	bool ShouldBeRendered(int screenWidth, int screenHeight) const;
 
 	float GetDistanceToCursor(const ImVec2& p) const;
 	bool IsShapeHovered(const ImVec2& cursor, float thresholdDistance) const;

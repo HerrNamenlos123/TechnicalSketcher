@@ -43,7 +43,7 @@ bool SketchLayer::AddShape(const nlohmann::json& json) {
 	SaveState();
 	ShapePTR shape = GenericShape::MakeShape(json);
 	if (shape) {
-		LOG_TRACE("Shape added to layer {} with id ", shape->GetID());
+		b::log::trace("Shape added to layer {} with id ", shape->GetID());
 		state.PushShape(std::move(shape));
 		return true;
 	}
@@ -54,7 +54,7 @@ void SketchLayer::AddShape(enum class ShapeType type, ImVec2 p1, ImVec2 p2, floa
 	SaveState();
 	ShapePTR shape = GenericShape::MakeShape(type, p1, p2, thickness, color);
 	if (shape) {
-		LOG_TRACE("Shape added to layer {} with id ", shape->GetID());
+		b::log::trace("Shape added to layer {} with id ", shape->GetID());
 		state.PushShape(std::move(shape));
 	}
 }
@@ -63,7 +63,7 @@ void SketchLayer::AddShape(enum class ShapeType type, ImVec2 center, float radiu
 	SaveState();
 	ShapePTR shape = GenericShape::MakeShape(type, center, radius, thickness, color);
 	if (shape) {
-		LOG_TRACE("Shape added to layer {} with id ", shape->GetID());
+		b::log::trace("Shape added to layer {} with id ", shape->GetID());
 		state.PushShape(std::move(shape));
 	}
 }
@@ -72,7 +72,7 @@ void SketchLayer::AddShape(enum class ShapeType type, ImVec2 center, float radiu
 	SaveState();
 	ShapePTR shape = GenericShape::MakeShape(type, center, radius, startAngle, endAngle, thickness, color);
 	if (shape) {
-		LOG_TRACE("Shape added to layer {} with id ", shape->GetID());
+		b::log::trace("Shape added to layer {} with id ", shape->GetID());
 		state.PushShape(std::move(shape));
 	}
 }
@@ -85,7 +85,7 @@ bool SketchLayer::AddShapes(const std::vector<nlohmann::json>& jsonArray) {
 		shapes.push_back(GenericShape::MakeShape(json));
 
 		if (!shapes[shapes.size() - 1]) {
-			LOG_TRACE(__FUNCTION__"(): Failed to parse Shape");
+			b::log::trace(__FUNCTION__"(): Failed to parse Shape");
 			return false;
 		}
 	}
@@ -108,7 +108,7 @@ void SketchLayer::AddShapes(std::vector<ShapePTR>&& shapes) {
 
 bool SketchLayer::RemoveShape(const ShapeID& id) {
 	SaveState();
-	LOG_TRACE("Removing shape #{}", id);
+	b::log::trace("Removing shape #{}", id);
 	return state.RemoveShape(id);
 }
 
@@ -117,7 +117,7 @@ bool SketchLayer::RemoveShapes(const std::vector<ShapeID>& ids) {
 	SaveState();
 
 	for (auto shape : ids) {
-		LOG_TRACE("Removing shape #{}", shape);
+		b::log::trace("Removing shape #{}", shape);
 
 		if (!state.RemoveShape(shape)) {
 			failed = true;

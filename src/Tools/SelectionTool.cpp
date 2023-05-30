@@ -42,18 +42,18 @@ void SelectionTool::OnShapeClicked(const ImVec2& position, const ImVec2& snapped
 	}
 }
 
-void SelectionTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void SelectionTool::OnMouseHovered(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 	selectionBoxActive = false;
 	selectionHandler.GetHoveredShape(position);
 }
 
-void SelectionTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, float dx, float dy) {
+void SelectionTool::OnMouseDragged(const ImVec2& position, const ImVec2& snapped, int dx, int dy) {
 	// Move selection box
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		selectionBoxPointB = position;
 	} 
 	else if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
-		Navigator::GetInstance()->panOffset += ImVec2(dx, dy);
+		Navigator::GetInstance()->m_panOffset += ImVec2(static_cast<float>(dx), static_cast<float>(dy));
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
 	}
 }
@@ -70,7 +70,7 @@ void SelectionTool::OnMouseReleased(const ImVec2& position, bool left, bool righ
 			}
 
 			// Select all shapes inside the selection box
-			for (const auto& shape : Navigator::GetInstance()->file.GetActiveLayer().GetShapes()) {
+			for (const auto& shape : Navigator::GetInstance()->m_file.GetActiveLayer().GetShapes()) {
 				if (shape->IsInSelectionBox(selectionBoxPointA, selectionBoxPointB)) {
 					selectionHandler.SelectShape(shape->GetID());
 				}
@@ -94,8 +94,8 @@ void SelectionTool::SelectAll() {
 void SelectionTool::CopyClipboard() {
 
 	if (selectionHandler.GetSelectedShapes().size() != 0) {
-		LOG_INFO("Copying selected shapes to clipboard");
-		nlohmann::json j = Navigator::GetInstance()->file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
+		b::log::info("Copying selected shapes to clipboard");
+		nlohmann::json j = Navigator::GetInstance()->m_file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
 		//Battery::GetMainWindow().SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
 		b::log::error("CLIPBOARD MISSING");
 	}
@@ -107,10 +107,10 @@ void SelectionTool::CopyClipboard() {
 void SelectionTool::CutClipboard() {
 
 	if (selectionHandler.GetSelectedShapes().size() != 0) {
-		LOG_INFO("Cutting selected shapes to clipboard");
-		nlohmann::json j = Navigator::GetInstance()->file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
+		b::log::info("Cutting selected shapes to clipboard");
+		nlohmann::json j = Navigator::GetInstance()->m_file.GetJsonFromShapes(selectionHandler.GetSelectedShapes());
 		//Battery::GetMainWindow().SetClipboardCustomFormatString(Navigator::GetInstance()->clipboardShapeFormat, j.dump(4));
-		Navigator::GetInstance()->file.RemoveShapes(selectionHandler.GetSelectedShapes());
+		Navigator::GetInstance()->m_file.RemoveShapes(selectionHandler.GetSelectedShapes());
 		selectionHandler.ClearSelection();
 	}
 	else {
@@ -127,7 +127,7 @@ void SelectionTool::PasteClipboard() {
 		return;
 	}
 
-	LOG_INFO("Pasting clipboard to active Layer");
+	b::log::info("Pasting clipboard to active Layer");
 	
 	// First create all shapes
 	std::vector<ShapePTR> shapes;
@@ -190,7 +190,7 @@ bool SelectionTool::IsPropertiesWindowShown() {
 void SelectionTool::ShowPropertiesWindow() {
 	if (selectionHandler.GetSelectedShapes().size() == 1) {
 		ShapeID id = selectionHandler.GetSelectedShapes()[0];
-		Navigator::GetInstance()->file.ShowPropertiesWindow(id);
+		Navigator::GetInstance()->m_file.ShowPropertiesWindow(id);
 	}
 }
 
@@ -207,24 +207,24 @@ void SelectionTool::RenderSecondPart() {
 }
 
 void SelectionTool::RemoveSelectedShapes() {
-	Navigator::GetInstance()->file.RemoveShapes(selectionHandler.GetSelectedShapes());
+	Navigator::GetInstance()->m_file.RemoveShapes(selectionHandler.GetSelectedShapes());
 	selectionHandler.ClearSelection();
 }
 
 void SelectionTool::MoveSelectedShapesLeft(float amount) {
-	Navigator::GetInstance()->file.MoveShapesLeft(selectionHandler.GetSelectedShapes(), amount);
+	Navigator::GetInstance()->m_file.MoveShapesLeft(selectionHandler.GetSelectedShapes(), amount);
 }
 
 void SelectionTool::MoveSelectedShapesRight(float amount) {
-	Navigator::GetInstance()->file.MoveShapesRight(selectionHandler.GetSelectedShapes(), amount);
+	Navigator::GetInstance()->m_file.MoveShapesRight(selectionHandler.GetSelectedShapes(), amount);
 }
 
 void SelectionTool::MoveSelectedShapesUp(float amount) {
-	Navigator::GetInstance()->file.MoveShapesUp(selectionHandler.GetSelectedShapes(), amount);
+	Navigator::GetInstance()->m_file.MoveShapesUp(selectionHandler.GetSelectedShapes(), amount);
 }
 
 void SelectionTool::MoveSelectedShapesDown(float amount) {
-	Navigator::GetInstance()->file.MoveShapesDown(selectionHandler.GetSelectedShapes(), amount);
+	Navigator::GetInstance()->m_file.MoveShapesDown(selectionHandler.GetSelectedShapes(), amount);
 }
 
 void SelectionTool::SelectNextPossibleShape() {
