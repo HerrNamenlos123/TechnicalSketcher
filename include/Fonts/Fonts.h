@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pch.h"
+#include "pch.hpp"
 #include "Fonts/MaterialIconFontData.h"
 #include "Fonts/OpenSansFontData.h"
 #include "Fonts/SegoeMDL2FontData.h"

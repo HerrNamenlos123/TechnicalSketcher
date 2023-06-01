@@ -20,7 +20,7 @@ battery_add_executable(${PROJECT_NAME}
         src/Tools/LineTool.cpp
         src/Tools/SelectionTool.cpp
 
-        src/App.cpp
+        src/TskWindow.cpp
         src/ApplicationRenderer.cpp
         src/Layer.cpp
         src/LayerList.cpp
@@ -29,6 +29,7 @@ battery_add_executable(${PROJECT_NAME}
         src/Navigator.cpp
         src/SelectionHandler.cpp
         src/SketchFile.cpp
+        src/TskConfig.cpp
         src/Updater.cpp
         src/UserInterface.cpp
 )
@@ -44,7 +45,7 @@ battery_add_module(filedialog)
 target_link_libraries(${PROJECT_NAME} battery::core battery::graphics battery::json battery::network battery::filedialog)
 
 # Enable precompiled headers for faster compilation
-battery_precompile_headers(${PROJECT_NAME} "${CMAKE_CURRENT_LIST_DIR}/include/pch.h")
+battery_precompile_headers(${PROJECT_NAME} "${CMAKE_CURRENT_LIST_DIR}/include/pch.hpp")
 
 # What project to start Visual Studio with
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})

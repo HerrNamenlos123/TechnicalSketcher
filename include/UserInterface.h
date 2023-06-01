@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pch.h"
-#include "config.h"
+#include "pch.hpp"
+#include "TskConfig.hpp"
 #include "Navigator.h"
 #include "Tools/GenericTool.h"
 #include "Fonts/Fonts.h"

@@ -36,3 +36,7 @@
 
 #define DEFAULT_LINE_THICKNESS 1
 #define DEFAULT_LINE_COLOR ImVec4(0, 0, 0, 255)
+
+struct TskConfig {
+
+};
