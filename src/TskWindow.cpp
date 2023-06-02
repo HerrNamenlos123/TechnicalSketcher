@@ -8,6 +8,13 @@
 #include "NavigatorLayer.h"
 
 #include "resources/splashscreen_png.hpp"
+#include "resources/ui/TskWindow_py.hpp"
+
+// TODO: Implement function in battery for escaping and un-escaping strings
+
+PYBIND11_EMBEDDED_MODULE(b, module) {
+    Tsk::get().apply_python_types(module);
+}
 
 void TskWindow::initSplashScreen() {
     sf::Texture splash;
@@ -25,6 +32,7 @@ void TskWindow::switchToMainScreen() {
 void TskWindow::attach() {
 
     initSplashScreen();
+    setPythonUiScriptResource(resources::ui::TskWindow_py);
 
 //
 //	// Set the icon and title of the window
@@ -78,12 +86,12 @@ void TskWindow::attach() {
 
 void TskWindow::update() {
 
-    if (b::time() > 4 && m_splashScreen) {
+    if (b::time() > 0 && m_splashScreen) {
         switchToMainScreen();
     }
     else {
-        Tsk::s_mainWindow->draw(sf::Sprite(splash));
-        Tsk::s_mainWindow->display();
+//        Tsk::s_mainWindow->draw(sf::Sprite(splash));
+//        Tsk::s_mainWindow->display();
     }
 
 	// Only refresh the screen eventually to save cpu power

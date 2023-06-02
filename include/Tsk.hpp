@@ -3,29 +3,29 @@
 #include "pch.hpp"
 #include "TskWindow.hpp"
 
-class Tsk : public b::application {
-public:
-
+struct TskContext : public b::context {
+    bool test2 = false;
     sf::Time lastScreenRefresh = sf::seconds(0);
     sf::Time passiveScreenTime = sf::seconds(5.0);
 
-    inline static std::shared_ptr<TskWindow> s_mainWindow;
+    void define_python_types(b::py::module& module) override {
+        b::py::class_<TskContext>(module, "Context")
+            .def_readwrite("test2", &TskContext::test2);
+    }
+};
 
+class Tsk : public b::application<TskContext, "TskContext"> {
+public:
     Tsk() = default;
+
+    TskWindow* s_mainWindow;
 
     void setup() override {
         this->attachWindow<TskWindow>(s_mainWindow);
     }
 
-    void update() override {
+    void update() override {}
+    void cleanup() override {}
 
-    }
-
-    void cleanup() override {
-        s_mainWindow.reset();
-    }
-
-    void OnEvent(sf::Event e, bool& handled);
-
-    inline static Tsk& get() { return dynamic_cast<Tsk&>(b::application::get()); }
+    inline static Tsk& get() { return dynamic_cast<Tsk&>(b::basic_application::get()); }
 };
