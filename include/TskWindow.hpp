@@ -2,16 +2,12 @@
 
 #include "pch.hpp"
 
-struct TskWindowContext : public b::context {
-    bool test1 = false;
+struct TskWindowContext : public b::py_context {
 
-    void define_python_types(b::py::module& module) override {
-        b::py::class_<TskWindowContext>(module, "TskWindowContext")
-            .def_readwrite("test1", &TskWindowContext::test1);
-    }
+    B_DEF_PY_CONTEXT(TskWindowContext);
 };
 
-class TskWindow : public b::window<TskWindowContext, "TskWindowContext"> {
+class TskWindow : public b::py_window<TskWindowContext, "TskWindowContext"> {
 public:
     TskWindow() = default;
 

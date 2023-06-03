@@ -3,18 +3,15 @@
 #include "pch.hpp"
 #include "TskWindow.hpp"
 
-struct TskContext : public b::context {
+struct TskContext : public b::py_context {
     bool test2 = false;
     sf::Time lastScreenRefresh = sf::seconds(0);
     sf::Time passiveScreenTime = sf::seconds(5.0);
 
-    void define_python_types(b::py::module& module) override {
-        b::py::class_<TskContext>(module, "Context")
-            .def_readwrite("test2", &TskContext::test2);
-    }
+    B_DEF_PY_CONTEXT(TskContext, test2);
 };
 
-class Tsk : public b::application<TskContext, "TskContext"> {
+class Tsk : public b::py_application<TskContext, "TskContext"> {
 public:
     Tsk() = default;
 
