@@ -1,10 +1,10 @@
 import b
 
-class TskWindow(b.widgets.window):
+class TskWindow():
     context = b.TskWindowContext
-    print(context.callback())
 
-#
-#
-# TskWindow = TskWindow()
-# TskWindow.pyInit()
+    def render(self):
+        pass
+
+TskWindow = TskWindow()
+TskWindow.context.init(TskWindow.render)

@@ -13,7 +13,7 @@
 // TODO: Implement function in battery for escaping and un-escaping strings
 
 PYBIND11_EMBEDDED_MODULE(b, module) {
-    Tsk::get().apply_python_types(module);
+    Tsk::get().definePythonClasses(module);
 }
 
 void TskWindow::initSplashScreen() {
