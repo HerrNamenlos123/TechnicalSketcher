@@ -8,7 +8,7 @@ struct TskWindowContext : public b::PyContext {
     B_DEF_PY_CONTEXT(TskWindowContext, test);
 };
 
-class TskWindow : public b::py_window<TskWindowContext, "TskWindowContext"> {
+class TskWindow : public b::PyWindow<TskWindowContext, "TskWindowContext"> {
 public:
     TskWindow() = default;
 

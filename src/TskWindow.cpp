@@ -34,9 +34,6 @@ void TskWindow::attach() {
     initSplashScreen();
     setPythonUiScriptResource(Resources::UI::TSKWINDOW_PY);
 
-//    b::py::module m;
-//    m_context.define_python_types(m);
-
 //
 //	// Set the icon and title of the window
 //	//Battery::LoadExecutableIcon(DB_ICON1);
