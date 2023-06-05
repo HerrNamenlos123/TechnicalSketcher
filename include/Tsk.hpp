@@ -15,14 +15,14 @@ class Tsk : public b::py_application<TskContext, "TskContext"> {
 public:
     Tsk() = default;
 
-    TskWindow* s_mainWindow;
+    TskWindow* s_mainWindow = nullptr;
 
     void setup() override {
-        this->attachWindow<TskWindow>(s_mainWindow);
+        this->attachWindow(&s_mainWindow);
     }
 
     void update() override {}
     void cleanup() override {}
 
-    inline static Tsk& get() { return dynamic_cast<Tsk&>(b::basic_application::get()); }
+    B_DEF_PY_APPLICATION(Tsk);
 };

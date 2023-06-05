@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(TechnicalSketcher LANGUAGES C CXX)
 
+set(ENABLE_CLANG_TIDY OFF)
+
 # Add the CPM.cmake package manager
 include(cmake/CPM.cmake)
 
