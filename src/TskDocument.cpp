@@ -1,3 +1,55 @@
+
+#include "TskDocument.hpp"
+
+bool TskDocument::Layer::containsUnsavedChanges() const {
+    return m_containsUnsavedChanges;
+}
+
+void TskDocument::addLayer(b::string layerName) {
+    if (layerName.empty()) {     // Auto-generate a unique name
+        size_t id = 1;
+        do {
+            layerName = b::format("Layer {}", id++);
+        } while (layerExists(layerName));
+    }
+    m_layers.emplace_back(layerName);
+    m_activeLayerIndex = std::clamp<size_t>(m_activeLayerIndex, 0, m_layers.size() - 1);
+    m_containsUnsavedChanges = true;
+}
+
+void TskDocument::removeLayer(size_t index) {
+    b::erase_nth_element(m_layers, index);
+    if (m_layers.empty()) {
+        addLayer();
+    }
+    m_activeLayerIndex = std::clamp<size_t>(m_activeLayerIndex, 0, m_layers.size() - 1);
+    m_containsUnsavedChanges = true;
+}
+
+void TskDocument::removeLayer(const LayerID& id) {
+    auto it = std::find_if(m_layers.begin(), m_layers.end(), [&id](const TskDocument::Layer& layer) { return layer.id() == id; });
+    auto index = std::distance(m_layers.begin(), it);
+    removeLayer(index);
+}
+
+bool TskDocument::layerExists(const b::string& name) const {
+    return std::find_if(m_layers.begin(), m_layers.end(), [&name](const TskDocument::Layer& layer) { return layer.name() == name; }) != m_layers.end();
+}
+
+const TskDocument::Layer& TskDocument::getLayer(const LayerID& id) const {
+    return *std::find_if(m_layers.begin(), m_layers.end(), [&id](const auto& layer) { return layer.id() == id; });
+}
+
+size_t TskDocument::getLayerIndex(const LayerID& id) const {
+    auto it = std::find_if(m_layers.begin(), m_layers.end(), [&id](const auto& layer) { return layer.id() == id; });
+    return std::distance(m_layers.begin(), it);
+}
+
+const std::vector<TskDocument::Layer>& TskDocument::getLayers() const {
+    return m_layers;
+}
+
+
 //
 //#include "battery/core/all.hpp"
 //#include "battery/filedialog/filedialog.hpp"
@@ -332,3 +384,13 @@
 //    b::log::critical("EXPORT NOW");
 //	return {};
 //}
+
+bool TskDocument::containsUnsavedChanges() const {
+    if (m_containsUnsavedChanges) { // <- The document itself or layers were changed
+        return true;
+    }                               // vv Something in one of the layers was changed
+    if (std::ranges::any_of(m_layers, [](const auto& layer) { return layer.containsUnsavedChanges(); })) {
+        return true;
+    }
+    return false;
+}

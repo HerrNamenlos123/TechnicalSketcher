@@ -27,8 +27,6 @@
 #define SCREEN_SIZE_MARGIN 1.1f
 #define GUI_PREVIEWWINDOW_SIZE 100
 
-#define MAX_NUMBER_OF_UNDOS 20
-
 #define DEFAULT_BACKGROUND_COLOR ImVec4(255, 255, 255, 255)
 #define COLOR_TRANSPARENT ImVec4(255, 255, 255, 0)
 #define EXPORT_BACKGROUND_COLOR ImVec4(255, 255, 255, 255)
@@ -37,6 +35,6 @@
 #define DEFAULT_LINE_THICKNESS 1
 #define DEFAULT_LINE_COLOR ImVec4(0, 0, 0, 255)
 
-struct TskConfig {
+namespace TskConfig {
 
-};
+} // namespace TskConfig

@@ -2,7 +2,7 @@
 
 #include "pch.hpp"
 #include "TskConfig.hpp"
-#include "Navigator.h"
+#include "TskHost.hpp"
 
 extern void RunUpdater();
 

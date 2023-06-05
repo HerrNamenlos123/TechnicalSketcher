@@ -2,7 +2,7 @@
 
 #include "pch.hpp"
 #include "TskConfig.hpp"
-#include "Navigator.h"
+#include "TskHost.hpp"
 #include "Tools/GenericTool.h"
 #include "Fonts/Fonts.h"
 

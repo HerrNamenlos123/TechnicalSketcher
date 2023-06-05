@@ -1,17 +1,18 @@
-//#pragma once
-//
-//#include "pch.h"
-//#include "SketchFile.h"
-//#include "ApplicationRenderer.h"
-//#include "SelectionHandler.h"
-//#include "config.h"
-//
-//#include "Tools/SelectionTool.h"
-//#include "Tools/LineTool.h"
-//#include "Tools/LineStripTool.h"
-//#include "Tools/CircleTool.h"
-//#include "Tools/ArcTool.h"
-//
+#pragma once
+
+#include "pch.hpp"
+#include "TskDocument.hpp"
+#include "ApplicationRenderer.h"
+#include "SelectionHandler.h"
+#include "TskDocument.hpp"
+#include "TskRenderHost.hpp"
+
+#include "Tools/SelectionTool.h"
+#include "Tools/LineTool.h"
+#include "Tools/LineStripTool.h"
+#include "Tools/CircleTool.h"
+#include "Tools/ArcTool.h"
+
 //enum class UpdateStatus {
 //	NOTHING,			// This is the default
 //	//USER_PROMPT,
@@ -22,18 +23,23 @@
 //	DONE,				// Request to restart the application
 //	FAILED
 //};
-//
-//class Navigator {
-//
-//	Navigator() {}
-//
-//	inline static std::unique_ptr<Navigator> instance;
-//
-//public:
-//	Navigator(Navigator const&) = delete;
-//	void operator=(Navigator const&) = delete;
-//
-//	SketchFile m_file;
+
+/// This class guarantees that always at least 1 document exists
+class TskHost {
+public:
+    TskHost();
+
+    const std::vector<TskDocument>& getDocuments() { return m_documents; }
+    TskDocument& getActiveDocument() { return m_documents[m_activeDocumentIndex]; }
+
+    void addDocument();
+    void update();
+
+private:
+    std::vector<TskDocument> m_documents;
+    size_t m_activeDocumentIndex = 0;
+    TskRenderHost m_renderHost;
+
 //	bool fileChanged = false;
 //	semver::version m_applicationVersion;
 //	b::fs::path m_imguiFileLocation;
@@ -151,4 +157,4 @@
 //	void AddArc(const ArcShape& arc);
 //
 //	void RenderShapes();
-//};
+};

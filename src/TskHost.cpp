@@ -1,8 +1,22 @@
-//
-//#include "App.hpp"
-//#include "Navigator.h"
-//#include "TskSettings.hpp"
-//#include "config.h"
+
+#include "Tsk.hpp"
+#include "TskHost.hpp"
+#include "TskSettings.hpp"
+
+TskHost::TskHost() {
+    m_documents.emplace_back();
+}
+
+void TskHost::addDocument() {
+    m_documents.emplace_back();
+    m_activeDocumentIndex = m_documents.size() - 1;
+}
+
+void TskHost::update() {
+    m_renderHost.render(getActiveDocument(), Tsk::get().s_mainWindow);
+}
+
+
 //
 //#include "resources/tsk_version.hpp"
 //

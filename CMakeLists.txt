@@ -27,11 +27,13 @@ battery_add_executable(${PROJECT_NAME}
         src/LayerList.cpp
         src/LayerState.cpp
         src/main.cpp
-        src/Navigator.cpp
         src/SelectionHandler.cpp
-        src/SketchFile.cpp
+        src/TskDocument.cpp
         src/Tsk.cpp
         src/TskConfig.cpp
+        src/TskHost.cpp
+        src/TskRenderHost.cpp
+        src/TskSettings.cpp
         src/TskSplashWindow.cpp
         src/TskWindow.cpp
         src/Updater.cpp

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pch.hpp"
+#include "TskHost.hpp"
 
 struct TskWindowContext : public b::PyContext {
     bool dummy = false;
@@ -15,6 +16,7 @@ public:
     TskWindow() = default;
 
     sf::Image m_tskIcon;
+    TskHost m_tskHost;
 
     void onAttach() override;
     void onUpdate() override;
