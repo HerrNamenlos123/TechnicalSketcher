@@ -2,7 +2,7 @@
 
 #include "pch.hpp"
 
-struct TskWindowContext : public b::py_context {
+struct TskWindowContext : public b::PyContext {
     bool test = false;
 
     B_DEF_PY_CONTEXT(TskWindowContext, test);
