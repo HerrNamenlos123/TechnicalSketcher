@@ -8,7 +8,7 @@ void Tsk::onSetup() {
 void Tsk::onUpdate() {
     switch (m_context.m_windowMode) {
         case TskWindowMode::Splash:
-            if (b::time() > 4 && s_splashWindow) {
+            if (b::time() > 0.3 && s_splashWindow) {
                 m_context.m_windowMode = TskWindowMode::Main;
                 attachWindow(&s_mainWindow);
                 detachWindow(&s_splashWindow);

@@ -14,6 +14,8 @@ class TskWindow : public b::PyWindow<TskWindowContext, "TskWindowContext"> {
 public:
     TskWindow() = default;
 
+    sf::Image m_tskIcon;
+
     void onAttach() override;
     void onUpdate() override;
     void onDetach() override;

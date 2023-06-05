@@ -1,17 +1,24 @@
 
 #include "TskSplashWindow.hpp"
 #include "resources/splashscreen_png.hpp"
+#include "resources/assets/TechnicalSketcher_png.hpp"
 
 void TskSplashWindow::onAttach() {
-    sf::Texture splash;
-    auto splashResource = Resources::SPLASHSCREEN_PNG;
-    if (splash.loadFromMemory(splashResource.data(), splashResource.size())) {
-        this->create(splash.getSize(), "TechnicalSketcher", sf::Style::None);
+    m_splashResource = Resources::SPLASHSCREEN_PNG;
+    if (m_splashTexture.loadFromMemory(m_splashResource.data(), m_splashResource.size())) {
+        this->create(m_splashTexture.getSize(), "TechnicalSketcher", sf::Style::None);
+        m_splashSprite.setTexture(m_splashTexture);
+        m_splashSprite.setPosition({ 0, 0 });
     }
+
+    if (!m_tskIcon.loadFromMemory(Resources::ASSETS::TECHNICALSKETCHER_PNG.data(), Resources::ASSETS::TECHNICALSKETCHER_PNG.size())) {
+        throw std::invalid_argument("Failed to load TechnicalSketcher.png icon from resource. This should not fail!");
+    }
+    this->setIcon(m_tskIcon);
 }
 
 void TskSplashWindow::onUpdate() {
-
+    draw(m_splashSprite);
 }
 
 void TskSplashWindow::onDetach() {

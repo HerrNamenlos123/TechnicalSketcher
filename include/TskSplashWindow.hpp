@@ -14,6 +14,12 @@ class TskSplashWindow : public b::PyWindow<TskSplashWindowContext, "TskSplashWin
 public:
     TskSplashWindow() = default;
 
+    sf::Image m_tskIcon;
+
+    b::Resource m_splashResource;
+    sf::Texture m_splashTexture;
+    sf::Sprite m_splashSprite;
+
     void onAttach() override;
     void onUpdate() override;
     void onDetach() override;

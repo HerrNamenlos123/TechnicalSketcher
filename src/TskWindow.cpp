@@ -8,6 +8,7 @@
 #include "NavigatorLayer.h"
 
 #include "resources/ui/TskWindow_py.hpp"
+#include "resources/assets/TechnicalSketcher_png.hpp"
 
 // TODO: Implement function in battery for escaping and un-escaping strings
 
@@ -16,15 +17,15 @@ PYBIND11_EMBEDDED_MODULE(b, module) {
 }
 
 void TskWindow::onAttach() {
-    this->create({ 1280, 720 }, "TechnicalSketcher", sf::Style::Default);
+    this->rememberWindowPositionJsonFile(b::Folders::AppConfigDir() + "windowpos.json");
+    this->setPythonUiScriptResource(Resources::UI::TSKWINDOW_PY);
+    this->create("TechnicalSketcher", sf::Style::Default);
 
-//    setPythonUiScriptResource(Resources::UI::TSKWINDOW_PY);
+    if (!m_tskIcon.loadFromMemory(Resources::ASSETS::TECHNICALSKETCHER_PNG.data(), Resources::ASSETS::TECHNICALSKETCHER_PNG.size())) {
+        throw std::invalid_argument("Failed to load TechnicalSketcher.png icon from resource. This should not fail!");
+    }
+    this->setIcon(m_tskIcon);
 
-//
-//	// Set the icon and title of the window
-//	//Battery::LoadExecutableIcon(DB_ICON1);
-//    App::s_mainWindow->setTitle(APPLICATION_NAME);
-//
 //	// Check if file to open was supplied
 //	b::fs::path openFile;
 //	bool newFile = false;
