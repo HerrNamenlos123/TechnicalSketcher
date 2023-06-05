@@ -7,7 +7,6 @@
 #include "TskSettings.hpp"
 #include "NavigatorLayer.h"
 
-#include "resources/splashscreen_png.hpp"
 #include "resources/ui/TskWindow_py.hpp"
 
 // TODO: Implement function in battery for escaping and un-escaping strings
@@ -16,23 +15,10 @@ PYBIND11_EMBEDDED_MODULE(b, module) {
     Tsk::get().definePythonClasses(module);
 }
 
-void TskWindow::initSplashScreen() {
-    sf::Texture splash;
-    auto splashResource = Resources::SPLASHSCREEN_PNG;
-    if (splash.loadFromMemory(splashResource.data(), splashResource.size())) {
-        this->create(splash.getSize(), "TechnicalSketcher", sf::Style::None);
-    }
-}
-
-void TskWindow::switchToMainScreen() {
+void TskWindow::onAttach() {
     this->create({ 1280, 720 }, "TechnicalSketcher", sf::Style::Default);
-    m_splashScreen = false;
-}
 
-void TskWindow::attach() {
-
-    initSplashScreen();
-    setPythonUiScriptResource(Resources::UI::TSKWINDOW_PY);
+//    setPythonUiScriptResource(Resources::UI::TSKWINDOW_PY);
 
 //
 //	// Set the icon and title of the window
@@ -84,15 +70,7 @@ void TskWindow::attach() {
 //    App::s_mainWindow->requestFocus();
 }
 
-void TskWindow::update() {
-
-    if (b::time() > 0 && m_splashScreen) {
-        switchToMainScreen();
-    }
-    else {
-//        Tsk::s_mainWindow->draw(sf::Sprite(splash));
-//        Tsk::s_mainWindow->display();
-    }
+void TskWindow::onUpdate() {
 
 	// Only refresh the screen eventually to save cpu power
 	// Allow the first 60 frames to let everything initialize
@@ -108,7 +86,7 @@ void TskWindow::update() {
 	}*/
 }
 
-void TskWindow::detach() {
+void TskWindow::onDetach() {
 
 }
 

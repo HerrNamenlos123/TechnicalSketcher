@@ -22,7 +22,6 @@ battery_add_executable(${PROJECT_NAME}
         src/Tools/LineTool.cpp
         src/Tools/SelectionTool.cpp
 
-        src/TskWindow.cpp
         src/ApplicationRenderer.cpp
         src/Layer.cpp
         src/LayerList.cpp
@@ -31,7 +30,10 @@ battery_add_executable(${PROJECT_NAME}
         src/Navigator.cpp
         src/SelectionHandler.cpp
         src/SketchFile.cpp
+        src/Tsk.cpp
         src/TskConfig.cpp
+        src/TskSplashWindow.cpp
+        src/TskWindow.cpp
         src/Updater.cpp
         src/UserInterface.cpp
 )
