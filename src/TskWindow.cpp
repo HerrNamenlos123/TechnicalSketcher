@@ -18,7 +18,7 @@ PYBIND11_EMBEDDED_MODULE(b, module) {
 
 void TskWindow::initSplashScreen() {
     sf::Texture splash;
-    auto splashResource = resources::splashscreen_png;
+    auto splashResource = Resources::SPLASHSCREEN_PNG;
     if (splash.loadFromMemory(splashResource.data(), splashResource.size())) {
         this->create(splash.getSize(), "TechnicalSketcher", sf::Style::None);
     }
@@ -32,7 +32,7 @@ void TskWindow::switchToMainScreen() {
 void TskWindow::attach() {
 
     initSplashScreen();
-    setPythonUiScriptResource(resources::ui::TskWindow_py);
+    setPythonUiScriptResource(Resources::UI::TSKWINDOW_PY);
 
 //    b::py::module m;
 //    m_context.define_python_types(m);

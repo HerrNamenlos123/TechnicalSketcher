@@ -55,4 +55,4 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 # Embed any resource files at build time
 battery_embed(${PROJECT_NAME} "${CMAKE_CURRENT_LIST_DIR}/version.txt" "tsk_version" TEXT)
 battery_embed(${PROJECT_NAME} "${CMAKE_CURRENT_LIST_DIR}/resources/splashscreen.png" "splashscreen_png" BINARY)
-battery_embed(${PROJECT_NAME} "${CMAKE_CURRENT_LIST_DIR}/ui/TskWindow.py" "ui/TskWindow_py" TEXT)
+battery_embed(${PROJECT_NAME} "${CMAKE_CURRENT_LIST_DIR}/ui/TskWindow.py" "UI/TskWindow_py" TEXT)

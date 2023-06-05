@@ -18,7 +18,7 @@ public:
     inline static const size_t MAX_NUMBER_OF_RECENT_FILES = 10;
 
     static b::fs::path SettingsDirectory() {
-        return b::folders::get_config_home();
+        return b::Folders::AppConfigDir();
     }
 
     static b::fs::path GetMostRecentFile() {
