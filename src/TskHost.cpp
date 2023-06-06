@@ -13,7 +13,7 @@ void TskHost::addDocument() {
 }
 
 void TskHost::update() {
-    m_renderHost.render(getActiveDocument(), Tsk::get().s_mainWindow);
+    m_renderHost.render(getActiveDocument());
 }
 
 

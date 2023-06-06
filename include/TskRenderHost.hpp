@@ -1,3 +1,4 @@
+#pragma once
 
 #include "TskDocument.hpp"
 
@@ -5,7 +6,7 @@ class TskRenderHost {
 public:
     TskRenderHost() = default;
 
-    void render(const TskDocument& document, b::BaseWindow* window);
+    void render(const TskDocument& document);
 
 private:
     void renderGrid();
