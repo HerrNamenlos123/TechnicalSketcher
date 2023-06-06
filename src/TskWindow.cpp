@@ -18,13 +18,13 @@ PYBIND11_EMBEDDED_MODULE(b, module) {
 
 void TskWindow::onAttach() {
     this->rememberWindowPositionJsonFile(b::Folders::AppConfigDir() + "windowpos.json");
-    this->setPythonUiScriptResource(Resources::UI::TSKWINDOW_PY);
+    this->setPythonUiScriptResource(Resources::ui::TskWindow_py);
 
     sf::ContextSettings context;
     context.antialiasingLevel = 8;
     this->create("TechnicalSketcher", sf::Style::Default, context);
 
-    if (!m_tskIcon.loadFromMemory(Resources::ASSETS::TECHNICALSKETCHER_PNG.data(), Resources::ASSETS::TECHNICALSKETCHER_PNG.size())) {
+    if (!m_tskIcon.loadFromMemory(Resources::assets::TechnicalSketcher_png.data(), Resources::assets::TechnicalSketcher_png.size())) {
         throw std::invalid_argument("Failed to load TechnicalSketcher.png icon from resource. This should not fail!");
     }
     this->setIcon(m_tskIcon);

@@ -117,7 +117,7 @@ class TskDocument {
 public:
     class Layer {
     public:
-        Layer(const b::string& name) : m_name(name), m_id(LayerID::New()) {}
+        Layer(const b::string& name) : m_id(LayerID::New()), m_name(name) {}
 
 //        LayerState GetState();
 //        void LoadState(const LayerState& state);
@@ -212,7 +212,7 @@ public:
 
 	void moveLayerBack(const LayerID& id) {
         auto toMoveIndex = getLayerIndex(id);
-        auto otherIndex = toMoveIndex - 1;
+        auto otherIndex = static_cast<int>(toMoveIndex) - 1;
 
         if (otherIndex >= 0) {
             std::swap(m_layers[toMoveIndex], m_layers[otherIndex]);

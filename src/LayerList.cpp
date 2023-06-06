@@ -30,7 +30,7 @@ bool LayerList::LoadJson(const nlohmann::json& json) {
 	// Try to parse data
 	try {
 
-		/*layers.clear();
+		layers.clear();
 		for (size_t i = 0; i < order.size(); i++) {
 			layers.push_back(static_cast<LayerID>(order[i]));
 		}

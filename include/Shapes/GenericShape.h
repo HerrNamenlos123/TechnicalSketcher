@@ -35,11 +35,11 @@ public:
 		this->id = id;
 	}
 
-	static ShapePTR MakeShape(enum class ShapeType type, ImVec2 p1, ImVec2 p2,
+	static ShapePTR MakeShape(ShapeType type, ImVec2 p1, ImVec2 p2,
 		float thickness, const ImVec4& color);
-	static ShapePTR MakeShape(enum class ShapeType type, ImVec2 center,
+	static ShapePTR MakeShape(ShapeType type, ImVec2 center,
 		float radius, float thickness, const ImVec4& color);
-	static ShapePTR MakeShape(enum class ShapeType type, ImVec2 center,
+	static ShapePTR MakeShape(ShapeType type, ImVec2 center,
 		float radius, float startAngle, float endAngle, float thickness, const ImVec4& color);
 	static ShapePTR MakeShape(const nlohmann::json& json);
 
