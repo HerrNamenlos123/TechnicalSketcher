@@ -2,7 +2,8 @@
 # Miscellaneous
 .idea/
 bin/
-build*/
+build/
+build-*/
 cmake-build-*/
 !premake5.exe
 !premake5/**
