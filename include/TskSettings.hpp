@@ -1,10 +1,9 @@
 #pragma once
 
-#include <utility>
-
-#include "battery/core/all.hpp"
-#include "battery/core/cache.hpp"
+#include "battery/core.hpp"
 #include "magic_enum.hpp"
+
+#include <utility>
 
 enum class TskSetting {
     NONE,
