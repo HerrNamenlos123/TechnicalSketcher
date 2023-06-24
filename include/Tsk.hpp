@@ -10,12 +10,12 @@ enum class TskWindowMode {
 };
 
 struct TskContext : public b::PyContext {
-    TskWindowMode m_windowMode = TskWindowMode::Splash;
+    TskWindowMode windowMode = TskWindowMode::Splash;
 //    sf::Time lastScreenRefresh = sf::seconds(0);
 //    sf::Time passiveScreenTime = sf::seconds(5.0);
 
     B_DEF_PY_CONTEXT_FUNC(
-        B_DEF_PY_CONTEXT_SUBCLASS(TskContext, m_windowMode);
+        B_DEF_PY_CONTEXT_SUBCLASS(TskContext, windowMode);
         b::py::enum_<TskWindowMode>(module, "TskWindowMode")
             .value("Splash", TskWindowMode::Splash)
             .value("Main", TskWindowMode::Main)
@@ -27,8 +27,8 @@ class Tsk : public b::PyApplication<TskContext, "TskContext"> {
 public:
     Tsk() = default;
 
-    TskWindow* s_mainWindow = nullptr;
-    TskSplashWindow* s_splashWindow = nullptr;
+    TskWindow* mainWindow = nullptr;
+    TskSplashWindow* splashWindow = nullptr;
 
     void onSetup() override;
     void onUpdate() override;
