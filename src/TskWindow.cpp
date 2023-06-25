@@ -77,6 +77,7 @@ void TskWindow::onAttach() {
 void TskWindow::onUpdate() {
 
     m_tskHost.update();
+//    m_tskHost.render();
 
 	// Only refresh the screen eventually to save cpu power
 	// Allow the first 60 frames to let everything initialize

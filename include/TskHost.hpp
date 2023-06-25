@@ -34,6 +34,7 @@ public:
 
     void addDocument();
     void update();
+    void render();
 
 private:
     std::vector<TskDocument> m_documents;

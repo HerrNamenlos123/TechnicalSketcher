@@ -16,16 +16,10 @@ nlohmann::json TskSettings::GetStandardSetting(TskSetting setting) {
         case TskSetting::DEFAULT_NEW_CANVAS_COLOR:
             return { 227, 217, 186, 255 };
 
-        case TskSetting::DOCUMENT_MAJOR_GRID_LINE_COLOR:
-            return { 255, 0, 0, 255 };
+        case TskSetting::DOCUMENT_GRID_LINE_COLOR:
+            return { 0.0, 0.0, 0.0, 0.2 };
 
-        case TskSetting::DOCUMENT_MAJOR_GRID_LINE_WIDTH:
-            return 1;
-
-        case TskSetting::DOCUMENT_MINOR_GRID_LINE_COLOR:
-            return { 0, 0, 255, 255 };
-
-        case TskSetting::DOCUMENT_MINOR_GRID_LINE_WIDTH:
+        case TskSetting::DOCUMENT_GRID_LINE_WIDTH:
             return 1;
 
         case TskSetting::DOCUMENT_MIN_GRID_LINE_SPACING_PX:

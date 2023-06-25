@@ -12,8 +12,30 @@ void TskHost::addDocument() {
     m_activeDocumentIndex = m_documents.size() - 1;
 }
 
+void TskRenderHost::onMouseScroll(const b::Events::MouseWheelScrollEvent& event) {
+    auto mouseToCenter = b::Vec2(m_view.getCenter()) - m_window->mapPixelToCoords(m_window->getMousePos(), m_view);
+    double zoomFactor = 1.0 + event.delta * 0.1;
+    m_view.zoom((float)zoomFactor);
+    m_view.move(mouseToCenter * zoomFactor - mouseToCenter);
+}
+
+void TskRenderHost::onMouseMove(const b::Events::MouseMoveEvent& event) {
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        auto deltaUnits = m_window->mapPixelToCoords({ 0, 0 }, m_view) - m_window->mapPixelToCoords(event.delta, m_view);
+        m_view.move(deltaUnits);
+    }
+}
+
 void TskHost::update() {
     m_renderHost.render(getActiveDocument());
+}
+
+void TskHost::render() {
+//    renderDocumentFrame();
+//    sf::RenderTexture renderTexture;
+//    (void)renderTexture.create({ 800, 600 });
+//    renderTexture.clear(sf::Color::Red);
+//    renderTexture.display();
 }
 
 
@@ -24,22 +46,6 @@ void TskHost::update() {
 //#include "Tools/LineTool.h"
 //#include "Tools/LineStripTool.h"
 //#include "Tools/CircleTool.h"
-//
-//void Navigator::CreateInstance() {
-//	instance.reset(new Navigator());
-//}
-//
-//void Navigator::DestroyInstance() {
-//	instance.reset();
-//}
-//
-//Navigator* Navigator::GetInstance() {
-//	if (instance) {
-//		return instance.get();
-//	}
-//
-//	throw std::logic_error(fmt::format("{}(): Can't return Navigator instance: Instance is nullptr!", std::source_location::current().function_name()));
-//}
 //
 //void Navigator::OnAttach() {
 //	UseTool(ToolType::SELECT);
@@ -140,21 +146,6 @@ void TskHost::update() {
 //
 //
 //
-//ImVec2 Navigator::ConvertScreenToWorkspaceCoords(const ImVec2& v) {
-//	return (v - m_panOffset - App::s_mainWindow->getSize() * 0.5f) / scale;
-//}
-//
-//ImVec2 Navigator::ConvertWorkspaceToScreenCoords(const ImVec2& v) {
-//	return m_panOffset + v * scale + App::s_mainWindow->getSize() * 0.5f;
-//}
-//
-//float Navigator::ConvertWorkspaceToScreenDistance(float distance) {
-//	return distance * scale;
-//}
-//
-//float Navigator::ConvertScreenToWorkspaceDistance(float distance) {
-//	return distance / scale;
-//}
 //
 //
 //
@@ -165,29 +156,6 @@ void TskHost::update() {
 //
 //
 //
-//
-//
-//void Navigator::MouseScrolled(float amount) {
-//
-//	float scroll = amount * scrollFactor;
-//	float factor = 1 + std::abs(scroll);
-//
-//	if (scroll > 0) {
-//		scale *= factor;
-//	}
-//	else {
-//		scale /= factor;
-//	}
-//
-//	auto mPos = sf::Mouse::getPosition();
-//	ImVec2 mouseToCenter = ImVec2(m_panOffset.x - mPos.x + m_windowSize.x / 2.f,
-//                                  m_panOffset.y - mPos.y + m_windowSize.y / 2.f);
-//
-//	if (scroll > 0)
-//        m_panOffset += mouseToCenter * factor - mouseToCenter;
-//	else
-//        m_panOffset -= mouseToCenter - mouseToCenter / factor;
-//}
 //
 //void Navigator::UpdateEvents() {
 //
