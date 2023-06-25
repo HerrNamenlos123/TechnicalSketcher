@@ -4,19 +4,13 @@
 
 class TskRenderHost {
 public:
-    TskRenderHost() = default;
+    TskRenderHost();
 
     void render(const TskDocument& document);
 
 private:
     void renderGrid();
 
-    class Perspective {
-    public:
-        Perspective() = default;
-
-    private:
-        ImVec2 m_position;
-        float m_zoom = 1.0f;
-    } m_perspective;
+    sf::View m_view;
+    b::BatchRenderer m_batchRenderer;
 };

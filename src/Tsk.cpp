@@ -2,21 +2,21 @@
 #include "Tsk.hpp"
 
 void Tsk::onSetup() {
-    attachWindow(&splashWindow);
+    attachWindow(splashWindow);
 }
 
 void Tsk::onUpdate() {
     switch (context.windowMode) {
         case TskWindowMode::Splash:
-            if (b::time() > 0.3 && splashWindow) {
+            if (b::time() > 0.3) {
                 context.windowMode = TskWindowMode::Main;
-                attachWindow(&mainWindow);
-                detachWindow(&splashWindow);
+                attachWindow(mainWindow);
+                detachWindow(splashWindow);
             }
             break;
 
         case TskWindowMode::Main:
-            if (!mainWindow->isOpen()) {
+            if (!mainWindow.isOpen()) {
                 stopApplication();
             }
             break;
@@ -26,6 +26,6 @@ void Tsk::onUpdate() {
     }
 }
 
-void Tsk::onCleanup() {
+void Tsk::onExit() {
 
 }

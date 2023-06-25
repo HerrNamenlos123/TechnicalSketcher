@@ -27,12 +27,12 @@ class Tsk : public b::PyApplication<TskContext, "TskContext"> {
 public:
     Tsk() = default;
 
-    TskWindow* mainWindow = nullptr;
-    TskSplashWindow* splashWindow = nullptr;
+    TskWindow mainWindow;
+    TskSplashWindow splashWindow;
 
     void onSetup() override;
     void onUpdate() override;
-    void onCleanup() override;
+    void onExit() override;
 
     B_DEF_PY_APPLICATION(Tsk);
 };
