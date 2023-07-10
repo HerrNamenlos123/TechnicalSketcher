@@ -32,6 +32,7 @@ public:
 
     void onSetup() override;
     void onUpdate() override;
+    void onRender() override;
     void onExit() override;
 
     B_DEF_PY_APPLICATION(Tsk);

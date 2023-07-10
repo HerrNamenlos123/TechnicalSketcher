@@ -27,15 +27,18 @@ void TskRenderHost::onMouseMove(const b::Events::MouseMoveEvent& event) {
 }
 
 void TskHost::update() {
-    m_renderHost.render(getActiveDocument());
 }
 
 void TskHost::render() {
+    m_renderHost.render(getActiveDocument());
 //    renderDocumentFrame();
-//    sf::RenderTexture renderTexture;
-//    (void)renderTexture.create({ 800, 600 });
-//    renderTexture.clear(sf::Color::Red);
-//    renderTexture.display();
+    sf::RenderTexture renderTexture;
+    (void)renderTexture.create({ 800, 600 });
+    renderTexture.clear(sf::Color::Red);
+    renderTexture.display();
+    sf::Sprite sprite(renderTexture.getTexture());
+    sprite.setPosition({ 0, 0 });
+    Tsk::get().mainWindow.draw(sprite);
 }
 
 

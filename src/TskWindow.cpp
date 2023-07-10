@@ -18,7 +18,7 @@ PYBIND11_EMBEDDED_MODULE(b, module) {
 
 void TskWindow::onAttach() {
     this->rememberWindowPositionJsonFile(b::Folders::AppConfigDir() + "windowpos.json");
-    this->setPythonUiScriptResource(Resources::ui::TskWindow_py);
+    this->loadPythonFrontendScriptResource(Resources::ui::TskWindow_py);
 
     sf::ContextSettings context;
     context.antialiasingLevel = 8;
@@ -77,7 +77,6 @@ void TskWindow::onAttach() {
 void TskWindow::onUpdate() {
 
     m_tskHost.update();
-//    m_tskHost.render();
 
 	// Only refresh the screen eventually to save cpu power
 	// Allow the first 60 frames to let everything initialize
@@ -91,6 +90,10 @@ void TskWindow::onUpdate() {
 	else {
 		lastScreenRefresh = GetRuntime();
 	}*/
+}
+
+void TskWindow::onRender() {
+    m_tskHost.render();
 }
 
 void TskWindow::onDetach() {

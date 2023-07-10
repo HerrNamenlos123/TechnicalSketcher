@@ -26,6 +26,10 @@ void Tsk::onUpdate() {
     }
 }
 
+void Tsk::onRender() {
+
+}
+
 void Tsk::onExit() {
 
 }

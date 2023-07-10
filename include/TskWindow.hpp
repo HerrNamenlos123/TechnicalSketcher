@@ -20,5 +20,6 @@ public:
 
     void onAttach() override;
     void onUpdate() override;
+    void onRender() override;
     void onDetach() override;
 };

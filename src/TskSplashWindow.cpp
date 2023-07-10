@@ -21,6 +21,10 @@ void TskSplashWindow::onUpdate() {
     draw(m_splashSprite);
 }
 
+void TskSplashWindow::onRender() {
+
+}
+
 void TskSplashWindow::onDetach() {
 
 }
