@@ -41,6 +41,9 @@ private:
     size_t m_activeDocumentIndex = 0;
     TskRenderHost m_renderHost;
 
+    b::widgets::panel m_panel;
+    b::widgets::canvas_host m_canvasHost;
+
 //	bool fileChanged = false;
 //	semver::version m_applicationVersion;
 //	b::fs::path m_imguiFileLocation;

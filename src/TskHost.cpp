@@ -12,33 +12,27 @@ void TskHost::addDocument() {
     m_activeDocumentIndex = m_documents.size() - 1;
 }
 
-void TskRenderHost::onMouseScroll(const b::Events::MouseWheelScrollEvent& event) {
-    auto mouseToCenter = b::Vec2(m_view.getCenter()) - m_window->mapPixelToCoords(m_window->getMousePos(), m_view);
-    double zoomFactor = 1.0 + event.delta * 0.1;
-    m_view.zoom((float)zoomFactor);
-    m_view.move(mouseToCenter * zoomFactor - mouseToCenter);
-}
-
-void TskRenderHost::onMouseMove(const b::Events::MouseMoveEvent& event) {
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-        auto deltaUnits = m_window->mapPixelToCoords({ 0, 0 }, m_view) - m_window->mapPixelToCoords(event.delta, m_view);
-        m_view.move(deltaUnits);
-    }
-}
-
 void TskHost::update() {
 }
 
 void TskHost::render() {
-    m_renderHost.render(getActiveDocument());
-//    renderDocumentFrame();
-    sf::RenderTexture renderTexture;
-    (void)renderTexture.create({ 800, 600 });
-    renderTexture.clear(sf::Color::Red);
-    renderTexture.display();
-    sf::Sprite sprite(renderTexture.getTexture());
-    sprite.setPosition({ 0, 0 });
-    Tsk::get().mainWindow.draw(sprite);
+
+    m_panel.left = 0;
+    m_panel.top = 0;
+    m_panel.width = Tsk::get().mainWindow.getSize().x;
+    m_panel.height = Tsk::get().mainWindow.getSize().y;
+    m_panel.style["ImGuiStyleVar_WindowRounding"] = 0;
+
+    m_canvasHost.width = "50%";
+    m_canvasHost.height = "50%";
+
+    m_panel([this]{
+        ImGui::Text("Hello, world!");
+        ImGui::Button("Save");
+        m_canvasHost([this](b::Canvas& canvas) {
+            m_renderHost.render(canvas, getActiveDocument());
+        });
+    });
 }
 
 

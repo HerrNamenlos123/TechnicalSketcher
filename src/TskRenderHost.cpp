@@ -5,70 +5,72 @@
 
 TskRenderHost::TskRenderHost() {
 
-    // Zooming
-    Tsk::get().mainWindow.attachEventHandler<b::Events::MouseWheelScrollEvent>([this](const auto& event) {
-        onMouseScroll(event);
-    });
-
-    // Panning
-    Tsk::get().mainWindow.attachEventHandler<b::Events::MouseMoveEvent>([this](const auto& event) {
-        onMouseMove(event);
-    });
 }
 
-void TskRenderHost::resetView() {
-    auto diff = m_window->mapPixelToCoords({ 0, 0 }, m_view) - m_window->mapPixelToCoords(m_window->getSize(), m_view);
-    m_view.setSize(m_window->getSize());
+void TskRenderHost::resetView(b::Canvas& canvas) {
+    b::Vec2 diff = canvas.mapPixelToCoords({0, 0 }, m_view) - canvas.mapPixelToCoords(b::Vec2(canvas.getSize()), m_view);
+    m_view.setSize(b::Vec2(canvas.getSize()));
     m_view.move(diff / 2.0);
     m_view.zoom(0.1f);
 }
 
-void TskRenderHost::renderShapes() {
+void TskRenderHost::renderShapes(b::Canvas& canvas) {
     m_batchRenderer.drawRect({ -5, -5 }, { 5, 5 }, sf::Color::Red, 0.1f);
-    m_window->draw(m_batchRenderer);
+    canvas.draw(m_batchRenderer);
     m_batchRenderer.clear();
 }
 
-void TskRenderHost::render(const TskDocument& document) {
-    m_window = &Tsk::get().mainWindow;
+void TskRenderHost::render(b::Canvas& canvas, const TskDocument& document) {
+
+    if (canvas.mouse.leftButtonPressed) {
+        auto deltaUnits = canvas.mapPixelToCoords({ 0, 0 }, m_view) -
+                          canvas.mapPixelToCoords(b::Vec2(canvas.mouse.posDelta.x, -canvas.mouse.posDelta.y), m_view);
+        m_view.move(deltaUnits);
+    }
+
+    if (canvas.mouse.scrollDelta.length() != 0) {
+        auto mouseToCenter = b::Vec2(m_view.getCenter()) - canvas.mapPixelToCoords(canvas.mouse.pos, m_view);
+        double zoomFactor = 1.0 - (canvas.mouse.scrollDelta.x + canvas.mouse.scrollDelta.y) * 0.1;
+        m_view.zoom((float) zoomFactor);
+        m_view.move((mouseToCenter * zoomFactor - mouseToCenter) * b::Vec2(1, -1));
+    }
 
     if (m_firstRenderPass) {        // Do this here because the window size might not be known earlier
-        resetView();
+        resetView(canvas);
         m_firstRenderPass = false;
     }
 
-    m_window->clear(document.getCanvasColor());
+    canvas.clear(document.getCanvasColor());
+    renderGrid(canvas);
 
-    renderGrid();
-
-    m_window->setView(m_view);
-    renderShapes();
+    canvas.setView(m_view);
+    renderShapes(canvas);
 }
 
-void TskRenderHost::renderGrid() {
+void TskRenderHost::renderGrid(b::Canvas& canvas) {
     // Disable the view while rendering the grid
-    m_window->setView(sf::View(m_window->getSize() / 2.0, m_window->getSize()));
+    canvas.setView(sf::View(b::Vec2(canvas.getSize()) / 2.0, b::Vec2(canvas.getSize())));
 
     b::Color gridLineColor = TskSettings::Get(TskSetting::DOCUMENT_GRID_LINE_COLOR);
     double gridLineWidth = TskSettings::Get(TskSetting::DOCUMENT_GRID_LINE_WIDTH);
-    auto leftUpperMostPixelCoords = m_window->mapPixelToCoords({ 0, 0 }, m_view);
+    auto leftUpperMostPixelCoords = canvas.mapPixelToCoords({0, 0 }, m_view);
 
     double unit = std::floor(leftUpperMostPixelCoords.x / m_gridSpacingFactor) * m_gridSpacingFactor;
     double x = 0;
-    while (x < m_window->getSize().x) {
-        x = m_window->mapCoordsToPixel({ unit, 0 }, m_view).x;
-        m_batchRenderer.drawLine({ x, 0 }, { x, m_window->getSize().y }, gridLineColor, gridLineWidth);
+    while (x < canvas.getSize().x) {
+        x = canvas.mapCoordsToPixel({static_cast<float>(unit), 0 }, m_view).x;
+        m_batchRenderer.drawLine({ x, 0 }, { x, b::Vec2(canvas.getSize()).y }, gridLineColor, gridLineWidth);
         unit += m_gridSpacingFactor;
     }
 
     unit = std::floor(leftUpperMostPixelCoords.y / m_gridSpacingFactor) * m_gridSpacingFactor;
     double y = 0;
-    while (y < m_window->getSize().y) {
-        y = m_window->mapCoordsToPixel({ 0, unit }, m_view).y;
-        m_batchRenderer.drawLine({ 0, y }, { m_window->getSize().x, y }, gridLineColor, gridLineWidth);
+    while (y < canvas.getSize().y) {
+        y = canvas.mapCoordsToPixel({0, static_cast<float>(unit) }, m_view).y;
+        m_batchRenderer.drawLine({ 0, y }, {b::Vec2(canvas.getSize()).x, y }, gridLineColor, gridLineWidth);
         unit += m_gridSpacingFactor;
     }
 
-    m_window->draw(m_batchRenderer);
+    canvas.draw(m_batchRenderer);
     m_batchRenderer.clear();
 }

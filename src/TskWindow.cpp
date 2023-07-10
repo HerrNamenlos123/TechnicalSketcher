@@ -12,12 +12,8 @@
 
 // TODO: Implement function in battery for escaping and un-escaping strings
 
-PYBIND11_EMBEDDED_MODULE(b, module) {
-    Tsk::get().definePythonClasses(module);
-}
-
 void TskWindow::onAttach() {
-    this->rememberWindowPositionJsonFile(b::Folders::AppConfigDir() + "windowpos.json");
+    this->rememberWindowPositionJsonFile(b::Folders::AppConfigDir() + "window-pos.json");
     this->loadPythonFrontendScriptResource(Resources::ui::TskWindow_py);
 
     sf::ContextSettings context;

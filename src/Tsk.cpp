@@ -1,6 +1,10 @@
 
 #include "Tsk.hpp"
 
+PYBIND11_EMBEDDED_MODULE(b, module) {
+    Tsk::get().definePythonClasses(module);
+}
+
 void Tsk::onSetup() {
     attachWindow(splashWindow);
 }
