@@ -4,7 +4,11 @@
 #include "TskSettings.hpp"
 
 TskHost::TskHost() {
-    m_documents.emplace_back();
+    addDocument();
+    addDocument();
+    addDocument();
+    addDocument();
+    addDocument();
 }
 
 void TskHost::addDocument() {
@@ -16,22 +20,35 @@ void TskHost::update() {
 }
 
 void TskHost::render() {
-
     m_panel.left = 0;
     m_panel.top = 0;
     m_panel.width = Tsk::get().mainWindow.getSize().x;
     m_panel.height = Tsk::get().mainWindow.getSize().y;
     m_panel.style["ImGuiStyleVar_WindowRounding"] = 0;
-
-    m_canvasHost.width = "50%";
-    m_canvasHost.height = "50%";
+    m_tabs.left = 0;
+    m_tabs.top = 0;
+    m_tabs.width = "100%";
+    m_tabs.height = "100%";
 
     m_panel([this]{
-        ImGui::Text("Hello, world!");
-        ImGui::Button("Save");
-        m_canvasHost([this](b::Canvas& canvas) {
-            m_renderHost.render(canvas, getActiveDocument());
+        m_tabs.items.resize(m_documents.size());
+        for (size_t i = 0; i < m_documents.size(); i++) {
+            m_tabs.items[i].label = m_documents[i].getVisualFilename();
+            m_tabs.items[i].unsavedDocument = m_documents[i].containsUnsavedChanges();
+        }
+        m_tabs([this] {
+            ImGui::Text("Hello, world %d", m_tabs.selectedItemArrayIndex.has_value() ? m_tabs.selectedItemArrayIndex.value() : -1);
         });
+        for (size_t i = 0; i < m_documents.size(); i++) {
+            if (!m_tabs.items[i].open) {
+                m_documents.erase(m_documents.begin() + i);
+                i--;
+            }
+        }
+
+
+
+        ImGui::ShowDemoWindow();
     });
 }
 

@@ -239,6 +239,12 @@ public:
 	sf::Image ExportImage(bool transparent = true, float dpi = 300);
 
     [[nodiscard]] bool containsUnsavedChanges() const;
+    [[nodiscard]] b::string getVisualFilename() const { return m_visualFilename.string(); }
+
+    void centerOnCanvas(b::Canvas& canvas);
+    void renderToCanvas(b::Canvas& canvas);
+    void renderGrid(b::Canvas& canvas);
+    void renderLayers(b::Canvas& canvas);
 
     TskDocument(const TskDocument& other) = delete;
     TskDocument& operator=(const TskDocument& other) = delete;
@@ -254,4 +260,9 @@ private:
     bool m_containsUnsavedChanges = false;
     b::fs::path m_visualFilename = TskSettings::Get(TskSetting::DEFAULT_TSK_NEW_FILE_FILENAME);
     b::fs::path m_absoluteFilepath;
+
+    bool m_firstRenderPass = true;
+    sf::View m_cameraView;
+    double m_gridDecadeFactor = 1.0;
+    b::BatchRenderer m_batchRenderer;
 };

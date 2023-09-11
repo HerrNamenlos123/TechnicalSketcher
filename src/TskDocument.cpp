@@ -394,3 +394,75 @@ bool TskDocument::containsUnsavedChanges() const {
     }
     return false;
 }
+
+void TskDocument::centerOnCanvas(b::Canvas& canvas) {
+    b::Vec2 diff = canvas.mapPixelToCoords({0, 0 }, m_cameraView) -
+                   canvas.mapPixelToCoords(b::Vec2(canvas.getSize()), m_cameraView);
+    m_cameraView.setSize(b::Vec2(canvas.getSize()));
+    m_cameraView.move(diff / 2.0);
+    m_cameraView.zoom(0.1f);
+}
+
+void TskDocument::renderToCanvas(b::Canvas& canvas) {
+    canvas.clear(m_canvasColor);
+    renderGrid(canvas);
+
+    if (canvas.mouse.leftButtonPressed) {
+        auto deltaUnits = canvas.mapPixelToCoords({ 0, 0 }, m_cameraView) -
+                          canvas.mapPixelToCoords(canvas.mouse.posDelta * b::Vec2(1, -1), m_cameraView);
+        m_cameraView.move(deltaUnits);
+    }
+
+    if (canvas.mouse.scrollDelta.length() != 0) {
+        auto mouseToCenter = b::Vec2(m_cameraView.getCenter()) - canvas.mapPixelToCoords(canvas.mouse.pos, m_cameraView);
+        double zoomFactor = 1.0 - (canvas.mouse.scrollDelta.x + canvas.mouse.scrollDelta.y) * 0.1;
+        m_cameraView.zoom((float) zoomFactor);
+        m_cameraView.move((mouseToCenter * zoomFactor - mouseToCenter) * b::Vec2(1, -1));
+    }
+
+    if (m_firstRenderPass) {        // Do this here because the window size might not be known earlier
+        centerOnCanvas(canvas);
+        m_firstRenderPass = false;
+    }
+
+    renderGrid(canvas);
+    renderLayers(canvas);
+}
+
+void TskDocument::renderGrid(b::Canvas& canvas) {
+    canvas.setView(sf::View(b::Vec2(canvas.getSize()) / 2.0, b::Vec2(canvas.getSize())));
+
+    b::Color gridLineColor = TskSettings::Get(TskSetting::DOCUMENT_GRID_LINE_COLOR);
+    double gridLineWidth = TskSettings::Get(TskSetting::DOCUMENT_GRID_LINE_WIDTH);
+    auto leftUpperMostPixelCoords = canvas.mapPixelToCoords({ 0, 0 }, m_cameraView);
+
+    double unit = std::floor(leftUpperMostPixelCoords.x / m_gridDecadeFactor) * m_gridDecadeFactor;
+    double x = 0;
+    while (x < canvas.getSize().x) {
+        x = canvas.mapCoordsToPixel({static_cast<float>(unit), 0 }, m_cameraView).x;
+        m_batchRenderer.drawLine({ x, 0 }, { x, b::Vec2(canvas.getSize()).y }, gridLineColor, gridLineWidth);
+        unit += m_gridDecadeFactor;
+    }
+
+    unit = std::floor(leftUpperMostPixelCoords.y / m_gridDecadeFactor) * m_gridDecadeFactor;
+    double y = 0;
+    while (y < canvas.getSize().y) {
+        y = canvas.mapCoordsToPixel({0, static_cast<float>(unit) }, m_cameraView).y;
+        m_batchRenderer.drawLine({ 0, y }, {b::Vec2(canvas.getSize()).x, y }, gridLineColor, gridLineWidth);
+        unit += m_gridDecadeFactor;
+    }
+
+    canvas.draw(m_batchRenderer);
+    m_batchRenderer.clear();
+}
+
+void TskDocument::renderLayers(b::Canvas& canvas) {
+    canvas.setView(m_cameraView);
+    for (auto& layer : m_layers) {
+//        layer.render(canvas);
+    }
+
+    m_batchRenderer.drawRect({ -5, -5 }, { 5, 5 }, sf::Color::Red, 0.1f);
+    canvas.draw(m_batchRenderer);
+    m_batchRenderer.clear();
+}

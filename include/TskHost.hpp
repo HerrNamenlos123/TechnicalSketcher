@@ -41,6 +41,7 @@ private:
     size_t m_activeDocumentIndex = 0;
     TskRenderHost m_renderHost;
 
+    b::widgets::tabs m_tabs;
     b::widgets::panel m_panel;
     b::widgets::canvas_host m_canvasHost;
 
