@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+
+clang++ src/main.cpp -o build/out -g -I/usr/local/include $(pkg-config --cflags --libs sdl3) --std=c++20 -Wno-vla-cxx-extension -Wno-c++11-narrowing -lSDL3_ttf -lSDL3_image
+
+./build/out

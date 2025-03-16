@@ -1,0 +1,8 @@
+CompileFlags:
+    #C++20
+    Add: [-std=c++20]  
+Diagnostics:
+  Suppress: 
+   - c++11-narrowing 
+   - vla-cxx-extension
+ 
