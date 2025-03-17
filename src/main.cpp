@@ -138,7 +138,9 @@ SDL_AppResult SDL_AppInit(void** _appstate, int argc, char* argv[])
   //   }
 
   compileApp(appstate);
-  loadAppLib(appstate);
+  if (!appstate->compileError) {
+    loadAppLib(appstate);
+  }
 
   return SDL_APP_CONTINUE;
 }
@@ -204,7 +206,7 @@ SDL_AppResult SDL_AppIterate(void* _appstate)
   }
 
   Clay_RenderCommandArray render_commands;
-  if (appstate->DrawUI) {
+  if (!appstate->compileError && appstate->DrawUI) {
     render_commands = appstate->DrawUI(appstate);
   }
 
@@ -216,7 +218,7 @@ SDL_AppResult SDL_AppIterate(void* _appstate)
     SDL_RenderClear(renderer);
   }
 
-  if (appstate->DrawUI) {
+  if (!appstate->compileError && appstate->DrawUI) {
     SDL_Clay_RenderClayCommands(&appstate->rendererData, &render_commands);
   }
 

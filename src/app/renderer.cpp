@@ -1,239 +1,34 @@
 
 #include "../app.h"
 #include "../clay.h"
+#include "ui.cpp"
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_surface.h>
 
-auto COLORS = Map<String, Clay_Color>();
-auto FONT_SIZES = Map<String, int>();
+void RenderDocuments(Appstate* appstate) { }
 
-List<String> split(String s, String delimiter)
+void RenderMainViewport(Appstate* appstate)
 {
-  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-  String token;
-  List<String> res;
-
-  while ((pos_end = s.find(delimiter, pos_start)) != String::npos) {
-    token = s.substr(pos_start, pos_end - pos_start);
-    pos_start = pos_end + delim_len;
-    res.push_back(token);
+  if (!appstate->mainDocumentRenderSurface
+      || appstate->mainDocumentRenderSurface->w != appstate->mainDocumentRenderSurfaceSize.x
+      || appstate->mainDocumentRenderSurface->h != appstate->mainDocumentRenderSurfaceSize.y) {
+    auto size = appstate->mainDocumentRenderSurfaceSize;
+    if (appstate->mainDocumentRenderSurface) {
+      SDL_DestroySurface(appstate->mainDocumentRenderSurface);
+    }
+    appstate->mainDocumentRenderSurface = SDL_CreateSurface(size.x, size.y, SDL_PIXELFORMAT_RGBA32);
   }
 
-  res.push_back(s.substr(pos_start));
-  return res;
-}
-
-void RenderBegin() { }
-
-void RenderEnd() { }
-
-Tuple<String, String> parseClass(String classString)
-{
-  String modifier;
-  String cmd;
-  auto elements = split(classString, ":");
-  if (elements.size() == 1) {
-    cmd = elements[0];
-  }
-  else if (elements.size() == 2) {
-    modifier = elements[0];
-    cmd = elements[1];
-  }
-  return std::make_tuple(modifier, cmd);
-}
-
-void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate))
-{
-  List<String> classes = split(classString, " ");
-  Clay_SizingAxis width;
-  Clay_SizingAxis height;
-  Clay_Padding padding;
-  Color backgroundColor;
-
-  size_t textColorPushed = 0;
-  size_t textSizePushed = 0;
-
-  for (const auto& classString : classes) {
-    const auto [modifier, cmd] = parseClass(classString);
-
-    if (cmd == "w-full") {
-      width = CLAY_SIZING_GROW(0);
-    }
-    else if (cmd == "h-full") {
-      height = CLAY_SIZING_GROW(0);
-    }
-    else if (cmd.starts_with("p-[")) {
-      auto unit = cmd.substr(3, cmd.length() - 4);
-      if (unit.ends_with("px")) {
-        try {
-          auto value = std::stol(unit.substr(0, unit.length() - 2));
-          padding = CLAY_PADDING_ALL(value);
-        }
-        catch (...) {
-        }
-      }
-    }
-    else if (cmd.starts_with("bg-")) {
-      auto value = cmd.substr(3, cmd.length() - 3);
-      if (COLORS.contains(value)) {
-        backgroundColor = COLORS.at(value);
-      }
-    }
-    else if (cmd.starts_with("bg-")) {
-      auto value = cmd.substr(3, cmd.length() - 3);
-      if (COLORS.contains(value)) {
-        backgroundColor = COLORS.at(value);
-      }
-    }
-    else if (cmd.starts_with("text-")) {
-      auto value = cmd.substr(3, cmd.length() - 3);
-      if (COLORS.contains(value)) {
-        appstate->uiCache.textColorStack.push_back(COLORS.at(value));
-        textColorPushed++;
-      }
-      else if (FONT_SIZES.contains(value)) {
-        appstate->uiCache.textSizeStack.push_back(FONT_SIZES.at(value));
-        textSizePushed++;
-      }
-    }
+  auto surface = appstate->mainDocumentRenderSurface;
+  SDL_FillSurfaceRect(surface, NULL, SDL_MapSurfaceRGB(surface, 255, 255, 255));
+  if (SDL_MUSTLOCK(surface)) {
+    SDL_LockSurface(surface);
   }
 
-  Color textColor = COLORS["black"];
-  if (appstate->uiCache.textColorStack.size() > 0) {
-    textColor = appstate->uiCache.textColorStack.back();
-  }
+  RenderDocuments(appstate);
 
-  int textsize = FONT_SIZES["base"];
-  if (appstate->uiCache.textSizeStack.size() > 0) {
-    textsize = appstate->uiCache.textSizeStack.back();
-  }
-
-  CLAY({ .layout = { .sizing = { .width = width, .height = height },
-                     .padding = CLAY_PADDING_ALL(16),
-                     .childGap = 16,
-                     .childAlignment = { .y = CLAY_ALIGN_Y_CENTER } },
-         .backgroundColor = backgroundColor })
-  {
-    if (cb) {
-      cb(appstate);
-    }
-  }
-
-  for (int i = 0; i < textColorPushed; i++) {
-    appstate->uiCache.textColorStack.pop_back();
-  }
-  for (int i = 0; i < textSizePushed; i++) {
-    appstate->uiCache.textSizeStack.pop_back();
-  }
-}
-
-void text(Appstate* appstate, String classString, String content)
-{
-  List<String> classes = split(classString, " ");
-  Clay_SizingAxis width;
-  Clay_SizingAxis height;
-  Clay_Padding padding;
-  Color backgroundColor;
-
-  size_t textColorPushed = 0;
-  size_t textSizePushed = 0;
-
-  for (const auto& classString : classes) {
-    const auto [modifier, cmd] = parseClass(classString);
-
-    if (cmd == "w-full") {
-      width = CLAY_SIZING_GROW(0);
-    }
-    else if (cmd == "h-full") {
-      height = CLAY_SIZING_GROW(0);
-    }
-    else if (cmd.starts_with("p-[")) {
-      auto unit = cmd.substr(3, cmd.length() - 4);
-      if (unit.ends_with("px")) {
-        try {
-          auto value = std::stol(unit.substr(0, unit.length() - 2));
-          padding = CLAY_PADDING_ALL(value);
-        }
-        catch (...) {
-        }
-      }
-    }
-    else if (cmd.starts_with("bg-")) {
-      auto value = cmd.substr(3, cmd.length() - 3);
-      if (COLORS.contains(value)) {
-        backgroundColor = COLORS.at(value);
-      }
-    }
-    else if (cmd.starts_with("bg-")) {
-      auto value = cmd.substr(3, cmd.length() - 3);
-      if (COLORS.contains(value)) {
-        backgroundColor = COLORS.at(value);
-      }
-    }
-    else if (cmd.starts_with("text-")) {
-      auto value = cmd.substr(5, cmd.length() - 5);
-      if (COLORS.contains(value)) {
-        appstate->uiCache.textColorStack.push_back(COLORS.at(value));
-        textColorPushed++;
-      }
-      else if (FONT_SIZES.contains(value)) {
-        appstate->uiCache.textSizeStack.push_back(FONT_SIZES.at(value));
-        textSizePushed++;
-      }
-    }
-  }
-
-  Color textColor = COLORS["black"];
-  if (appstate->uiCache.textColorStack.size() > 0) {
-    textColor = appstate->uiCache.textColorStack.back();
-  }
-
-  int textsize = FONT_SIZES["base"];
-  if (appstate->uiCache.textSizeStack.size() > 0) {
-    textsize = appstate->uiCache.textSizeStack.back();
-  }
-
-  appstate->uiCache.stringCache.push_back(content);
-  CLAY_TEXT(((Clay_String) {
-                .length = appstate->uiCache.stringCache.back().length(),
-                .chars = appstate->uiCache.stringCache.back().c_str(),
-            }),
-            CLAY_TEXT_CONFIG({
-                .textColor = textColor,
-                .fontSize = textsize,
-            }));
-
-  for (int i = 0; i < textColorPushed; i++) {
-    appstate->uiCache.textColorStack.pop_back();
-  }
-  for (int i = 0; i < textSizePushed; i++) {
-    appstate->uiCache.textSizeStack.pop_back();
-  }
-}
-
-void ui(Appstate* appstate)
-{
-  div(appstate, "w-full bg-blue", [](Appstate* appstate) { text(appstate, "text-green text-base", "Hallo test"); });
-  CLAY({ .id = CLAY_ID("SideBar"),
-         .layout = { .sizing = { .width = CLAY_SIZING_FIXED(900), .height = CLAY_SIZING_FIXED(500) },
-                     .padding = CLAY_PADDING_ALL(16),
-                     .childGap = 16 ,
-                     .layoutDirection = CLAY_TOP_TO_BOTTOM,
-                    },
-         .backgroundColor = (Clay_Color) { 255, 128, 128, 255 } })
-  {
-    CLAY({ .id = CLAY_ID("ProfilePictureOuter"),
-           .layout = { .sizing = { .width = CLAY_SIZING_GROW(0) },
-                       .padding = CLAY_PADDING_ALL(16),
-                       .childGap = 16,
-                       .childAlignment = { .y = CLAY_ALIGN_Y_CENTER } },
-           .backgroundColor = (Clay_Color) { 255, 128, 128, 255 } })
-    {
-      CLAY_TEXT(CLAY_STRING("Clay - UI Library"),
-                CLAY_TEXT_CONFIG({
-                    .textColor = { 255, 255, 255, 255 },
-                    .fontSize = 24,
-                }));
-    }
+  if (SDL_MUSTLOCK(surface)) {
+    SDL_UnlockSurface(surface);
   }
 }
 
@@ -314,6 +109,12 @@ extern "C" SDL_AppResult EventHandler(Appstate* appstate, SDL_Event* event)
 
 extern "C" Clay_RenderCommandArray DrawUI(Appstate* appstate)
 {
+  RenderMainViewport(appstate);
+
+  const auto STRING_CACHE_SIZE = 1;
+  UICache uiCache = {};
+  appstate->uiCache = &uiCache;
+
   Clay_BeginLayout();
 
   CLAY({
@@ -325,13 +126,7 @@ extern "C" Clay_RenderCommandArray DrawUI(Appstate* appstate)
     ui(appstate);
   }
 
-  //   ui();
   Clay_RenderCommandArray renderCommands = Clay_EndLayout();
-
-  appstate->uiCache.stringCache.clear();
-  appstate->uiCache.textColorStack.clear();
-  appstate->uiCache.textSizeStack.clear();
-
   return renderCommands;
 }
 

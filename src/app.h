@@ -39,11 +39,7 @@ struct Clay_SDL3RendererData {
   List<Tuple<TTF_Font*, int>> fonts;
 };
 
-struct UICache {
-  List<Color> textColorStack;
-  List<int> textSizeStack;
-  List<String> stringCache;
-};
+struct UICache;
 
 struct Appstate;
 typedef Clay_RenderCommandArray (*DrawUI_t)(Appstate* appstate);
@@ -52,6 +48,8 @@ typedef void (*InitClay_t)(Appstate* appstate);
 
 struct Appstate {
   SDL_Window* window = 0;
+  SDL_Surface* mainDocumentRenderSurface;
+  Vec2 mainDocumentRenderSurfaceSize;
   Clay_SDL3RendererData rendererData;
   List<Document> documents = {};
   uint64_t lastHotreloadUpdate = 0;
@@ -62,7 +60,7 @@ struct Appstate {
   EventHandler_t EventHandler = 0;
   InitClay_t InitClay = 0;
   Clay_Context* clayContext;
-  UICache uiCache;
+  UICache* uiCache;
 };
 
 #endif // APP_H
