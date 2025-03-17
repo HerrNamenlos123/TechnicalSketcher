@@ -3,15 +3,24 @@
 #define STD_H
 
 #include <cstdlib>
+#include <filesystem>
+#include <optional>
 #include <stdlib.h>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
+
+namespace fs = std::filesystem;
 
 template <typename T> using List = std::vector<T>;
 using String = std::string;
 
 template <typename... TArgs> using Variant = std::variant<TArgs...>;
+
+template <typename T, typename U> using Map = std::unordered_map<T, U>;
+
+template <typename T> using Optional = std::optional<T>;
 
 // template <typename T> class List {
 // public:

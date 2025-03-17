@@ -1,9 +1,190 @@
 
+#include "../app.h"
+#include "../clay.h"
+#include <SDL3/SDL_init.h>
+
+auto COLORS = Map<String, Clay_Color>();
+
+List<String> split(String s, String delimiter)
+{
+  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+  String token;
+  List<String> res;
+
+  while ((pos_end = s.find(delimiter, pos_start)) != String::npos) {
+    token = s.substr(pos_start, pos_end - pos_start);
+    pos_start = pos_end + delim_len;
+    res.push_back(token);
+  }
+
+  res.push_back(s.substr(pos_start));
+  return res;
+}
+
 void RenderBegin() { }
 
 void RenderEnd() { }
 
-void DrawUI() { }
+void div(String classString, std::function<void(void)> cb)
+{
+  List<String> classes = split(classString, " ");
+  Clay_SizingAxis width;
+  Clay_SizingAxis height;
+  Clay_Padding padding;
+  Clay_Color backgroundColor;
+
+  for (const auto& cls : classes) {
+    if (cls == "w-full") {
+      width = CLAY_SIZING_GROW(0);
+    }
+    else if (cls == "h-full") {
+      height = CLAY_SIZING_GROW(0);
+    }
+    else if (cls.starts_with("p-[")) {
+      auto unit = cls.substr(3, cls.length() - 4);
+      if (unit.ends_with("px")) {
+        try {
+          auto value = std::stol(unit.substr(0, unit.length() - 2));
+          padding = CLAY_PADDING_ALL(value);
+        }
+        catch (...) {
+        }
+      }
+    }
+    else if (cls.starts_with("bg-")) {
+      auto value = cls.substr(3, cls.length() - 3);
+      if (COLORS.contains(value)) {
+        backgroundColor = COLORS.at(value);
+      }
+    }
+  }
+
+  CLAY({ .layout = { .sizing = { .width = width, .height = height },
+                     .padding = CLAY_PADDING_ALL(16),
+                     .childGap = 16,
+                     .childAlignment = { .y = CLAY_ALIGN_Y_CENTER } },
+         .backgroundColor = backgroundColor })
+  {
+    if (cb) {
+      cb();
+    }
+  }
+}
+
+void ui(Appstate* appstate)
+{
+  div("w-full bg-blue", []() {
+    CLAY_TEXT(CLAY_STRING("Clay - UI Library"),
+              CLAY_TEXT_CONFIG({
+                  .textColor = { 255, 255, 255, 255 },
+                  .fontSize = 24,
+              }));
+  });
+  CLAY({ .id = CLAY_ID("SideBar"),
+         .layout = { .sizing = { .width = CLAY_SIZING_FIXED(900), .height = CLAY_SIZING_FIXED(500) },
+                     .padding = CLAY_PADDING_ALL(16),
+                     .childGap = 16 ,
+                     .layoutDirection = CLAY_TOP_TO_BOTTOM,
+                    },
+         .backgroundColor = (Clay_Color) { 255, 128, 128, 255 } })
+  {
+    CLAY({ .id = CLAY_ID("ProfilePictureOuter"),
+           .layout = { .sizing = { .width = CLAY_SIZING_GROW(0) },
+                       .padding = CLAY_PADDING_ALL(16),
+                       .childGap = 16,
+                       .childAlignment = { .y = CLAY_ALIGN_Y_CENTER } },
+           .backgroundColor = (Clay_Color) { 255, 128, 128, 255 } })
+    {
+      CLAY_TEXT(CLAY_STRING("Clay - UI Library"),
+                CLAY_TEXT_CONFIG({
+                    .textColor = { 255, 255, 255, 255 },
+                    .fontSize = 24,
+                }));
+    }
+  }
+}
+
+static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextElementConfig* config, void* _appstate)
+{
+  Appstate* appstate = (Appstate*)_appstate;
+  auto& fonts = appstate->rendererData.fonts;
+  TTF_Font* font = fonts[config->fontId];
+  int width, height;
+
+  if (!TTF_GetStringSize(font, text.chars, text.length, &width, &height)) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to measure text: %s", SDL_GetError());
+  }
+
+  return (Clay_Dimensions) { (float)width, (float)height };
+}
+
+void HandleClayErrors(Clay_ErrorData errorData) { printf("%s", errorData.errorText.chars); }
+
+extern "C" void InitClay(Appstate* appstate)
+{
+  uint64_t totalMemorySize = Clay_MinMemorySize();
+  Clay_Arena clayMemory = (Clay_Arena) { .capacity = totalMemorySize, .memory = (char*)SDL_malloc(totalMemorySize) };
+
+  int width, height;
+  SDL_GetWindowSize(appstate->window, &width, &height);
+
+  Clay_Initialize(
+      clayMemory, (Clay_Dimensions) { (float)width, (float)height }, (Clay_ErrorHandler) { HandleClayErrors });
+  Clay_SetMeasureTextFunction(SDL_MeasureText, appstate);
+
+  COLORS["white"] = (Clay_Color) { 255, 255, 255, 255 };
+  COLORS["black"] = (Clay_Color) { 0, 0, 0, 255 };
+  COLORS["red"] = (Clay_Color) { 255, 0, 0, 255 };
+  COLORS["green"] = (Clay_Color) { 0, 255, 0, 255 };
+  COLORS["blue"] = (Clay_Color) { 0, 0, 255, 255 };
+}
+
+extern "C" SDL_AppResult EventHandler(Appstate* appstate, SDL_Event* event)
+{
+  switch (event->type) {
+  case SDL_EVENT_QUIT:
+    return SDL_APP_SUCCESS;
+    break;
+
+  case SDL_EVENT_WINDOW_RESIZED:
+    Clay_SetLayoutDimensions((Clay_Dimensions) { (float)event->window.data1, (float)event->window.data2 });
+    break;
+
+  case SDL_EVENT_MOUSE_MOTION:
+    Clay_SetPointerState((Clay_Vector2) { event->motion.x, event->motion.y }, event->motion.state & SDL_BUTTON_LMASK);
+    break;
+
+  case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    Clay_SetPointerState((Clay_Vector2) { event->button.x, event->button.y }, event->button.button == SDL_BUTTON_LEFT);
+    break;
+
+  case SDL_EVENT_MOUSE_WHEEL:
+    Clay_UpdateScrollContainers(true, (Clay_Vector2) { event->wheel.x, event->wheel.y }, 0.01f);
+    break;
+
+  default:
+    break;
+  }
+  return SDL_APP_CONTINUE;
+}
+
+extern "C" Clay_RenderCommandArray DrawUI(Appstate* appstate)
+{
+  Clay_BeginLayout();
+
+  CLAY({
+      .layout = { 
+                  .sizing = { .width = CLAY_SIZING_GROW(0), .height = CLAY_SIZING_GROW(0) },
+        .layoutDirection = CLAY_TOP_TO_BOTTOM,
+        },})
+  {
+    ui(appstate);
+  }
+
+  //   ui();
+  Clay_RenderCommandArray renderCommands = Clay_EndLayout();
+  return renderCommands;
+}
 
 // void ApplicationRenderer::BeginFrame() { Battery::Renderer2D::BeginScene(GetInstance().scene.get()); }
 

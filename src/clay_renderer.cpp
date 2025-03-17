@@ -1,15 +1,7 @@
-#include "clay.h"
-#include "std.hpp"
+
+#include "app.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3_image/SDL_image.h>
-#include <SDL3_ttf/SDL_ttf.h>
-
-typedef struct {
-  SDL_Renderer* renderer;
-  TTF_TextEngine* textEngine;
-  List<TTF_Font*> fonts;
-} Clay_SDL3RendererData;
 
 /* Global for convenience. Even in 4K this is enough for smooth curves (low radius or rect size coupled with
  * no AA or low resolution might make it appear as jagged curves) */

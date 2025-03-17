@@ -1,26 +1,78 @@
 #define SDL_MAIN_USE_CALLBACKS 1
-#include "app.hpp"
+#include "app.h"
+#include "clay_renderer.cpp"
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_oldnames.h>
+#include <SDL3/SDL_timer.h>
+#include <filesystem>
 #include <stdio.h>
 
-#include "renderer.cpp"
-
 const Vec2 DEFAULT_WINDOW_SIZE = Vec2(640, 480);
+const uint64_t HOTRELOAD_UPDATE_RATE = 100;
 
-static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextElementConfig* config, void* _appstate)
+bool compileApp(Appstate* appstate)
 {
-  Appstate* appstate = (Appstate*)_appstate;
-  auto& fonts = appstate->rendererData.fonts;
-  TTF_Font* font = fonts[config->fontId];
-  int width, height;
-
-  if (!TTF_GetStringSize(font, text.chars, text.length, &width, &height)) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to measure text: %s", SDL_GetError());
+  printf("Application code changed, recompiling...\n");
+  auto result = system("bash build-app.sh");
+  if (result != 0) {
+    printf("Failed to build app!\n");
+    appstate->compileError = true;
+    return false;
   }
 
-  return (Clay_Dimensions) { (float)width, (float)height };
+  printf("Done, reloaded app!\n");
+  appstate->compileError = false;
+  return true;
 }
 
-void HandleClayErrors(Clay_ErrorData errorData) { printf("%s", errorData.errorText.chars); }
+void closeAppLib(Appstate* appstate)
+{
+  if (appstate->appLibraryHandle) {
+    appstate->DrawUI = 0;
+    appstate->EventHandler = 0;
+    appstate->InitClay = 0;
+    dlclose(appstate->appLibraryHandle);
+    appstate->appLibraryHandle = 0;
+  }
+}
+
+bool loadAppLib(Appstate* appstate)
+{
+  closeAppLib(appstate);
+
+  appstate->appLibraryHandle = dlopen("build/app.so", RTLD_LAZY);
+  if (!appstate->appLibraryHandle) {
+    printf("Error loading library: %s", dlerror());
+    return false;
+  }
+
+  appstate->DrawUI = (DrawUI_t)dlsym(appstate->appLibraryHandle, "DrawUI");
+  if (appstate->DrawUI == 0) {
+    printf("Failed to load func: %s\n", dlerror());
+    appstate->compileError = true;
+    return false;
+  }
+
+  appstate->EventHandler = (EventHandler_t)dlsym(appstate->appLibraryHandle, "EventHandler");
+  if (appstate->EventHandler == 0) {
+    printf("Failed to load func: %s\n", dlerror());
+    appstate->compileError = true;
+    return false;
+  }
+
+  appstate->InitClay = (InitClay_t)dlsym(appstate->appLibraryHandle, "InitClay");
+  if (appstate->InitClay == 0) {
+    printf("Failed to load func: %s\n", dlerror());
+    appstate->compileError = true;
+    return false;
+  }
+
+  appstate->InitClay(appstate);
+
+  // Clear any previous errors
+  dlerror();
+  return true;
+}
 
 SDL_AppResult SDL_AppInit(void** _appstate, int argc, char* argv[])
 {
@@ -29,6 +81,7 @@ SDL_AppResult SDL_AppInit(void** _appstate, int argc, char* argv[])
     return SDL_APP_FAILURE;
   }
   auto appstate = (Appstate*)(*_appstate);
+  appstate->lastHotreloadUpdate = SDL_GetTicks();
 
   SDL_SetAppMetadata("Example Pen Drawing Lines", "1.0", "com.example.pen-drawing-lines");
 
@@ -65,15 +118,6 @@ SDL_AppResult SDL_AppInit(void** _appstate, int argc, char* argv[])
   }
   appstate->rendererData.fonts.push_back(font);
 
-  uint64_t totalMemorySize = Clay_MinMemorySize();
-  Clay_Arena clayMemory = (Clay_Arena) { .capacity = totalMemorySize, .memory = (char*)SDL_malloc(totalMemorySize) };
-
-  int width, height;
-  SDL_GetWindowSize(appstate->window, &width, &height);
-  Clay_Initialize(
-      clayMemory, (Clay_Dimensions) { (float)width, (float)height }, (Clay_ErrorHandler) { HandleClayErrors });
-  Clay_SetMeasureTextFunction(SDL_MeasureText, appstate);
-
   int w, h;
   SDL_GetRenderOutputSize(appstate->rendererData.renderer, &w, &h);
   SDL_SetRenderDrawColor(appstate->rendererData.renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -89,6 +133,9 @@ SDL_AppResult SDL_AppInit(void** _appstate, int argc, char* argv[])
   //     return SDL_APP_FAILURE;
   //   }
 
+  compileApp(appstate);
+  loadAppLib(appstate);
+
   return SDL_APP_CONTINUE;
 }
 
@@ -99,96 +146,77 @@ SDL_AppResult SDL_AppEvent(void* _appstate, SDL_Event* event)
     return SDL_APP_SUCCESS;
   }
 
-  switch (event->type) {
-  case SDL_EVENT_QUIT:
-    return SDL_APP_SUCCESS;
-    break;
-
-  case SDL_EVENT_WINDOW_RESIZED:
-    Clay_SetLayoutDimensions((Clay_Dimensions) { (float)event->window.data1, (float)event->window.data2 });
-    break;
-
-  case SDL_EVENT_MOUSE_MOTION:
-    Clay_SetPointerState((Clay_Vector2) { event->motion.x, event->motion.y }, event->motion.state & SDL_BUTTON_LMASK);
-    break;
-
-  case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    Clay_SetPointerState((Clay_Vector2) { event->button.x, event->button.y }, event->button.button == SDL_BUTTON_LEFT);
-    break;
-
-  case SDL_EVENT_MOUSE_WHEEL:
-    Clay_UpdateScrollContainers(true, (Clay_Vector2) { event->wheel.x, event->wheel.y }, 0.01f);
-    break;
-
-  default:
-    break;
+  if (appstate->EventHandler) {
+    return appstate->EventHandler(appstate, event);
   }
-
-  /* There are several events that track the specific stages of pen activity,
-     but we're only going to look for motion and pressure, for simplicity. */
-  if (event->type == SDL_EVENT_PEN_MOTION) {
-    /* you can check for when the pen is touching, but if pressure > 0.0f, it's definitely touching! */
-    // if (pressure > 0.0f) {
-    //   if (previous_touch_x >= 0.0f) { /* only draw if we're moving while touching */
-    /* draw with the alpha set to the pressure, so you effectively get a fainter line for lighter presses. */
-    // SDL_SetRenderTarget(appstate->renderer, render_target);
-    SDL_SetRenderDrawColorFloat(appstate->rendererData.renderer, 0, 0, 0, 500);
-    SDL_RenderLine(appstate->rendererData.renderer,
-                   event->pmotion.x - 10,
-                   event->pmotion.y - 10,
-                   event->pmotion.x,
-                   event->pmotion.y);
-    printf("Output\n");
-    //   }
-    //   previous_touch_x = event->pmotion.x;
-    //   previous_touch_y = event->pmotion.y;
-    // }
-    // else {
-    //   previous_touch_x = previous_touch_y = -1.0f;
-    // }
+  else {
+    return SDL_APP_CONTINUE;
   }
-  else if (event->type == SDL_EVENT_PEN_AXIS) {
-    // if (event->paxis.axis == SDL_PEN_AXIS_PRESSURE) {
-    //   pressure = event->paxis.value; /* remember new pressure for later draws. */
-    // }
-    // else if (event->paxis.axis == SDL_PEN_AXIS_XTILT) {
-    //   tilt_x = event->paxis.value;
-    // }
-    // else if (event->paxis.axis == SDL_PEN_AXIS_YTILT) {
-    //   tilt_y = event->paxis.value;
-    // }
-  }
-
-  return SDL_APP_CONTINUE;
-}
-
-Clay_RenderCommandArray DrawUI(Appstate* appstate)
-{
-  appstate->clayFrameArena.offset = 0;
-  Clay_BeginLayout();
-  Clay_Sizing layoutExpand = { .width = CLAY_SIZING_GROW(0), .height = CLAY_SIZING_GROW(0) };
-
-  // Build UI here
-
-  Clay_RenderCommandArray renderCommands = Clay_EndLayout();
-  // for (int32_t i = 0; i < renderCommands.length; i++) {
-  //   Clay_RenderCommandArray_Get(&renderCommands, i)->boundingBox.y += data->yOffset;
-  // }
-  return renderCommands;
 }
 
 SDL_AppResult SDL_AppIterate(void* _appstate)
 {
   Appstate* appstate = (Appstate*)_appstate;
+  auto* renderer = appstate->rendererData.renderer;
 
-  Clay_RenderCommandArray render_commands = DrawUI(appstate);
+  auto now = SDL_GetTicks();
+  auto elapsed = now - appstate->lastHotreloadUpdate;
+  if (elapsed > HOTRELOAD_UPDATE_RATE) {
+    appstate->lastHotreloadUpdate = now;
 
-  SDL_SetRenderDrawColor(appstate->rendererData.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-  SDL_RenderClear(appstate->rendererData.renderer);
+    bool reloadApp = false;
+    for (const auto& entry : fs::directory_iterator(fs::current_path() / "src" / "app")) {
+      if (entry.is_regular_file()) {
+        auto moddate = fs::last_write_time(entry);
+        if (appstate->fileModificationDates.contains(entry.path().string())
+            && appstate->fileModificationDates[entry.path().string()] != moddate) {
+          reloadApp = true;
+        }
+        appstate->fileModificationDates[entry.path().string()] = moddate;
+      }
+    }
 
-  SDL_Clay_RenderClayCommands(&appstate->rendererData, &render_commands);
+    bool reloadCore = false;
+    for (const auto& entry : fs::directory_iterator(fs::current_path() / "src")) {
+      if (entry.is_regular_file()) {
+        auto moddate = fs::last_write_time(entry);
+        if (appstate->fileModificationDates.contains(entry.path().string())
+            && appstate->fileModificationDates[entry.path().string()] != moddate) {
+          reloadCore = true;
+        }
+        appstate->fileModificationDates[entry.path().string()] = moddate;
+      }
+    }
 
-  SDL_RenderPresent(appstate->rendererData.renderer);
+    if (reloadCore) {
+      printf("Core code changed, application must be restarted. Closing...\n");
+      return SDL_APP_SUCCESS;
+    }
+
+    if (reloadApp) {
+      compileApp(appstate);
+      loadAppLib(appstate);
+    }
+  }
+
+  Clay_RenderCommandArray render_commands;
+  if (appstate->DrawUI) {
+    render_commands = appstate->DrawUI(appstate);
+  }
+
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+  SDL_RenderClear(renderer);
+
+  if (appstate->compileError) {
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer);
+  }
+
+  if (appstate->DrawUI) {
+    SDL_Clay_RenderClayCommands(&appstate->rendererData, &render_commands);
+  }
+
+  SDL_RenderPresent(renderer);
   return SDL_APP_CONTINUE;
 }
 

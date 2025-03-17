@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 
-clang++ src/main.cpp -o build/out -g -I/usr/local/include $(pkg-config --cflags --libs sdl3) --std=c++20 -Wno-vla-cxx-extension -Wno-c++11-narrowing -lSDL3_ttf -lSDL3_image
+clang++ src/clay/clay.cpp -c -o build/clay.o --std=gnu++20 -fPIC -g
+clang++ src/main.cpp -o build/out -g -I/usr/local/include build/clay.o $(pkg-config --cflags --libs sdl3) --std=gnu++20 -Wno-vla-cxx-extension -Wno-c++11-narrowing -lSDL3_ttf -lSDL3_image
 
 ./build/out
