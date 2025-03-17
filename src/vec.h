@@ -4,22 +4,25 @@
 
 #include <stdint.h>
 
-class Vec2 {
+template <typename T> class _Vec2 {
 public:
-  double x;
-  double y;
+  T x;
+  T y;
 
-  Vec2()
+  _Vec2()
   {
     this->x = 0;
     this->y = 0;
   }
 
-  Vec2(double x, double y)
+  _Vec2(T x, T y)
   {
     this->x = x;
     this->y = y;
   }
 };
+
+using Vec2 = _Vec2<double>;
+using Vec2i = _Vec2<int>;
 
 #endif // VEC_H

@@ -112,7 +112,7 @@ Optional<Color> parseBgClass(String cls)
   return {};
 }
 
-void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate), Optional<SDL_Surface*> image = {})
+void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate), Optional<SDL_Texture*> image = {})
 {
   List<String> classes = split(classString, " ");
   Clay_SizingAxis width = {};
@@ -204,8 +204,8 @@ void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate),
 
   Clay_ImageElementConfig imageConfig = {};
   if (image && *image) {
-    auto surface = appstate->mainDocumentRenderSurface;
-    imageConfig = { .imageData = *image, .sourceDimensions = { surface->w, surface->h } };
+    auto texture = appstate->mainDocumentRenderTexture;
+    imageConfig = { .imageData = *image, .sourceDimensions = { texture->w, texture->h } };
   }
 
   CLAY({

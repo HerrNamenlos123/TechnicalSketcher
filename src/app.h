@@ -25,22 +25,39 @@ using Shape = Variant<LineShape>;
 
 struct Page {
   List<Shape> s;
-  SDL_Surface* canvas = 0;
+  SDL_Texture* canvas = 0;
 
   Page() { }
 
   ~Page()
   {
     if (this->canvas) {
-      SDL_DestroySurface(this->canvas);
+      SDL_DestroyTexture(this->canvas);
     }
   }
+
+  Page(const Page&) = delete;
+  Page(Page&& other)
+  {
+    this->s = std::move(other.s);
+    this->canvas = other.canvas;
+    other.canvas = 0;
+  }
+
+  void operator=(const Page&) = delete;
+  void operator=(Page&& other)
+  {
+    this->s = std::move(other.s);
+    this->canvas = other.canvas;
+    other.canvas = 0;
+  };
 };
 
 struct Document {
   int pageWidthPixels = 0;
   int pageScroll = 0;
   List<Page> pages;
+  Color paperColor = {};
 };
 
 struct ClayVideoDemo_Arena {
@@ -64,8 +81,8 @@ typedef void (*InitClay_t)(Appstate* appstate);
 struct Appstate {
   Tool tool;
   SDL_Window* window = 0;
-  SDL_Surface* mainDocumentRenderSurface;
-  Vec2 mainDocumentRenderSurfaceSize;
+  SDL_Texture* mainDocumentRenderTexture;
+  Vec2i mainViewportSize;
   Clay_SDL3RendererData rendererData;
   List<Document> documents = {};
   uint64_t lastHotreloadUpdate = 0;

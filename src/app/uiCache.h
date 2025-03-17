@@ -9,5 +9,5 @@ struct UICache {
   List<Color> textColorStack;
   List<int> textSizeStack;
   std::deque<String> stringCache;
-  List<SDL_Surface*> pages;
+  List<SDL_Texture*> pages;
 };

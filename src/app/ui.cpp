@@ -11,10 +11,10 @@ void ui(Appstate* appstate)
         text(appstate, "", "Hallo test");
       });
       div(appstate, "id-editor-viewport h-full w-full", [](Appstate* appstate) {
-        div(appstate, "h-full w-full", [](Appstate* appstate) { }, appstate->mainDocumentRenderSurface);
+        div(appstate, "h-full w-full", [](Appstate* appstate) { }, appstate->mainDocumentRenderTexture);
       });
     });
   });
   Clay_ElementData viewportSize = Clay_GetElementData(CLAY_ID("editor-viewport"));
-  appstate->mainDocumentRenderSurfaceSize = Vec2(viewportSize.boundingBox.width, viewportSize.boundingBox.height);
+  appstate->mainViewportSize = Vec2i(viewportSize.boundingBox.width, viewportSize.boundingBox.height);
 }

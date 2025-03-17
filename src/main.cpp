@@ -234,8 +234,8 @@ void SDL_AppQuit(void* _appstate, SDL_AppResult result)
       TTF_DestroyRendererTextEngine(appstate->rendererData.textEngine);
     }
 
-    if (appstate->mainDocumentRenderSurface) {
-      SDL_DestroySurface(appstate->mainDocumentRenderSurface);
+    if (appstate->mainDocumentRenderTexture) {
+      SDL_DestroyTexture(appstate->mainDocumentRenderTexture);
     }
 
     if (appstate->rendererData.renderer) {

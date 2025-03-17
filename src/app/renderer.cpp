@@ -2,37 +2,44 @@
 #include "../app.h"
 #include "../clay.h"
 #include "clay_renderer.cpp"
+#include "document.cpp"
 #include "ui.cpp"
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
 
-void RenderPage(Appstate* appstate, Page& page)
+const auto PAGE_OUTLINE_COLOR = parseHexcolor("#888");
+const auto APP_BACKGROUND_COLOR = parseHexcolor("#DDD");
+const auto PAGE_GRID_COLOR = parseHexcolor("#A8C9E3");
+
+void RenderPage(Appstate* appstate, Document& document, Page& page)
 {
-  // Fill the surface red
-  SDL_FillSurfaceRect(page.canvas, NULL, SDL_MapSurfaceRGB(page.canvas, 255, 0, 0));
+  auto renderer = appstate->rendererData.renderer;
+  int pageWidthPx = document.pageWidthPixels;
+  int pageHeightPx = pageWidthPx * 297 / 210;
+  int gridSpacing = 5;
+  float gridLineThickness_mm = 1;
 
-  // Lock surface if needed
-  if (SDL_MUSTLOCK(page.canvas)) {
-    SDL_LockSurface(page.canvas);
+  SDL_SetRenderTarget(renderer, page.canvas);
+  SDL_SetRenderDrawColor(
+      renderer, document.paperColor.r, document.paperColor.g, document.paperColor.b, document.paperColor.a);
+  SDL_RenderFillRect(renderer, NULL);
+
+  SDL_SetRenderDrawColor(renderer, PAGE_GRID_COLOR.r, PAGE_GRID_COLOR.g, PAGE_GRID_COLOR.b, PAGE_GRID_COLOR.a);
+  for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
+    float x_px = x_mm / 210.0 * pageWidthPx;
+    float gridLineThicknessPx = std::max(gridLineThickness_mm / 210.0 * pageWidthPx, 1.0);
+    gridLineThicknessPx = 1;
+    auto rect = (SDL_FRect) { x_px, 0, gridLineThicknessPx, pageHeightPx };
+    SDL_RenderFillRect(renderer, &rect);
+    // SDL_RenderLine(renderer, x_px, 0, x_px, pageHeightPx);
+  }
+  for (int y_mm = 0; y_mm < 297; y_mm += gridSpacing) {
+    float y_px = y_mm / 297.0 * pageHeightPx;
+    SDL_RenderLine(renderer, 0, y_px, pageWidthPx, y_px);
   }
 
-  // Get pixel buffer
-  Uint32* pixels = (Uint32*)page.canvas->pixels;
-  int pitch = page.canvas->pitch / sizeof(Uint32); // Convert bytes to pixels
-
-  Uint32 black = SDL_MapSurfaceRGB(page.canvas, 0, 0, 0);
-  int w = page.canvas->w, h = page.canvas->h;
-
-  // Draw diagonal cross
-  for (int i = 0; i < w && i < h; i++) {
-    pixels[i * pitch + i] = black; // Main diagonal
-    pixels[(h - i - 1) * pitch + i] = black; // Anti-diagonal
-  }
-
-  // Unlock if needed
-  if (SDL_MUSTLOCK(page.canvas)) {
-    SDL_UnlockSurface(page.canvas);
-  }
+  SDL_SetRenderTarget(renderer, NULL);
 }
 
 void RenderDocuments(Appstate* appstate)
@@ -40,51 +47,64 @@ void RenderDocuments(Appstate* appstate)
   for (auto& document : appstate->documents) {
     int pageWidth = document.pageWidthPixels;
     int pageHeight = pageWidth * 297 / 210;
+    int pageXOffset = (int)appstate->mainViewportSize.x / 2 - pageWidth / 2;
     int pageYOffset = 0;
+    int pageGapPercentOfHeight = 3;
     for (auto& page : document.pages) {
-      if (page.canvas) {
-        SDL_DestroySurface(page.canvas);
-      }
-      page.canvas = SDL_CreateSurface(pageWidth, pageHeight, SDL_PIXELFORMAT_RGBA32);
-      if (!page.canvas) {
-        fprintf(stderr, "Failed to create SDL surface for page\n");
-        abort();
+      if (!page.canvas || page.canvas->w != pageWidth || page.canvas->h != pageHeight) {
+        if (page.canvas) {
+          SDL_DestroyTexture(page.canvas);
+        }
+        page.canvas = SDL_CreateTexture(
+            appstate->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, pageWidth, pageHeight);
+        if (!page.canvas) {
+          fprintf(stderr, "Failed to create SDL texture for page\n");
+          abort();
+        }
       }
 
-      RenderPage(appstate, page);
+      RenderPage(appstate, document, page);
 
-      SDL_Rect destRect = { pageYOffset, 0, page.canvas->w, page.canvas->h };
-      SDL_BlitSurface(page.canvas, NULL, appstate->mainDocumentRenderSurface, &destRect);
+      auto renderer = appstate->rendererData.renderer;
+      SDL_SetRenderTarget(renderer, appstate->mainDocumentRenderTexture);
+      SDL_FRect destRect = { pageXOffset, pageYOffset, page.canvas->w, page.canvas->h };
+      SDL_RenderTexture(renderer, page.canvas, NULL, &destRect);
+      SDL_SetRenderDrawColor(
+          renderer, PAGE_OUTLINE_COLOR.r, PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b, PAGE_OUTLINE_COLOR.a);
+      SDL_FRect outlineRect = { pageXOffset, pageYOffset, page.canvas->w, page.canvas->h };
+      SDL_RenderRect(renderer, &outlineRect);
+      SDL_SetRenderTarget(renderer, NULL);
+
+      // SDL_BlitSurface(page.canvas, NULL, appstate->mainDocumentRenderTexture, &destRect);
+      pageYOffset += pageHeight + pageHeight * pageGapPercentOfHeight / 100;
     }
   }
 }
 
 void RenderMainViewport(Appstate* appstate)
 {
-  if (!appstate->mainDocumentRenderSurface
-      || appstate->mainDocumentRenderSurface->w != appstate->mainDocumentRenderSurfaceSize.x
-      || appstate->mainDocumentRenderSurface->h != appstate->mainDocumentRenderSurfaceSize.y) {
-    auto size = appstate->mainDocumentRenderSurfaceSize;
-    if (appstate->mainDocumentRenderSurface) {
-      SDL_DestroySurface(appstate->mainDocumentRenderSurface);
+  if (!appstate->mainDocumentRenderTexture || appstate->mainDocumentRenderTexture->w != appstate->mainViewportSize.x
+      || appstate->mainDocumentRenderTexture->h != appstate->mainViewportSize.y) {
+    auto size = appstate->mainViewportSize;
+    if (appstate->mainDocumentRenderTexture) {
+      SDL_DestroyTexture(appstate->mainDocumentRenderTexture);
     }
-    appstate->mainDocumentRenderSurface = SDL_CreateSurface(size.x, size.y, SDL_PIXELFORMAT_RGBA32);
-    if (!appstate->mainDocumentRenderSurface) {
-      fprintf(stderr, "Failed to create SDL surface for page\n");
+    int w = std::max(size.x, 1);
+    int h = std::max(size.y, 1);
+    appstate->mainDocumentRenderTexture
+        = SDL_CreateTexture(appstate->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
+    if (!appstate->mainDocumentRenderTexture) {
+      fprintf(stderr, "Failed to create SDL texture for viewport\n");
       abort();
     }
   }
 
-  auto surface = appstate->mainDocumentRenderSurface;
-  SDL_FillSurfaceRect(surface, NULL, SDL_MapSurfaceRGB(surface, 255, 255, 255));
-  if (SDL_MUSTLOCK(surface)) {
-    SDL_LockSurface(surface);
-  }
-
-  appstate->documents.clear();
-  appstate->documents.emplace_back();
-  appstate->documents.back().pages.emplace_back();
-  appstate->documents.back().pages.emplace_back();
+  auto renderer = appstate->rendererData.renderer;
+  auto texture = appstate->mainDocumentRenderTexture;
+  SDL_SetRenderTarget(renderer, texture);
+  SDL_SetRenderDrawColor(
+      renderer, APP_BACKGROUND_COLOR.r, APP_BACKGROUND_COLOR.g, APP_BACKGROUND_COLOR.b, APP_BACKGROUND_COLOR.a);
+  SDL_RenderClear(renderer);
 
   for (auto& document : appstate->documents) {
     if (document.pageWidthPixels == 0) {
@@ -93,10 +113,7 @@ void RenderMainViewport(Appstate* appstate)
   }
 
   RenderDocuments(appstate);
-
-  if (SDL_MUSTLOCK(surface)) {
-    SDL_UnlockSurface(surface);
-  }
+  SDL_SetRenderTarget(renderer, NULL);
 }
 
 static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextElementConfig* config, void* _appstate)
@@ -143,6 +160,11 @@ extern "C" void InitClay(Appstate* appstate)
   FONT_SIZES["lg"] = 18;
   FONT_SIZES["xl"] = 20;
   FONT_SIZES["2xl"] = 24;
+
+  addDocument(appstate);
+  addPageToDocument(appstate, appstate->documents.back());
+  addPageToDocument(appstate, appstate->documents.back());
+  addPageToDocument(appstate, appstate->documents.back());
 }
 
 extern "C" SDL_AppResult EventHandler(Appstate* appstate, SDL_Event* event)
@@ -185,7 +207,7 @@ extern "C" void DrawUI(Appstate* appstate)
   Clay_BeginLayout();
 
   CLAY({
-      .layout = { 
+      .layout = {
                   .sizing = { .width = CLAY_SIZING_GROW(0), .height = CLAY_SIZING_GROW(0) },
         .layoutDirection = CLAY_TOP_TO_BOTTOM,
         },})
