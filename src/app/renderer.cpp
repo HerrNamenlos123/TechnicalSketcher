@@ -1,11 +1,63 @@
 
 #include "../app.h"
 #include "../clay.h"
+#include "clay_renderer.cpp"
 #include "ui.cpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_surface.h>
 
-void RenderDocuments(Appstate* appstate) { }
+void RenderPage(Appstate* appstate, Page& page)
+{
+  // Fill the surface red
+  SDL_FillSurfaceRect(page.canvas, NULL, SDL_MapSurfaceRGB(page.canvas, 255, 0, 0));
+
+  // Lock surface if needed
+  if (SDL_MUSTLOCK(page.canvas)) {
+    SDL_LockSurface(page.canvas);
+  }
+
+  // Get pixel buffer
+  Uint32* pixels = (Uint32*)page.canvas->pixels;
+  int pitch = page.canvas->pitch / sizeof(Uint32); // Convert bytes to pixels
+
+  Uint32 black = SDL_MapSurfaceRGB(page.canvas, 0, 0, 0);
+  int w = page.canvas->w, h = page.canvas->h;
+
+  // Draw diagonal cross
+  for (int i = 0; i < w && i < h; i++) {
+    pixels[i * pitch + i] = black; // Main diagonal
+    pixels[(h - i - 1) * pitch + i] = black; // Anti-diagonal
+  }
+
+  // Unlock if needed
+  if (SDL_MUSTLOCK(page.canvas)) {
+    SDL_UnlockSurface(page.canvas);
+  }
+}
+
+void RenderDocuments(Appstate* appstate)
+{
+  for (auto& document : appstate->documents) {
+    int pageWidth = document.pageWidthPixels;
+    int pageHeight = pageWidth * 297 / 210;
+    int pageYOffset = 0;
+    for (auto& page : document.pages) {
+      if (page.canvas) {
+        SDL_DestroySurface(page.canvas);
+      }
+      page.canvas = SDL_CreateSurface(pageWidth, pageHeight, SDL_PIXELFORMAT_RGBA32);
+      if (!page.canvas) {
+        fprintf(stderr, "Failed to create SDL surface for page\n");
+        abort();
+      }
+
+      RenderPage(appstate, page);
+
+      SDL_Rect destRect = { pageYOffset, 0, page.canvas->w, page.canvas->h };
+      SDL_BlitSurface(page.canvas, NULL, appstate->mainDocumentRenderSurface, &destRect);
+    }
+  }
+}
 
 void RenderMainViewport(Appstate* appstate)
 {
@@ -17,12 +69,27 @@ void RenderMainViewport(Appstate* appstate)
       SDL_DestroySurface(appstate->mainDocumentRenderSurface);
     }
     appstate->mainDocumentRenderSurface = SDL_CreateSurface(size.x, size.y, SDL_PIXELFORMAT_RGBA32);
+    if (!appstate->mainDocumentRenderSurface) {
+      fprintf(stderr, "Failed to create SDL surface for page\n");
+      abort();
+    }
   }
 
   auto surface = appstate->mainDocumentRenderSurface;
   SDL_FillSurfaceRect(surface, NULL, SDL_MapSurfaceRGB(surface, 255, 255, 255));
   if (SDL_MUSTLOCK(surface)) {
     SDL_LockSurface(surface);
+  }
+
+  appstate->documents.clear();
+  appstate->documents.emplace_back();
+  appstate->documents.back().pages.emplace_back();
+  appstate->documents.back().pages.emplace_back();
+
+  for (auto& document : appstate->documents) {
+    if (document.pageWidthPixels == 0) {
+      document.pageWidthPixels = 500;
+    }
   }
 
   RenderDocuments(appstate);
@@ -107,7 +174,7 @@ extern "C" SDL_AppResult EventHandler(Appstate* appstate, SDL_Event* event)
   return SDL_APP_CONTINUE;
 }
 
-extern "C" Clay_RenderCommandArray DrawUI(Appstate* appstate)
+extern "C" void DrawUI(Appstate* appstate)
 {
   RenderMainViewport(appstate);
 
@@ -127,8 +194,10 @@ extern "C" Clay_RenderCommandArray DrawUI(Appstate* appstate)
   }
 
   Clay_RenderCommandArray renderCommands = Clay_EndLayout();
-  return renderCommands;
+  SDL_Clay_RenderClayCommands(&appstate->rendererData, &renderCommands);
 }
+
+extern "C" void RenderClay(Appstate* appstate, Clay_RenderCommandArray* renderCommands) { }
 
 // void ApplicationRenderer::BeginFrame() { Battery::Renderer2D::BeginScene(GetInstance().scene.get()); }
 
@@ -334,7 +403,8 @@ extern "C" Clay_RenderCommandArray DrawUI(Appstate* appstate)
 //     for (float x = nav->panOffset.x + w / 2; x < right; x += nav->scale * nav->snapSize) {
 //       Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
 //     }
-//     for (float x = nav->panOffset.x + w / 2 - nav->scale * nav->snapSize; x > left; x -= nav->scale * nav->snapSize)
+//     for (float x = nav->panOffset.x + w / 2 - nav->scale * nav->snapSize; x > left; x -= nav->scale *
+//     nav->snapSize)
 //     {
 //       Renderer2D::DrawPrimitiveLine({ x, bottom }, { x, top }, thickness, color);
 //     }

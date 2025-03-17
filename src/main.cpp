@@ -1,7 +1,7 @@
+#include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "app.h"
-#include "clay_renderer.cpp"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_timer.h>
@@ -129,14 +129,6 @@ SDL_AppResult SDL_AppInit(void** _appstate, int argc, char* argv[])
   SDL_SetRenderTarget(appstate->rendererData.renderer, NULL);
   SDL_SetRenderDrawBlendMode(appstate->rendererData.renderer, SDL_BLENDMODE_BLEND);
 
-  //   appstate->documents.emplace_back();
-  //   appstate->documents[0].canvas
-  //       = SDL_CreateTexture(appstate->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
-  //   if (!render_target) {
-  //     SDL_Log("Couldn't create render target: %s", SDL_GetError());
-  //     return SDL_APP_FAILURE;
-  //   }
-
   compileApp(appstate);
   if (!appstate->compileError) {
     loadAppLib(appstate);
@@ -164,6 +156,10 @@ SDL_AppResult SDL_AppIterate(void* _appstate)
 {
   Appstate* appstate = (Appstate*)_appstate;
   auto* renderer = appstate->rendererData.renderer;
+
+  // if (SDL_GetTicks() > 10000) {
+  //   return SDL_APP_SUCCESS;
+  // }
 
   auto now = SDL_GetTicks();
   auto elapsed = now - appstate->lastHotreloadUpdate;
@@ -205,21 +201,15 @@ SDL_AppResult SDL_AppIterate(void* _appstate)
     }
   }
 
-  Clay_RenderCommandArray render_commands;
-  if (!appstate->compileError && appstate->DrawUI) {
-    render_commands = appstate->DrawUI(appstate);
-  }
-
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
 
-  if (appstate->compileError) {
+  if (!appstate->compileError && appstate->DrawUI) {
+    appstate->DrawUI(appstate);
+  }
+  else {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
-  }
-
-  if (!appstate->compileError && appstate->DrawUI) {
-    SDL_Clay_RenderClayCommands(&appstate->rendererData, &render_commands);
   }
 
   SDL_RenderPresent(renderer);
@@ -242,6 +232,10 @@ void SDL_AppQuit(void* _appstate, SDL_AppResult result)
 
     if (appstate->rendererData.textEngine) {
       TTF_DestroyRendererTextEngine(appstate->rendererData.textEngine);
+    }
+
+    if (appstate->mainDocumentRenderSurface) {
+      SDL_DestroySurface(appstate->mainDocumentRenderSurface);
     }
 
     if (appstate->rendererData.renderer) {

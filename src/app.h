@@ -6,6 +6,7 @@
 #include "vec.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_surface.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <cwchar>
@@ -22,10 +23,24 @@ enum class Tool {
 struct LineShape { };
 using Shape = Variant<LineShape>;
 
-struct Document {
+struct Page {
   List<Shape> s;
-  Tool tool;
-  SDL_Texture* canvas = 0;
+  SDL_Surface* canvas = 0;
+
+  Page() { }
+
+  ~Page()
+  {
+    if (this->canvas) {
+      SDL_DestroySurface(this->canvas);
+    }
+  }
+};
+
+struct Document {
+  int pageWidthPixels = 0;
+  int pageScroll = 0;
+  List<Page> pages;
 };
 
 struct ClayVideoDemo_Arena {
@@ -42,11 +57,12 @@ struct Clay_SDL3RendererData {
 struct UICache;
 
 struct Appstate;
-typedef Clay_RenderCommandArray (*DrawUI_t)(Appstate* appstate);
+typedef void (*DrawUI_t)(Appstate* appstate);
 typedef SDL_AppResult (*EventHandler_t)(Appstate* appstate, SDL_Event* event);
 typedef void (*InitClay_t)(Appstate* appstate);
 
 struct Appstate {
+  Tool tool;
   SDL_Window* window = 0;
   SDL_Surface* mainDocumentRenderSurface;
   Vec2 mainDocumentRenderSurfaceSize;
