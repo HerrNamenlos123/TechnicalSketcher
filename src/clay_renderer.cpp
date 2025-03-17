@@ -208,7 +208,12 @@ static void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Cla
     } break;
     case CLAY_RENDER_COMMAND_TYPE_TEXT: {
       Clay_TextRenderData* config = &rcmd->renderData.text;
-      TTF_Font* font = rendererData->fonts[config->fontId];
+      TTF_Font* font = std::get<TTF_Font*>(rendererData->fonts[0]);
+      for (auto [_font, size] : rendererData->fonts) {
+        if (size == config->fontSize) {
+          font = _font;
+        }
+      }
       TTF_Text* text
           = TTF_CreateText(rendererData->textEngine, font, config->stringContents.chars, config->stringContents.length);
       TTF_SetTextColor(text, config->textColor.r, config->textColor.g, config->textColor.b, config->textColor.a);

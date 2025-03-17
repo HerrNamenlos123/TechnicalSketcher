@@ -2,6 +2,7 @@
 #ifndef STD_H
 #define STD_H
 
+#include "app.h"
 #include <cstdlib>
 #include <filesystem>
 #include <optional>
@@ -17,10 +18,52 @@ template <typename T> using List = std::vector<T>;
 using String = std::string;
 
 template <typename... TArgs> using Variant = std::variant<TArgs...>;
+template <typename... TArgs> using Tuple = std::tuple<TArgs...>;
 
 template <typename T, typename U> using Map = std::unordered_map<T, U>;
 
 template <typename T> using Optional = std::optional<T>;
+
+struct Color {
+  float r = 0;
+  float g = 0;
+  float b = 0;
+  float a = 0;
+
+  Color()
+  {
+    this->r = 0;
+    this->g = 0;
+    this->b = 0;
+    this->a = 0;
+  }
+
+  Color(float r, float g, float b, float a = 255)
+  {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+    this->a = a;
+  }
+
+  Color(Clay_Color color)
+  {
+    this->r = color.r;
+    this->g = color.g;
+    this->b = color.b;
+    this->a = color.a;
+  }
+
+  operator Clay_Color()
+  {
+    return (Clay_Color) {
+      .r = r,
+      .g = g,
+      .b = b,
+      .a = a,
+    };
+  }
+};
 
 // template <typename T> class List {
 // public:

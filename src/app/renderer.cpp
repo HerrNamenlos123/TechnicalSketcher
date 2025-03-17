@@ -4,6 +4,7 @@
 #include <SDL3/SDL_init.h>
 
 auto COLORS = Map<String, Clay_Color>();
+auto FONT_SIZES = Map<String, int>();
 
 List<String> split(String s, String delimiter)
 {
@@ -25,23 +26,43 @@ void RenderBegin() { }
 
 void RenderEnd() { }
 
-void div(String classString, std::function<void(void)> cb)
+Tuple<String, String> parseClass(String classString)
+{
+  String modifier;
+  String cmd;
+  auto elements = split(classString, ":");
+  if (elements.size() == 1) {
+    cmd = elements[0];
+  }
+  else if (elements.size() == 2) {
+    modifier = elements[0];
+    cmd = elements[1];
+  }
+  return std::make_tuple(modifier, cmd);
+}
+
+void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate))
 {
   List<String> classes = split(classString, " ");
   Clay_SizingAxis width;
   Clay_SizingAxis height;
   Clay_Padding padding;
-  Clay_Color backgroundColor;
+  Color backgroundColor;
 
-  for (const auto& cls : classes) {
-    if (cls == "w-full") {
+  size_t textColorPushed = 0;
+  size_t textSizePushed = 0;
+
+  for (const auto& classString : classes) {
+    const auto [modifier, cmd] = parseClass(classString);
+
+    if (cmd == "w-full") {
       width = CLAY_SIZING_GROW(0);
     }
-    else if (cls == "h-full") {
+    else if (cmd == "h-full") {
       height = CLAY_SIZING_GROW(0);
     }
-    else if (cls.starts_with("p-[")) {
-      auto unit = cls.substr(3, cls.length() - 4);
+    else if (cmd.starts_with("p-[")) {
+      auto unit = cmd.substr(3, cmd.length() - 4);
       if (unit.ends_with("px")) {
         try {
           auto value = std::stol(unit.substr(0, unit.length() - 2));
@@ -51,12 +72,39 @@ void div(String classString, std::function<void(void)> cb)
         }
       }
     }
-    else if (cls.starts_with("bg-")) {
-      auto value = cls.substr(3, cls.length() - 3);
+    else if (cmd.starts_with("bg-")) {
+      auto value = cmd.substr(3, cmd.length() - 3);
       if (COLORS.contains(value)) {
         backgroundColor = COLORS.at(value);
       }
     }
+    else if (cmd.starts_with("bg-")) {
+      auto value = cmd.substr(3, cmd.length() - 3);
+      if (COLORS.contains(value)) {
+        backgroundColor = COLORS.at(value);
+      }
+    }
+    else if (cmd.starts_with("text-")) {
+      auto value = cmd.substr(3, cmd.length() - 3);
+      if (COLORS.contains(value)) {
+        appstate->uiCache.textColorStack.push_back(COLORS.at(value));
+        textColorPushed++;
+      }
+      else if (FONT_SIZES.contains(value)) {
+        appstate->uiCache.textSizeStack.push_back(FONT_SIZES.at(value));
+        textSizePushed++;
+      }
+    }
+  }
+
+  Color textColor = COLORS["black"];
+  if (appstate->uiCache.textColorStack.size() > 0) {
+    textColor = appstate->uiCache.textColorStack.back();
+  }
+
+  int textsize = FONT_SIZES["base"];
+  if (appstate->uiCache.textSizeStack.size() > 0) {
+    textsize = appstate->uiCache.textSizeStack.back();
   }
 
   CLAY({ .layout = { .sizing = { .width = width, .height = height },
@@ -66,20 +114,105 @@ void div(String classString, std::function<void(void)> cb)
          .backgroundColor = backgroundColor })
   {
     if (cb) {
-      cb();
+      cb(appstate);
     }
+  }
+
+  for (int i = 0; i < textColorPushed; i++) {
+    appstate->uiCache.textColorStack.pop_back();
+  }
+  for (int i = 0; i < textSizePushed; i++) {
+    appstate->uiCache.textSizeStack.pop_back();
+  }
+}
+
+void text(Appstate* appstate, String classString, String content)
+{
+  List<String> classes = split(classString, " ");
+  Clay_SizingAxis width;
+  Clay_SizingAxis height;
+  Clay_Padding padding;
+  Color backgroundColor;
+
+  size_t textColorPushed = 0;
+  size_t textSizePushed = 0;
+
+  for (const auto& classString : classes) {
+    const auto [modifier, cmd] = parseClass(classString);
+
+    if (cmd == "w-full") {
+      width = CLAY_SIZING_GROW(0);
+    }
+    else if (cmd == "h-full") {
+      height = CLAY_SIZING_GROW(0);
+    }
+    else if (cmd.starts_with("p-[")) {
+      auto unit = cmd.substr(3, cmd.length() - 4);
+      if (unit.ends_with("px")) {
+        try {
+          auto value = std::stol(unit.substr(0, unit.length() - 2));
+          padding = CLAY_PADDING_ALL(value);
+        }
+        catch (...) {
+        }
+      }
+    }
+    else if (cmd.starts_with("bg-")) {
+      auto value = cmd.substr(3, cmd.length() - 3);
+      if (COLORS.contains(value)) {
+        backgroundColor = COLORS.at(value);
+      }
+    }
+    else if (cmd.starts_with("bg-")) {
+      auto value = cmd.substr(3, cmd.length() - 3);
+      if (COLORS.contains(value)) {
+        backgroundColor = COLORS.at(value);
+      }
+    }
+    else if (cmd.starts_with("text-")) {
+      auto value = cmd.substr(5, cmd.length() - 5);
+      if (COLORS.contains(value)) {
+        appstate->uiCache.textColorStack.push_back(COLORS.at(value));
+        textColorPushed++;
+      }
+      else if (FONT_SIZES.contains(value)) {
+        appstate->uiCache.textSizeStack.push_back(FONT_SIZES.at(value));
+        textSizePushed++;
+      }
+    }
+  }
+
+  Color textColor = COLORS["black"];
+  if (appstate->uiCache.textColorStack.size() > 0) {
+    textColor = appstate->uiCache.textColorStack.back();
+  }
+
+  int textsize = FONT_SIZES["base"];
+  if (appstate->uiCache.textSizeStack.size() > 0) {
+    textsize = appstate->uiCache.textSizeStack.back();
+  }
+
+  appstate->uiCache.stringCache.push_back(content);
+  CLAY_TEXT(((Clay_String) {
+                .length = appstate->uiCache.stringCache.back().length(),
+                .chars = appstate->uiCache.stringCache.back().c_str(),
+            }),
+            CLAY_TEXT_CONFIG({
+                .textColor = textColor,
+                .fontSize = textsize,
+            }));
+
+  for (int i = 0; i < textColorPushed; i++) {
+    appstate->uiCache.textColorStack.pop_back();
+  }
+  for (int i = 0; i < textSizePushed; i++) {
+    appstate->uiCache.textSizeStack.pop_back();
   }
 }
 
 void ui(Appstate* appstate)
 {
-  div("w-full bg-blue", []() {
-    CLAY_TEXT(CLAY_STRING("Clay - UI Library"),
-              CLAY_TEXT_CONFIG({
-                  .textColor = { 255, 255, 255, 255 },
-                  .fontSize = 24,
-              }));
-  });
+  div(appstate, "w-full bg-blue", [](Appstate* appstate) { text(appstate, "text-green text-base", "Hallo test"); });
   CLAY({ .id = CLAY_ID("SideBar"),
          .layout = { .sizing = { .width = CLAY_SIZING_FIXED(900), .height = CLAY_SIZING_FIXED(500) },
                      .padding = CLAY_PADDING_ALL(16),
@@ -108,7 +241,12 @@ static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextEl
 {
   Appstate* appstate = (Appstate*)_appstate;
   auto& fonts = appstate->rendererData.fonts;
-  TTF_Font* font = fonts[config->fontId];
+  TTF_Font* font = std::get<TTF_Font*>(fonts[0]);
+  for (auto [_font, size] : fonts) {
+    if (size == config->fontSize) {
+      font = _font;
+    }
+  }
   int width, height;
 
   if (!TTF_GetStringSize(font, text.chars, text.length, &width, &height)) {
@@ -137,6 +275,12 @@ extern "C" void InitClay(Appstate* appstate)
   COLORS["red"] = (Clay_Color) { 255, 0, 0, 255 };
   COLORS["green"] = (Clay_Color) { 0, 255, 0, 255 };
   COLORS["blue"] = (Clay_Color) { 0, 0, 255, 255 };
+  FONT_SIZES["xs"] = 12;
+  FONT_SIZES["sm"] = 14;
+  FONT_SIZES["base"] = 16;
+  FONT_SIZES["lg"] = 18;
+  FONT_SIZES["xl"] = 20;
+  FONT_SIZES["2xl"] = 24;
 }
 
 extern "C" SDL_AppResult EventHandler(Appstate* appstate, SDL_Event* event)
@@ -183,6 +327,11 @@ extern "C" Clay_RenderCommandArray DrawUI(Appstate* appstate)
 
   //   ui();
   Clay_RenderCommandArray renderCommands = Clay_EndLayout();
+
+  appstate->uiCache.stringCache.clear();
+  appstate->uiCache.textColorStack.clear();
+  appstate->uiCache.textSizeStack.clear();
+
   return renderCommands;
 }
 

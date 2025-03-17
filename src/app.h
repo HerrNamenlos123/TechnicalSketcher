@@ -36,7 +36,13 @@ struct ClayVideoDemo_Arena {
 struct Clay_SDL3RendererData {
   SDL_Renderer* renderer;
   TTF_TextEngine* textEngine;
-  List<TTF_Font*> fonts;
+  List<Tuple<TTF_Font*, int>> fonts;
+};
+
+struct UICache {
+  List<Color> textColorStack;
+  List<int> textSizeStack;
+  List<String> stringCache;
 };
 
 struct Appstate;
@@ -56,6 +62,7 @@ struct Appstate {
   EventHandler_t EventHandler = 0;
   InitClay_t InitClay = 0;
   Clay_Context* clayContext;
+  UICache uiCache;
 };
 
 #endif // APP_H

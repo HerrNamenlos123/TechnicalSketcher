@@ -1,3 +1,4 @@
+#include <SDL3_ttf/SDL_ttf.h>
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "app.h"
 #include "clay_renderer.cpp"
@@ -111,12 +112,15 @@ SDL_AppResult SDL_AppInit(void** _appstate, int argc, char* argv[])
     return SDL_APP_FAILURE;
   }
 
-  TTF_Font* font = TTF_OpenFont("resource/Roboto-Regular.ttf", 24);
-  if (!font) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", SDL_GetError());
-    return SDL_APP_FAILURE;
+  auto sizes = List<int> { 12, 14, 16, 18, 20, 24 };
+  for (auto size : sizes) {
+    TTF_Font* font = TTF_OpenFont("resource/Roboto-Regular.ttf", size);
+    if (!font) {
+      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", SDL_GetError());
+      return SDL_APP_FAILURE;
+    }
+    appstate->rendererData.fonts.push_back(std::make_tuple(font, size));
   }
-  appstate->rendererData.fonts.push_back(font);
 
   int w, h;
   SDL_GetRenderOutputSize(appstate->rendererData.renderer, &w, &h);
@@ -231,7 +235,7 @@ void SDL_AppQuit(void* _appstate, SDL_AppResult result)
   if (appstate) {
 
     for (size_t i = 0; i < appstate->rendererData.fonts.size(); i++) {
-      TTF_CloseFont(appstate->rendererData.fonts[i]);
+      TTF_CloseFont(std::get<TTF_Font*>(appstate->rendererData.fonts[i]));
     }
 
     if (appstate->rendererData.textEngine) {
