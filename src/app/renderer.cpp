@@ -45,37 +45,41 @@ void RenderDocuments(Appstate* appstate)
   }
   auto& document = appstate->documents[appstate->selectedDocument];
   int pageWidthPx = document.pageWidthPercentOfWindow * appstate->mainViewportBB.width / 100.0;
-  int pageHeight = pageWidthPx * 297 / 210;
+  int pageHeightPx = pageWidthPx * 297 / 210;
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
   int pageGapPercentOfHeight = 3;
   for (auto& page : document.pages) {
-    if (!page.canvas || page.canvas->w != pageWidthPx || page.canvas->h != pageHeight) {
+    if (!page.canvas || page.canvas->w != pageWidthPx || page.canvas->h != pageHeightPx) {
       if (page.canvas) {
         SDL_DestroyTexture(page.canvas);
       }
       page.canvas = SDL_CreateTexture(
-          appstate->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, pageWidthPx, pageHeight);
+          appstate->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, pageWidthPx, pageHeightPx);
       if (!page.canvas) {
         fprintf(stderr, "Failed to create SDL texture for page\n");
         abort();
       }
     }
 
-    RenderPage(appstate, document, page);
+    Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
+    Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
+    auto bb = appstate->mainViewportBB;
+    if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
+      RenderPage(appstate, document, page);
 
-    auto renderer = appstate->rendererData.renderer;
-    SDL_SetRenderTarget(renderer, appstate->mainDocumentRenderTexture);
-    SDL_FRect destRect = { pageXOffset, pageYOffset, page.canvas->w, page.canvas->h };
-    SDL_RenderTexture(renderer, page.canvas, NULL, &destRect);
-    SDL_SetRenderDrawColor(
-        renderer, PAGE_OUTLINE_COLOR.r, PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b, PAGE_OUTLINE_COLOR.a);
-    SDL_FRect outlineRect = { pageXOffset, pageYOffset, page.canvas->w, page.canvas->h };
-    SDL_RenderRect(renderer, &outlineRect);
-    SDL_SetRenderTarget(renderer, NULL);
+      auto renderer = appstate->rendererData.renderer;
+      SDL_SetRenderTarget(renderer, appstate->mainDocumentRenderTexture);
+      SDL_FRect destRect = { pageXOffset, pageYOffset, page.canvas->w, page.canvas->h };
+      SDL_RenderTexture(renderer, page.canvas, NULL, &destRect);
+      SDL_SetRenderDrawColor(
+          renderer, PAGE_OUTLINE_COLOR.r, PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b, PAGE_OUTLINE_COLOR.a);
+      SDL_FRect outlineRect = { pageXOffset, pageYOffset, page.canvas->w, page.canvas->h };
+      SDL_RenderRect(renderer, &outlineRect);
+      SDL_SetRenderTarget(renderer, NULL);
+    }
 
-    // SDL_BlitSurface(page.canvas, NULL, appstate->mainDocumentRenderTexture, &destRect);
-    pageYOffset += pageHeight + pageHeight * pageGapPercentOfHeight / 100;
+    pageYOffset += pageHeightPx + pageHeightPx * pageGapPercentOfHeight / 100;
   }
 }
 
