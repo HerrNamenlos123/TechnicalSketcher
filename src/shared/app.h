@@ -1,21 +1,18 @@
 #ifndef APP_H
 #define APP_H
 
-#include "base.h"
 #include "clay.h"
 #include "std.h"
-#include "vec.h"
+#include "stdlib.h"
+#include "vector.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
-// #include <algorithm>
-// #include <cwchar>
-// #include <dlfcn.h>
-// #include <filesystem>
-// #include <functional>
 #include <stdint.h>
+
+#include "shared.h"
 
 enum class Tool {
   Select,

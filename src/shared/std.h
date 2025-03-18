@@ -2,6 +2,7 @@
 #ifndef BASE_H
 #define BASE_H
 
+#include "format.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>

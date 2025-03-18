@@ -2,7 +2,7 @@
 #ifndef TSK_PLATFORM_H
 #define TSK_PLATFORM_H
 
-#include "../../base.h"
+#include "../std.h"
 
 extern time_t GetFileModificationDate(Arena* arena, String path);
 

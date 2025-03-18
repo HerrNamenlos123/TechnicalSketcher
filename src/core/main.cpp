@@ -1,6 +1,5 @@
 #define SDL_MAIN_USE_CALLBACKS 1
-#include "../app.h"
-#include "../base.h"
+#include "../shared/app.h"
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_oldnames.h>
@@ -9,8 +8,6 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <dlfcn.h>
 #include <stdio.h>
-
-#include "../shared/shared.h"
 
 const Vec2 DEFAULT_WINDOW_SIZE = Vec2(640, 480);
 const uint64_t HOTRELOAD_UPDATE_RATE = 100;
@@ -149,9 +146,6 @@ static SDL_AppResult InitApp(App* app)
 {
   app->lastHotreloadUpdate = SDL_GetTicks();
   SDL_SetAppMetadata("Example Pen Drawing Lines", "1.0", "com.example.pen-drawing-lines");
-
-  auto str = format(app->mainArena, "This is a test: {} {}", 5.f, String("Test"));
-  printf("String: %s\n", c_str(app->mainArena, str));
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());

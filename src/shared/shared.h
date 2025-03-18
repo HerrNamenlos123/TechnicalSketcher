@@ -1,8 +1,51 @@
 
-#include "../base.h"
+#ifndef SHARED_H
+#define SHARED_H
+
+#include "clay.h"
+#include "std.h"
 
 #include "platform/platform.h"
 
-// String format(Arena* arena, const char* fmt, ...);
-template <typename... Args>
-String format(Arena* arena, const char* fmt, Args&&... args);
+struct Color {
+  float r = 0;
+  float g = 0;
+  float b = 0;
+  float a = 0;
+
+  Color()
+  {
+    this->r = 0;
+    this->g = 0;
+    this->b = 0;
+    this->a = 0;
+  }
+
+  Color(float r, float g, float b, float a = 255)
+  {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+    this->a = a;
+  }
+
+  Color(Clay_Color color)
+  {
+    this->r = color.r;
+    this->g = color.g;
+    this->b = color.b;
+    this->a = color.a;
+  }
+
+  operator Clay_Color()
+  {
+    return (Clay_Color) {
+      .r = r,
+      .g = g,
+      .b = b,
+      .a = a,
+    };
+  }
+};
+
+#endif // SHARED_H
