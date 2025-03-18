@@ -3,27 +3,45 @@
 #define STD_H
 
 #include "clay.h"
-#include <cstdlib>
-#include <deque>
-#include <filesystem>
-#include <optional>
-#include <stdlib.h>
-#include <string>
-#include <unordered_map>
-#include <variant>
-#include <vector>
+// #include <cstdlib>
+// #include <deque>
+// #include <filesystem>
+// #include <optional>
+// #include <stdlib.h>
+// #include <string>
+// #include <unordered_map>
+// #include <variant>
+// #include <vector>
 
-namespace fs = std::filesystem;
+// template <typename... TArgs>
+// using Variant = std::variant<TArgs...>;
+// template <typename... TArgs>
+// using Tuple = std::tuple<TArgs...>;
 
-template <typename T> using List = std::vector<T>;
-using String = std::string;
+// template <typename T, typename U>
+// using Map = std::unordered_map<T, U>;
 
-template <typename... TArgs> using Variant = std::variant<TArgs...>;
-template <typename... TArgs> using Tuple = std::tuple<TArgs...>;
+// template <typename T>
+// using Optional = std::optional<T>;
 
-template <typename T, typename U> using Map = std::unordered_map<T, U>;
+// template <typename T>
+// struct Optional {
+//   public:
+//   Optional()
+//   {
+//     this->isValid = false;
+//   }
 
-template <typename T> using Optional = std::optional<T>;
+//   Optional(T elem)
+//   {
+//     this->isValid = true;
+//     this->data = elem;
+//   }
+
+//   private:
+//   T data;
+//   bool isValid;
+// };
 
 struct Color {
   float r = 0;
