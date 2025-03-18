@@ -5,10 +5,12 @@
 #include "std.h"
 #include "vec.h"
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <algorithm>
 #include <cwchar>
 #include <dlfcn.h>
 #include <filesystem>
@@ -54,8 +56,9 @@ struct Page {
 };
 
 struct Document {
-  int pageWidthPixels = 0;
+  float pageWidthPercentOfWindow = 50;
   int pageScroll = 0;
+  Vec2 position;
   List<Page> pages;
   Color paperColor = {};
 };
@@ -79,21 +82,31 @@ typedef SDL_AppResult (*EventHandler_t)(Appstate* appstate, SDL_Event* event);
 typedef void (*InitClay_t)(Appstate* appstate);
 
 struct Appstate {
-  Tool tool;
-  SDL_Window* window = 0;
-  SDL_Texture* mainDocumentRenderTexture;
-  Vec2i mainViewportSize;
-  Clay_SDL3RendererData rendererData;
+
+  // Actual application data
   List<Document> documents = {};
+  size_t selectedDocument = 0;
+  Tool tool;
+
+  // Device input
+  List<SDL_TouchFingerEvent> touchFingers;
+  Optional<Vec2> prevAveragePos;
+  Optional<float> prevPinchDistance;
+
+  // Hotreloading and UI stuff
+  Clay_SDL3RendererData rendererData;
   uint64_t lastHotreloadUpdate = 0;
-  Map<String, fs::file_time_type> fileModificationDates;
   bool compileError = false;
   void* appLibraryHandle = 0;
   DrawUI_t DrawUI = 0;
   EventHandler_t EventHandler = 0;
   InitClay_t InitClay = 0;
-  Clay_Context* clayContext;
   UICache* uiCache;
+  Clay_Context* clayContext;
+  Map<String, fs::file_time_type> fileModificationDates;
+  SDL_Window* window = 0;
+  SDL_Texture* mainDocumentRenderTexture;
+  Clay_BoundingBox mainViewportBB;
 };
 
 #endif // APP_H

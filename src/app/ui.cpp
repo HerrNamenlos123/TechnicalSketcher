@@ -16,5 +16,5 @@ void ui(Appstate* appstate)
     });
   });
   Clay_ElementData viewportSize = Clay_GetElementData(CLAY_ID("editor-viewport"));
-  appstate->mainViewportSize = Vec2i(viewportSize.boundingBox.width, viewportSize.boundingBox.height);
+  appstate->mainViewportBB = viewportSize.boundingBox;
 }
