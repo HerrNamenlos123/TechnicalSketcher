@@ -6,7 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(TechnicalSketcher)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -18,6 +18,7 @@ set(SANITIZERS "")
 # set(SANITIZERS -fsanitize=undefined -fsanitize=memory -fsanitize=shadow-call-stack -fsanitize=integer -flto)
 
 set(COMMON_COMPILER_FLAGS -fPIC -g -Wno-vla-cxx-extension -Wno-c++11-narrowing -I/usr/local/include)
+set(COMMON_LINKER_FLAGS)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL3 REQUIRED sdl3)
 set(SDL_COMPILER_FLAGS ${SDL3_CFLAGS})
@@ -26,17 +27,18 @@ set(SDL_LINKER_FLAGS ${SDL3_LDFLAGS} -lSDL3_ttf -lSDL3_image)
 # Shared Library
 add_library(shared OBJECT src/shared/shared.cpp)
 target_compile_options(shared PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS})
+target_link_options(shared PRIVATE ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 
 # Core Executable
 add_executable(core src/core/main.cpp)
 target_link_libraries(core PRIVATE shared)
 target_compile_options(core PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS} ${SDL_COMPILER_FLAGS})
-target_link_options(core PRIVATE ${SDL_LINKER_FLAGS})
+target_link_options(core PRIVATE ${SDL_LINKER_FLAGS} ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 
 # App Shared Library
 add_library(app EXCLUDE_FROM_ALL SHARED src/app/app.cpp $<TARGET_OBJECTS:shared>)
 target_compile_options(app PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS} ${SDL_COMPILER_FLAGS})
-target_link_options(app PRIVATE ${SDL_LINKER_FLAGS})
+target_link_options(app PRIVATE ${SDL_LINKER_FLAGS} ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 set_target_properties(app PROPERTIES OUTPUT_NAME "app" LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build")
 
 # Custom Run Target

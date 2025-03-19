@@ -89,13 +89,13 @@ struct App {
   InitClay_t InitClay = 0;
   UICache* uiCache;
   Clay_Context* clayContext;
-  // Map<String, time_t> fileModificationDates;
+  List<Pair<String, time_t>> fileModificationDates;
   SDL_Window* window;
   SDL_Texture* mainDocumentRenderTexture;
   Clay_BoundingBox mainViewportBB;
 
   // Memory stuff
-  Arena* mainArena;
+  Arena mainArena;
 };
 
 #endif // APP_H

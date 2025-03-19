@@ -83,6 +83,21 @@ static SDL_AppResult UpdateHotreload(App* app)
   if (elapsed > HOTRELOAD_UPDATE_RATE) {
     app->lastHotreloadUpdate = now;
 
+    StackArena<8192> arena;
+
+    auto cwd = GetCurrentWorkingDirectory(arena);
+    if (cwd) {
+      auto result = ListDirectory(app->mainArena, format(arena, "{}/src/app", *cwd));
+      if (result) {
+        for (auto list : *result) {
+          print("Path: {}", list);
+        }
+        return SDL_APP_SUCCESS;
+      } else {
+        print("Error: {}", result.error());
+      }
+    }
+
     // bool reloadApp
     //     = false;
     // for (const auto& entry : fs::directory_iterator(fs::current_path() / "src" / "app")) {
@@ -190,7 +205,6 @@ static SDL_AppResult InitApp(App* app)
   SDL_SetRenderTarget(app->rendererData.renderer, NULL);
   SDL_SetRenderDrawBlendMode(app->rendererData.renderer, SDL_BLENDMODE_BLEND);
 
-  return SDL_APP_SUCCESS;
   compileApp(app);
   if (!app->compileError) {
     loadAppLib(app);
@@ -226,8 +240,8 @@ static void DestroyApp(App* appstate)
 
 SDL_AppResult SDL_AppInit(void** _app, int argc, char* argv[])
 {
-  Arena* mainArena = Arena::create();
-  *_app = mainArena->allocate<App>();
+  Arena mainArena = Arena::create();
+  *_app = mainArena.allocate<App>();
   ((App*)(*_app))->mainArena = mainArena;
   return InitApp((App*)(*_app));
 }
@@ -260,6 +274,7 @@ void SDL_AppQuit(void* _app, SDL_AppResult result)
 
   if (app) {
     DestroyApp(app);
-    FreeArena(app->mainArena);
+    Arena arena = app->mainArena; // Shallow copy the arena, because otherwise the method would free its own this pointer
+    arena.free();
   }
 }

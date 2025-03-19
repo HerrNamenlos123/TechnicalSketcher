@@ -2,6 +2,8 @@
 #ifndef BASE_H
 #define BASE_H
 
+#include "stddecl.h"
+
 #include "format.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -13,123 +15,196 @@
 #define tsk_max(a, b) (((a) > (b)) ? (a) : (b))
 
 const auto DEFAULT_ARENA_SIZE = 16 * 1024 * 1024;
+const auto MAX_PRINT_LINE_LENGTH = 4096;
 
-struct Arena {
-  Arena* nextChunk;
-  Arena* prevChunk;
-  Arena* lastChunk;
-  void* data;
+struct ArenaChunk {
+  ArenaChunk* nextChunk;
   size_t capacity;
   size_t used;
+  // After here comes the data
+  // dataPointer = chunkPointer + sizeof(ArenaChunk)
+};
 
-  static Arena* create(size_t chunkSize = DEFAULT_ARENA_SIZE)
+struct Arena {
+  ArenaChunk* firstChunk;
+  bool isStackArena;
+
+  [[nodiscard]] static Arena create(size_t chunkSize = DEFAULT_ARENA_SIZE)
   {
-    Arena* newArena = (Arena*)calloc(sizeof(Arena), 1);
-    if (newArena == 0) {
-      fprintf(stderr, "Memory allocation unexpectedly failed");
-      abort();
+    size_t allocSize = sizeof(ArenaChunk) + chunkSize;
+    Arena newArena;
+    newArena.firstChunk = (ArenaChunk*)calloc(allocSize, 1);
+    newArena.isStackArena = false;
+    newArena.__initialized = true;
+    if (newArena.firstChunk == 0) {
+      panicSizeT("Arena chunk allocation of size {} failed", allocSize);
     }
-    newArena->data = (Arena*)calloc(chunkSize, 1);
-    if (newArena->data == 0) {
-      fprintf(stderr, "Memory allocation unexpectedly failed");
-      abort();
-    }
-    newArena->capacity = chunkSize;
-    newArena->lastChunk = newArena;
+    newArena.firstChunk->capacity = chunkSize;
     return newArena;
   }
 
-  void
-  enlarge(size_t chunkSize = DEFAULT_ARENA_SIZE)
+  [[nodiscard]] static Arena createFromBuffer(char* buffer, size_t bufferSize)
   {
-    Arena* lastChunk = this->lastChunk;
-    Arena* newArena = Arena::create(chunkSize);
-    lastChunk->nextChunk = newArena;
-    newArena->prevChunk = lastChunk;
-
-    Arena* current = newArena;
-    while (current) {
-      current->lastChunk = newArena;
-      current = current->prevChunk;
+    if (bufferSize <= sizeof(ArenaChunk)) {
+      panicStr("Cannot create arena from buffer: Buffer too small");
     }
+    ArenaChunk* chunk = (ArenaChunk*)buffer;
+    chunk->nextChunk = 0;
+    chunk->capacity = bufferSize - sizeof(ArenaChunk);
+    chunk->used = 0;
+    memset((uint8_t*)chunk + sizeof(ArenaChunk), 0, chunk->capacity);
+
+    Arena arena;
+    arena.firstChunk = chunk;
+    arena.isStackArena = true;
+    arena.__initialized = true;
+    return arena;
+  }
+
+  void
+  enlarge(ArenaChunk** lastChunk, size_t chunkSize = DEFAULT_ARENA_SIZE)
+  {
+    if (!this->__initialized) {
+      panicStr("Arena was not properly initialized");
+    }
+    if (this->isStackArena) {
+      panicStr("Cannot enlarge a stack-based arena");
+    }
+    size_t allocSize = sizeof(ArenaChunk) + chunkSize;
+    (*lastChunk)->nextChunk = (ArenaChunk*)calloc(allocSize, 1);
+    if ((*lastChunk)->nextChunk == 0) {
+      panicSizeT("Arena chunk allocation of size {} failed", allocSize);
+    }
+    (*lastChunk) = (*lastChunk)->nextChunk;
+    (*lastChunk)->capacity = chunkSize;
   }
 
   template <typename T>
-  T* allocate(size_t elementCount = 1)
+  [[nodiscard]] T* allocate(size_t elementCount = 1)
   {
+    if (!this->__initialized) {
+      panicStr("Arena was not properly initialized");
+    }
     size_t size = elementCount * sizeof(T);
-    Arena* lastChunk = this->lastChunk;
-    if (lastChunk->capacity - lastChunk->used < size) {
-      printf("Warning: Arena was enlarged. Consider more short-lived arenas to prevent excessive memory usage.");
-      this->enlarge(tsk_max(DEFAULT_ARENA_SIZE, size));
-    }
-    lastChunk = lastChunk->lastChunk;
-
-    if (lastChunk->capacity - lastChunk->used < size) {
-      fprintf(stderr, "[Impossible] Arena enlarged but still not large enough");
-      abort();
+    ArenaChunk* lastChunk = this->firstChunk;
+    while (lastChunk->nextChunk) {
+      lastChunk = lastChunk->nextChunk;
     }
 
-    uint8_t* data = (uint8_t*)lastChunk->data + lastChunk->used;
+    if (lastChunk->capacity - lastChunk->used < size) {
+      if (this->isStackArena) {
+        panicSizeT("Stack Arena is not large enough for allocation of size {}", size);
+      } else {
+        printf("Warning: Arena was enlarged. Consider more short-lived arenas to prevent excessive memory usage.");
+        this->enlarge(&lastChunk, tsk_max(DEFAULT_ARENA_SIZE, size));
+      }
+    }
+
+    uint8_t* data = (uint8_t*)lastChunk + sizeof(ArenaChunk) + lastChunk->used;
     lastChunk->used += size;
     return (T*)data;
   }
+
+  void free()
+  {
+    ArenaChunk* current = this->firstChunk;
+    while (current) {
+      ArenaChunk* next = current->nextChunk;
+      ::free(current);
+      current = next;
+    }
+    this->firstChunk = 0;
+  }
+
+  private:
+  bool __initialized;
 };
 
-static void FreeArena(Arena* arena)
-{
-  Arena* first = arena;
-  while (first->prevChunk) {
-    first = first->prevChunk;
+template <size_t Size>
+// Note: The Arena is private and automatically converted, because the Arena cannot outlive the StackArena.
+// Do not save the Arena from the StackArena out to a separate variable.
+struct StackArena {
+  char data[Size];
+
+  [[nodiscard]] operator Arena&()
+  {
+    // Only valid as long as the address of this->data does not change
+    if (!this->arenaInitialized) {
+      this->_arena = Arena::createFromBuffer(this->data, Size);
+      this->arenaInitialized = true;
+    }
+    return this->_arena;
   }
 
-  Arena* current = first;
-  while (current) {
-    Arena* next = current->nextChunk;
-    free(current->data);
-    free(current);
-    current = next;
-  }
-}
+  private:
+  Arena _arena;
+  bool arenaInitialized;
+};
 
 struct String {
   const char* data;
   size_t length;
 
-  String(const char* str)
+  [[nodiscard]] String concat(Arena& arena, String other)
   {
-    this->data = str,
-    this->length = strlen(str);
-  }
-
-  String(const char* str, size_t length)
-  {
-    this->data = str,
-    this->length = length;
-  }
-
-  String concat(Arena* arena, String other)
-  {
-    char* buf = arena->allocate<char>(this->length + other.length + 1);
+    char* buf = arena.allocate<char>(this->length + other.length + 1);
     memcpy(buf, this->data, this->length);
     memcpy(buf + this->length, other.data, other.length);
     return String(buf, this->length + other.length);
   }
 
-  static String allocate(Arena* arena, const char* str, size_t length)
+  [[nodiscard]] const char* c_str(Arena& arena)
   {
-    char* buf = arena->allocate<char>(length + 1);
+    String s = String::clone(arena, *this);
+    return s.data;
+  }
+
+  [[nodiscard]] static String clone(Arena& arena, String string)
+  {
+    char* buf = arena.allocate<char>(string.length + 1);
+    memcpy(buf, string.data, string.length);
+    return String(buf, string.length);
+  }
+
+  [[nodiscard]] static String clone(Arena& arena, const char* str)
+  {
+    return String::clone(arena, str, strlen(str));
+  }
+
+  [[nodiscard]] static String clone(Arena& arena, const char* str, size_t length)
+  {
+    char* buf = arena.allocate<char>(length + 1);
     memcpy(buf, str, length);
     return String(buf, length);
   }
+
+  [[nodiscard]] static String view(const char* str)
+  {
+    return String(str, strlen(str));
+  }
+
+  [[nodiscard]] static String view(const char* str, size_t length)
+  {
+    return String(str, length);
+  }
+
+  private:
+  String(const char* str, size_t length)
+  {
+    this->data = str;
+    this->length = length;
+  }
 };
 
-static char* c_str(Arena* arena, String string)
+template <typename... Args>
+void panic(const char* fmt, Args&&... args)
 {
-  char* str = arena->allocate<char>(string.length + 1);
-  memcpy(str, string.data, string.length);
-  str[string.length] = 0;
-  return str;
+  Arena arena = Arena::create();
+  String str = format(arena, fmt, args...);
+  print_stderr("[FATAL] Thread panicked: {}", str);
+  fflush(stderr);
+  abort();
+  arena.free();
 }
 
 template <typename T>
@@ -140,52 +215,245 @@ struct ListElem {
 
 template <typename T>
 struct List {
-  ListElem<T>* firstElement;
-  size_t length;
 
-  static List<T>* create(Arena* arena)
-  {
-    List<T>* list = arena->allocate<List<T>>();
-    list->firstElement = 0;
-    list->length = 0;
-    return list;
-  }
-
-  void push(Arena* arena, T element)
+  void push(Arena& arena, T element)
   {
     if (!this->firstElement) {
-      this->firstElement = arena->allocate<ListElem<T>>();
+      this->firstElement = arena.allocate<ListElem<T>>();
       this->firstElement->data = element;
     } else {
       ListElem<T>* lastElement = this->firstElement;
       while (lastElement->nextElement) {
         lastElement = lastElement->nextElement;
       }
-      lastElement->nextElement = arena->allocate<ListElem<T>>();
+      lastElement->nextElement = arena.allocate<ListElem<T>>();
       lastElement->nextElement->data = element;
     }
+    this->_length++;
   }
 
   void pop()
   {
-    // if (!this->firstElement) {
-    //   this->firstElement = arena->allocate<ListElem<T>>();
-    //   this->firstElement->data = element;
-    // } else {
-    //   ListElem<T>* lastElement = this->firstElement;
-    //   while (lastElement->nextElement) {
-    //     lastElement = lastElement->nextElement;
-    //   }
-    //   lastElement->nextElement = arena->allocate<ListElem<T>>();
-    //   lastElement->nextElement->data = element;
-    // }
+    if (!this->firstElement) {
+      panic("Cannot pop from list: length = 0");
+    }
+
+    if (!this->firstElement->nextElement) {
+      this->firstElement = 0;
+      this->_length = 0;
+      return;
+    }
+
+    ListElem<T>* secondToLastElement = this->firstElement;
+    while (secondToLastElement->nextElement->nextElement) {
+      secondToLastElement = secondToLastElement->nextElement;
+    }
+
+    secondToLastElement->nextElement = 0;
+    this->_length--;
   }
+
+  [[nodiscard]] T& get(size_t index)
+  {
+    if (index < 0 || index >= this->length()) {
+      panic("List index out of bounds: {} >= {}", index, this->length());
+    }
+    ListElem<T>* elem = this->firstElement;
+    for (size_t i = 0; i < index; i++) {
+      elem = elem->nextElement;
+    }
+    return elem->data;
+  }
+
+  [[nodiscard]] T& operator[](size_t index)
+  {
+    return this->get(index);
+  }
+
+  [[nodiscard]] size_t length()
+  // This is a getter because the length is read-only
+  {
+    return this->_length;
+  }
+
+  struct Iterator {
+    ListElem<T>* current;
+    Iterator(ListElem<T>* node)
+        : current(node)
+    {
+    }
+
+    T& operator*()
+    {
+      return current->data;
+    }
+
+    Iterator& operator++()
+    {
+      current = current->nextElement;
+      return *this;
+    }
+
+    bool operator!=(const Iterator& other) const
+    {
+      return current != other.current;
+    }
+  };
+
+  Iterator begin()
+  {
+    return Iterator(this->firstElement);
+  }
+
+  Iterator end()
+  {
+    return Iterator(nullptr);
+  }
+
+  private:
+  size_t _length = { 0 };
+  ListElem<T>* firstElement = { 0 };
 };
 
-static void foo(Arena* arena)
-{
-  auto array = List<int>::create(arena);
-  // array.push();
-}
+template <typename T, size_t Size>
+struct Array {
+  [[nodiscard]] T& get(size_t index)
+  {
+    if (index < 0 || index >= this->length()) {
+      panic("Array index out of bounds: {} >= {}", index, this->length());
+    }
+    return this->_data[index];
+  }
+
+  [[nodiscard]] T& operator[](size_t index)
+  {
+    return this->get(index);
+  }
+
+  [[nodiscard]] size_t length()
+  {
+    return Size;
+  }
+
+  void zeroFill()
+  {
+    memset(this->_data, 0, sizeof(this->_data));
+  }
+
+  private:
+  T _data[Size];
+};
+
+template <typename T>
+struct Optional {
+
+  Optional()
+  {
+    this->_hasValue = false;
+  }
+
+  Optional(T value)
+  {
+    this->_hasValue = true;
+    this->_value = value;
+  }
+
+  [[nodiscard]] T& value()
+  {
+    if (!this->_hasValue) {
+      panic("Bad optional access");
+    }
+    return this->_value;
+  }
+
+  [[nodiscard]] bool hasValue()
+  {
+    return this->_hasValue;
+  }
+
+  [[nodiscard]] operator bool()
+  {
+    return this->hasValue();
+  }
+
+  [[nodiscard]] T& operator*()
+  {
+    return this->value();
+  }
+
+  [[nodiscard]] T& operator->()
+  {
+    return this->value();
+  }
+
+  private:
+  T _value;
+  bool _hasValue;
+};
+
+template <typename TVal, typename TErr>
+struct Result {
+
+  Result(TVal succ)
+  {
+    this->_value = succ;
+    this->_hasValue = true;
+  }
+
+  Result(TErr err)
+  {
+    this->_error = err;
+    this->_hasValue = false;
+  }
+
+  [[nodiscard]] TVal& value()
+  {
+    if (!this->_hasValue) {
+      panic("Bad result access");
+    }
+    return this->_value;
+  }
+
+  [[nodiscard]] TErr& error()
+  {
+    if (this->_hasValue) {
+      panic("Bad result access");
+    }
+    return this->_error;
+  }
+
+  [[nodiscard]] bool hasValue()
+  {
+    return this->_hasValue;
+  }
+
+  [[nodiscard]] operator bool()
+  {
+    return this->hasValue();
+  }
+
+  [[nodiscard]] TVal& operator*()
+  {
+    return this->value();
+  }
+
+  [[nodiscard]] TVal* operator->()
+  {
+    return &this->_value;
+  }
+
+  private:
+  union {
+    TVal _value;
+    TErr _error;
+  };
+  bool _hasValue;
+};
+
+template <typename T, typename U>
+struct Pair {
+  T first;
+  U second;
+};
 
 #endif // BASE_H
