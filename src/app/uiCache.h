@@ -1,5 +1,6 @@
 
-#include "../std.h"
+#include "../shared/shared.h"
+#include "../shared/std.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h>
@@ -8,6 +9,5 @@
 struct UICache {
   List<Color> textColorStack;
   List<int> textSizeStack;
-  std::deque<String> stringCache;
   List<SDL_Texture*> pages;
 };

@@ -1,20 +1,20 @@
 
-#include "../app.h"
+#include "../shared/app.h"
 #include "components.cpp"
 
-void ui(Appstate* appstate)
+void ui(App* app)
 {
-  div(appstate, "w-full bg-white h-full col", [](Appstate* appstate) {
-    div(appstate, "bg-[#333] w-full h-[50px]", [](Appstate* appstate) { });
-    div(appstate, "w-full h-full", [](Appstate* appstate) {
-      div(appstate, "h-full bg-[#333] w-[200px] text-white", [](Appstate* appstate) {
-        text(appstate, "", "Hallo test");
+  div(app, "w-full bg-white h-full col"s, [](App* app) {
+    div(app, "bg-[#333] w-full h-[50px]"s, [](App* app) { });
+    div(app, "w-full h-full"s, [](App* app) {
+      div(app, "h-full bg-[#333] w-[200px] text-white"s, [](App* app) {
+        text(app, ""s, "Hallo test"s);
       });
-      div(appstate, "id-editor-viewport h-full w-full", [](Appstate* appstate) {
-        div(appstate, "h-full w-full", [](Appstate* appstate) { }, appstate->mainDocumentRenderTexture);
+      div(app, "id-editor-viewport h-full w-full"s, [](App* app) {
+        div(app, "h-full w-full"s, [](App* app) { }, app->mainDocumentRenderTexture);
       });
     });
   });
   Clay_ElementData viewportSize = Clay_GetElementData(CLAY_ID("editor-viewport"));
-  appstate->mainViewportBB = viewportSize.boundingBox;
+  app->mainViewportBB = viewportSize.boundingBox;
 }

@@ -48,4 +48,10 @@ struct Color {
   }
 };
 
+enum struct ParseError {
+  NonDigitsRemaining
+};
+
+[[nodiscard]] Result<int64_t, ParseError> strToInt(String string);
+
 #endif // SHARED_H

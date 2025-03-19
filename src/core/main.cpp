@@ -42,7 +42,7 @@ bool loadAppLib(App* appstate)
 {
   closeAppLib(appstate);
 
-  appstate->appLibraryHandle = dlopen("build/app.so", RTLD_LAZY);
+  appstate->appLibraryHandle = dlopen("build/libapp.so", RTLD_LAZY);
   if (!appstate->appLibraryHandle) {
     printf("Error loading library: %s", dlerror());
     return false;

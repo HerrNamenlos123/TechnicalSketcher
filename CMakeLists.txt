@@ -6,7 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(TechnicalSketcher)
 
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -18,7 +18,7 @@ set(SANITIZERS "")
 # set(SANITIZERS -fsanitize=undefined -fsanitize=memory -fsanitize=shadow-call-stack -fsanitize=integer -flto)
 
 set(COMMON_COMPILER_FLAGS -fPIC -g -Wno-vla-cxx-extension -Wno-c++11-narrowing -I/usr/local/include -Wno-user-defined-literals)
-set(COMMON_LINKER_FLAGS)
+set(COMMON_LINKER_FLAGS  -Wl,--no-undefined)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL3 REQUIRED sdl3)
 set(SDL_COMPILER_FLAGS ${SDL3_CFLAGS})
@@ -49,7 +49,10 @@ add_custom_target(run
 )
 
 # Output Directories
-set_target_properties(core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build")
+set_target_properties(core PROPERTIES OUTPUT_NAME "TechnicalSketcher")
+set_target_properties(core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set_target_properties(shared PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set_target_properties(app PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 # FMT library for proper string formatting
 include(FetchContent)

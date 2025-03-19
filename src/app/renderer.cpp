@@ -1,39 +1,42 @@
 
-#include "../app.h"
-#include "../clay.h"
+#include "../shared/app.h"
+#include "../shared/clay.h"
 #include "clay_renderer.cpp"
 #include "document.cpp"
 #include "ui.cpp"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
-const auto PAGE_OUTLINE_COLOR = parseHexcolor("#888");
-const auto APP_BACKGROUND_COLOR = parseHexcolor("#DDD");
-const auto PAGE_GRID_COLOR = parseHexcolor("#A8C9E3");
+const auto PAGE_OUTLINE_COLOR = parseHexcolor("#888"s);
+const auto APP_BACKGROUND_COLOR = parseHexcolor("#DDD"s);
+const auto PAGE_GRID_COLOR = parseHexcolor("#A8C9E3"s);
 
-void RenderShapesOnPage(Appstate *appstate, Document &document, Page &page) {
+void RenderShapesOnPage(App* appstate, Document& document, Page& page)
+{
   auto renderer = appstate->rendererData.renderer;
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
   // for (page.s)
 }
 
-void RenderPage(Appstate *appstate, Document &document, Page &page) {
+void RenderPage(App* appstate, Document& document, Page& page)
+{
   auto renderer = appstate->rendererData.renderer;
-  int pageWidthPx = document.pageWidthPercentOfWindow / 100.0 *
-                    appstate->mainViewportBB.width;
+  int pageWidthPx = document.pageWidthPercentOfWindow / 100.0 * appstate->mainViewportBB.width;
   int pageHeightPx = pageWidthPx * 297 / 210;
   int gridSpacing = 5;
 
   SDL_SetRenderTarget(renderer, page.canvas);
   SDL_SetRenderDrawColor(renderer, document.paperColor.r, document.paperColor.g,
-                         document.paperColor.b, document.paperColor.a);
+      document.paperColor.b, document.paperColor.a);
   SDL_RenderFillRect(renderer, NULL);
 
   SDL_SetRenderDrawColor(renderer, PAGE_GRID_COLOR.r, PAGE_GRID_COLOR.g,
-                         PAGE_GRID_COLOR.b, PAGE_GRID_COLOR.a);
+      PAGE_GRID_COLOR.b, PAGE_GRID_COLOR.a);
   for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
     float x_px = x_mm / 210.0 * pageWidthPx;
     SDL_RenderLine(renderer, x_px, 0, x_px, pageHeightPx);
@@ -48,25 +51,23 @@ void RenderPage(Appstate *appstate, Document &document, Page &page) {
   SDL_SetRenderTarget(renderer, NULL);
 }
 
-void RenderDocuments(Appstate *appstate) {
-  if (appstate->mainViewportBB.width == 0 ||
-      appstate->mainViewportBB.height == 0) {
+void RenderDocuments(App* app)
+{
+  if (app->mainViewportBB.width == 0 || app->mainViewportBB.height == 0) {
     return;
   }
-  auto &document = appstate->documents[appstate->selectedDocument];
-  int pageWidthPx = document.pageWidthPercentOfWindow *
-                    appstate->mainViewportBB.width / 100.0;
+  auto& document = app->documents[app->selectedDocument];
+  int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
-  for (auto &page : document.pages) {
-    if (!page.canvas || page.canvas->w != pageWidthPx ||
-        page.canvas->h != pageHeightPx) {
+  for (auto& page : document.pages) {
+    if (!page.canvas || page.canvas->w != pageWidthPx || page.canvas->h != pageHeightPx) {
       if (page.canvas) {
         SDL_DestroyTexture(page.canvas);
       }
       page.canvas = SDL_CreateTexture(
-          appstate->rendererData.renderer, SDL_PIXELFORMAT_RGBA32,
+          app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32,
           SDL_TEXTUREACCESS_TARGET, pageWidthPx, pageHeightPx);
       if (!page.canvas) {
         fprintf(stderr, "Failed to create SDL texture for page\n");
@@ -75,71 +76,66 @@ void RenderDocuments(Appstate *appstate) {
     }
 
     Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
-    Vec2 bottomRight =
-        Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
-    auto bb = appstate->mainViewportBB;
-    if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width &&
-        topLeft.y < bb.height) {
-      RenderPage(appstate, document, page);
+    Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
+    auto bb = app->mainViewportBB;
+    if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
+      RenderPage(app, document, page);
 
-      auto renderer = appstate->rendererData.renderer;
-      SDL_SetRenderTarget(renderer, appstate->mainDocumentRenderTexture);
-      SDL_FRect destRect = {pageXOffset, pageYOffset, page.canvas->w,
-                            page.canvas->h};
+      auto renderer = app->rendererData.renderer;
+      SDL_SetRenderTarget(renderer, app->mainDocumentRenderTexture);
+      SDL_FRect destRect = { pageXOffset, pageYOffset, page.canvas->w,
+        page.canvas->h };
       SDL_RenderTexture(renderer, page.canvas, NULL, &destRect);
       SDL_SetRenderDrawColor(renderer, PAGE_OUTLINE_COLOR.r,
-                             PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b,
-                             PAGE_OUTLINE_COLOR.a);
-      SDL_FRect outlineRect = {pageXOffset, pageYOffset, page.canvas->w,
-                               page.canvas->h};
+          PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b,
+          PAGE_OUTLINE_COLOR.a);
+      SDL_FRect outlineRect = { pageXOffset, pageYOffset, page.canvas->w,
+        page.canvas->h };
       SDL_RenderRect(renderer, &outlineRect);
       SDL_SetRenderTarget(renderer, NULL);
     }
 
-    pageYOffset +=
-        pageHeightPx + pageHeightPx * appstate->pageGapPercentOfHeight / 100;
+    pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100;
   }
 }
 
-void RenderMainViewport(Appstate *appstate) {
-  if (!appstate->mainDocumentRenderTexture ||
-      appstate->mainDocumentRenderTexture->w !=
-          appstate->mainViewportBB.width ||
-      appstate->mainDocumentRenderTexture->h !=
-          appstate->mainViewportBB.height) {
-    auto size = appstate->mainViewportBB;
-    if (appstate->mainDocumentRenderTexture) {
-      SDL_DestroyTexture(appstate->mainDocumentRenderTexture);
+void RenderMainViewport(App* app)
+{
+  if (!app->mainDocumentRenderTexture || app->mainDocumentRenderTexture->w != app->mainViewportBB.width || app->mainDocumentRenderTexture->h != app->mainViewportBB.height) {
+    auto size = app->mainViewportBB;
+    if (app->mainDocumentRenderTexture) {
+      SDL_DestroyTexture(app->mainDocumentRenderTexture);
     }
     int w = std::max(size.width, 1.f);
     int h = std::max(size.height, 1.f);
-    appstate->mainDocumentRenderTexture = SDL_CreateTexture(
-        appstate->rendererData.renderer, SDL_PIXELFORMAT_RGBA32,
+    app->mainDocumentRenderTexture = SDL_CreateTexture(
+        app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32,
         SDL_TEXTUREACCESS_TARGET, w, h);
-    if (!appstate->mainDocumentRenderTexture) {
+    if (!app->mainDocumentRenderTexture) {
       fprintf(stderr, "Failed to create SDL texture for viewport\n");
       abort();
     }
   }
 
-  auto renderer = appstate->rendererData.renderer;
-  auto texture = appstate->mainDocumentRenderTexture;
+  auto renderer = app->rendererData.renderer;
+  auto texture = app->mainDocumentRenderTexture;
   SDL_SetRenderTarget(renderer, texture);
   SDL_SetRenderDrawColor(renderer, APP_BACKGROUND_COLOR.r,
-                         APP_BACKGROUND_COLOR.g, APP_BACKGROUND_COLOR.b,
-                         APP_BACKGROUND_COLOR.a);
+      APP_BACKGROUND_COLOR.g, APP_BACKGROUND_COLOR.b,
+      APP_BACKGROUND_COLOR.a);
   SDL_RenderClear(renderer);
 
-  RenderDocuments(appstate);
+  RenderDocuments(app);
   SDL_SetRenderTarget(renderer, NULL);
 }
 
 static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text,
-                                              Clay_TextElementConfig *config,
-                                              void *_appstate) {
-  Appstate *appstate = (Appstate *)_appstate;
-  auto &fonts = appstate->rendererData.fonts;
-  TTF_Font *font = std::get<TTF_Font *>(fonts[0]);
+    Clay_TextElementConfig* config,
+    void* _app)
+{
+  App* app = (App*)_app;
+  auto& fonts = app->rendererData.fonts;
+  TTF_Font* font = fonts[0].first;
   for (auto [_font, size] : fonts) {
     if (size == config->fontSize) {
       font = _font;
@@ -149,114 +145,120 @@ static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text,
 
   if (!TTF_GetStringSize(font, text.chars, text.length, &width, &height)) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to measure text: %s",
-                 SDL_GetError());
+        SDL_GetError());
   }
 
-  return (Clay_Dimensions){(float)width, (float)height};
+  return (Clay_Dimensions) { (float)width, (float)height };
 }
 
-void HandleClayErrors(Clay_ErrorData errorData) {
+void HandleClayErrors(Clay_ErrorData errorData)
+{
   printf("%s", errorData.errorText.chars);
 }
 
-extern "C" void InitClay(Appstate *appstate) {
+extern "C" void InitClay(App* app)
+{
   uint64_t totalMemorySize = Clay_MinMemorySize();
-  Clay_Arena clayMemory =
-      (Clay_Arena){.capacity = totalMemorySize,
-                   .memory = (char *)SDL_malloc(totalMemorySize)};
+  Clay_Arena clayMemory = (Clay_Arena) { .capacity = totalMemorySize,
+    .memory = (char*)SDL_malloc(totalMemorySize) };
 
   int width, height;
-  SDL_GetWindowSize(appstate->window, &width, &height);
+  SDL_GetWindowSize(app->window, &width, &height);
 
-  Clay_Initialize(clayMemory, (Clay_Dimensions){(float)width, (float)height},
-                  (Clay_ErrorHandler){HandleClayErrors});
-  Clay_SetMeasureTextFunction(SDL_MeasureText, appstate);
+  Clay_Initialize(clayMemory, (Clay_Dimensions) { (float)width, (float)height },
+      (Clay_ErrorHandler) { HandleClayErrors });
+  Clay_SetMeasureTextFunction(SDL_MeasureText, app);
 
-  COLORS["white"] = (Clay_Color){255, 255, 255, 255};
-  COLORS["black"] = (Clay_Color){0, 0, 0, 255};
-  COLORS["red"] = (Clay_Color){255, 0, 0, 255};
-  COLORS["green"] = (Clay_Color){0, 255, 0, 255};
-  COLORS["blue"] = (Clay_Color){0, 0, 255, 255};
-  FONT_SIZES["xs"] = 12;
-  FONT_SIZES["sm"] = 14;
-  FONT_SIZES["base"] = 16;
-  FONT_SIZES["lg"] = 18;
-  FONT_SIZES["xl"] = 20;
-  FONT_SIZES["2xl"] = 24;
+  COLORS.push(app->persistentApplicationArena, { "white"s, Color(255, 255, 255, 255) });
+  COLORS.push(app->persistentApplicationArena, { "black"s, Color(0, 0, 0, 255) });
+  COLORS.push(app->persistentApplicationArena, { "red"s, Color(255, 0, 0, 255) });
+  COLORS.push(app->persistentApplicationArena, { "green"s, Color(0, 255, 0, 255) });
+  COLORS.push(app->persistentApplicationArena, { "blue"s, Color(0, 0, 255, 255) });
+  COLORS.push(app->persistentApplicationArena, { "yellow"s, Color(255, 255, 0, 255) });
+  COLORS.push(app->persistentApplicationArena, { "magenta"s, Color(255, 0, 255, 255) });
+  COLORS.push(app->persistentApplicationArena, { "cyan"s, Color(0, 255, 255, 255) });
+  COLORS.push(app->persistentApplicationArena, { "transparent"s, Color(255, 255, 255, 255) });
+  FONT_SIZES.push(app->persistentApplicationArena, { "xs"s, 12 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "sm"s, 14 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "base"s, 16 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "lg"s, 18 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "xl"s, 20 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "2xl"s, 24 });
 
-  addDocument(appstate);
-  addPageToDocument(appstate, appstate->documents.back());
-  addPageToDocument(appstate, appstate->documents.back());
-  addPageToDocument(appstate, appstate->documents.back());
+  addDocument(app);
+  addPageToDocument(app, app->documents.back());
+  addPageToDocument(app, app->documents.back());
+  addPageToDocument(app, app->documents.back());
 
-  appstate->documents.back().position = Vec2(800, 200);
-  appstate->documents.back().pageWidthPercentOfWindow = 30;
+  app->documents.back().position = Vec2(800, 200);
+  app->documents.back().pageWidthPercentOfWindow = 30;
 }
 
-extern "C" SDL_AppResult EventHandler(Appstate *appstate, SDL_Event *event) {
+extern "C" SDL_AppResult EventHandler(App* app, SDL_Event* event)
+{
   switch (event->type) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
     break;
 
   case SDL_EVENT_WINDOW_RESIZED:
-    Clay_SetLayoutDimensions((Clay_Dimensions){(float)event->window.data1,
-                                               (float)event->window.data2});
+    Clay_SetLayoutDimensions((Clay_Dimensions) { (float)event->window.data1,
+        (float)event->window.data2 });
     break;
 
   case SDL_EVENT_MOUSE_MOTION:
-    Clay_SetPointerState((Clay_Vector2){event->motion.x, event->motion.y},
-                         event->motion.state & SDL_BUTTON_LMASK);
+    Clay_SetPointerState((Clay_Vector2) { event->motion.x, event->motion.y },
+        event->motion.state & SDL_BUTTON_LMASK);
     break;
 
   case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    Clay_SetPointerState((Clay_Vector2){event->button.x, event->button.y},
-                         event->button.button == SDL_BUTTON_LEFT);
+    Clay_SetPointerState((Clay_Vector2) { event->button.x, event->button.y },
+        event->button.button == SDL_BUTTON_LEFT);
     break;
 
   case SDL_EVENT_MOUSE_WHEEL:
     Clay_UpdateScrollContainers(
-        true, (Clay_Vector2){event->wheel.x, event->wheel.y}, 0.01f);
+        true, (Clay_Vector2) { event->wheel.x, event->wheel.y }, 0.01f);
     break;
 
   case SDL_EVENT_FINGER_DOWN:
-    processFingerDownEvent(appstate, event->tfinger);
+    processFingerDownEvent(app, event->tfinger);
     break;
 
   case SDL_EVENT_FINGER_MOTION:
-    processFingerMotionEvent(appstate, event->tfinger);
+    processFingerMotionEvent(app, event->tfinger);
     break;
 
   case SDL_EVENT_FINGER_UP:
-    processFingerUpEvent(appstate, event->tfinger);
+    processFingerUpEvent(app, event->tfinger);
     break;
 
   case SDL_EVENT_FINGER_CANCELED:
-    processFingerCancelledEvent(appstate, event->tfinger);
+    processFingerCancelledEvent(app, event->tfinger);
     break;
 
   case SDL_EVENT_PEN_AXIS:
-    processPenAxisEvent(appstate, event->paxis);
+    processPenAxisEvent(app, event->paxis);
     break;
 
   case SDL_EVENT_PEN_DOWN:
-    processPenDownEvent(appstate, event->ptouch);
+    processPenDownEvent(app, event->ptouch);
     break;
 
   case SDL_EVENT_PEN_UP:
-    processPenUpEvent(appstate, event->ptouch);
+    processPenUpEvent(app, event->ptouch);
     break;
 
   case SDL_EVENT_PEN_MOTION:
-    processPenMotionEvent(appstate, event->pmotion);
+    processPenMotionEvent(app, event->pmotion);
     break;
 
   case SDL_EVENT_PEN_BUTTON_DOWN:
-    processPenButtonDownEvent(appstate, event->pbutton);
+    processPenButtonDownEvent(app, event->pbutton);
     break;
 
   case SDL_EVENT_PEN_BUTTON_UP:
-    processPenButtonUpEvent(appstate, event->pbutton);
+    processPenButtonUpEvent(app, event->pbutton);
     break;
 
   default:
@@ -265,28 +267,29 @@ extern "C" SDL_AppResult EventHandler(Appstate *appstate, SDL_Event *event) {
   return SDL_APP_CONTINUE;
 }
 
-extern "C" void DrawUI(Appstate *appstate) {
-  RenderMainViewport(appstate);
+extern "C" void DrawUI(App* app)
+{
+  RenderMainViewport(app);
 
   const auto STRING_CACHE_SIZE = 1;
   UICache uiCache = {};
-  appstate->uiCache = &uiCache;
+  app->uiCache = &uiCache;
 
   Clay_BeginLayout();
 
   CLAY({
-      .layout =
-          {
-              .sizing = {.width = CLAY_SIZING_GROW(0),
-                         .height = CLAY_SIZING_GROW(0)},
-              .layoutDirection = CLAY_TOP_TO_BOTTOM,
-          },
-  }) {
-    ui(appstate);
+      .layout = {
+          .sizing = { .width = CLAY_SIZING_GROW(0),
+              .height = CLAY_SIZING_GROW(0) },
+          .layoutDirection = CLAY_TOP_TO_BOTTOM,
+      },
+  })
+  {
+    ui(app);
   }
 
   Clay_RenderCommandArray renderCommands = Clay_EndLayout();
-  SDL_Clay_RenderClayCommands(&appstate->rendererData, &renderCommands);
+  SDL_Clay_RenderClayCommands(&app->rendererData, &renderCommands);
 }
 
 // void ApplicationRenderer::DrawLineWorkspace(const glm::vec2& point1,

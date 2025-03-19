@@ -1,5 +1,5 @@
 
-#include "../app.h"
+#include "../shared/app.h"
 #include "documentrenderer.cpp"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_pen.h>
@@ -7,14 +7,23 @@
 
 void addDocument(App* appstate)
 {
-  Document document;
-  document.paperColor = Color(255, 255, 255, 255);
-  appstate->documents.push_back(std::move(document));
+  Document document = (Document) {
+    .pageWidthPercentOfWindow = 50,
+    .pageScroll = 0,
+    .position = Vec2(),
+    .pages = {},
+    .paperColor = Color(255, 255, 255, 255),
+    .arena = Arena::create(),
+  };
+  appstate->documents.push(appstate->persistentApplicationArena, document);
 }
 void addPageToDocument(App* appstate, Document& document)
 {
-  Page page;
-  document.pages.push_back(std::move(page));
+  Page page = (Page) {
+    .shapes = {},
+    .canvas = {},
+  };
+  document.pages.push(document.arena, page);
 }
 
 void handleZoomPan(App* appstate)
@@ -22,19 +31,19 @@ void handleZoomPan(App* appstate)
   auto& document = appstate->documents[appstate->selectedDocument];
   int w, h;
   SDL_GetWindowSize(appstate->window, &w, &h);
-  if (appstate->touchFingers.size() == 1) {
+  if (appstate->touchFingers.length == 1) {
     auto finger = appstate->touchFingers[0];
     auto dx_px = finger.dx * w;
     auto dy_px = finger.dy * h;
     appstate->documents[appstate->selectedDocument].position.x += dx_px;
     appstate->documents[appstate->selectedDocument].position.y += dy_px;
-  } else if (appstate->touchFingers.size() == 2) {
+  } else if (appstate->touchFingers.length == 2) {
     Vec2 averagePosition = Vec2(0, 0);
     for (auto& finger : appstate->touchFingers) {
       auto x_px = finger.x * w - appstate->mainViewportBB.x;
       auto y_px = finger.y * h - appstate->mainViewportBB.y;
-      averagePosition.x += x_px / appstate->touchFingers.size();
-      averagePosition.y += y_px / appstate->touchFingers.size();
+      averagePosition.x += x_px / appstate->touchFingers.length;
+      averagePosition.y += y_px / appstate->touchFingers.length;
     }
 
     float pinchDistance = Vec2(appstate->touchFingers[1].x * w - appstate->touchFingers[0].x * w,
@@ -58,16 +67,16 @@ void handleZoomPan(App* appstate)
 
     appstate->prevAveragePos = averagePosition;
     appstate->prevPinchDistance = pinchDistance;
-  } else if (appstate->touchFingers.size() == 0) {
+  } else if (appstate->touchFingers.length == 0) {
     appstate->prevAveragePos = {};
     appstate->prevPinchDistance = {};
     return;
   }
 }
 
-void processFingerDownEvent(App* appstate, SDL_TouchFingerEvent event)
+void processFingerDownEvent(App* app, SDL_TouchFingerEvent event)
 {
-  for (auto& finger : appstate->touchFingers) {
+  for (auto& finger : app->touchFingers) {
     if (finger.fingerID == event.fingerID) {
       finger = event;
     } else {
@@ -75,10 +84,10 @@ void processFingerDownEvent(App* appstate, SDL_TouchFingerEvent event)
       finger.dy = 0;
     }
   }
-  appstate->touchFingers.push_back(event);
-  appstate->prevAveragePos = {};
-  appstate->prevPinchDistance = {};
-  handleZoomPan(appstate);
+  app->touchFingers.push(app->persistentApplicationArena, event);
+  app->prevAveragePos = {};
+  app->prevPinchDistance = {};
+  handleZoomPan(app);
 }
 
 void processFingerMotionEvent(App* appstate, SDL_TouchFingerEvent event)
@@ -94,10 +103,10 @@ void processFingerMotionEvent(App* appstate, SDL_TouchFingerEvent event)
 
 void processFingerUpEvent(App* appstate, SDL_TouchFingerEvent event)
 {
-  appstate->touchFingers.erase(std::remove_if(appstate->touchFingers.begin(),
-                                   appstate->touchFingers.end(),
-                                   [&](SDL_TouchFingerEvent e) { return e.fingerID == event.fingerID; }),
-      appstate->touchFingers.end());
+  // appstate->touchFingers.erase(std::remove_if(appstate->touchFingers.begin(),
+  //                                  appstate->touchFingers.end(),
+  //                                  [&](SDL_TouchFingerEvent e) { return e.fingerID == event.fingerID; }),
+  //     appstate->touchFingers.end());
   appstate->prevAveragePos = {};
   appstate->prevPinchDistance = {};
   handleZoomPan(appstate);
@@ -105,10 +114,10 @@ void processFingerUpEvent(App* appstate, SDL_TouchFingerEvent event)
 
 void processFingerCancelledEvent(App* appstate, SDL_TouchFingerEvent event)
 {
-  appstate->touchFingers.erase(std::remove_if(appstate->touchFingers.begin(),
-                                   appstate->touchFingers.end(),
-                                   [&](SDL_TouchFingerEvent e) { return e.fingerID == event.fingerID; }),
-      appstate->touchFingers.end());
+  // appstate->touchFingers.erase(std::remove_if(appstate->touchFingers.begin(),
+  //                                  appstate->touchFingers.end(),
+  //                                  [&](SDL_TouchFingerEvent e) { return e.fingerID == event.fingerID; }),
+  //     appstate->touchFingers.end());
   appstate->prevAveragePos = {};
   appstate->prevPinchDistance = {};
   handleZoomPan(appstate);
@@ -174,7 +183,7 @@ void processPenMotionEvent(App* appstate, SDL_PenMotionEvent event)
       InterpolationPoint point;
       point.pos = penPosOnPage_mm;
       point.thickness = appstate->currentPenPressure;
-      appstate->currentLine.points.push_back(point);
+      appstate->currentLine.points.push(document.arena, point);
     }
     pageYOffset += pageHeightPx + pageHeightPx * appstate->pageGapPercentOfHeight / 100;
     pageIndex++;

@@ -26,22 +26,23 @@ struct InterpolationPoint {
 };
 
 struct LineShape {
-  // List<InterpolationPoint> points;
+  List<InterpolationPoint> points;
   Color color;
 };
 // using Shape = Variant<LineShape>;
 
 struct Page {
-  // List<Shape> shapes;
+  List<LineShape> shapes;
   SDL_Texture* canvas = 0;
 };
 
 struct Document {
-  float pageWidthPercentOfWindow = 50;
+  float pageWidthPercentOfWindow = 0;
   int pageScroll = 0;
-  Vec2 position;
-  // List<Page> pages;
+  Vec2 position = {};
+  List<Page> pages = {};
   Color paperColor = {};
+  Arena arena;
 };
 
 struct ClayVideoDemo_Arena {
@@ -64,7 +65,7 @@ typedef void (*InitClay_t)(App* appstate);
 
 struct App {
   // Actual application data
-  // List<Document> documents = {};
+  List<Document> documents = {};
   size_t selectedDocument = 0;
   Tool tool;
   float currentPenPressure = 0;
@@ -75,9 +76,9 @@ struct App {
   const float pageGapPercentOfHeight = 3;
 
   // Device input
-  // List<SDL_TouchFingerEvent> touchFingers;
-  // Optional<Vec2> prevAveragePos;
-  // Optional<float> prevPinchDistance;
+  List<SDL_TouchFingerEvent> touchFingers;
+  Optional<Vec2> prevAveragePos;
+  Optional<float> prevPinchDistance;
 
   // Hotreloading and UI stuff
   Clay_SDL3RendererData rendererData;

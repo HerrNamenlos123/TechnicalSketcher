@@ -147,6 +147,8 @@ struct String {
   const char* data;
   size_t length;
 
+  static const size_t npos = -1;
+
   [[nodiscard]] String concat(Arena& arena, String other)
   {
     char* buf = arena.allocate<char>(this->length + other.length + 1);
@@ -155,10 +157,75 @@ struct String {
     return String(buf, this->length + other.length);
   }
 
+  [[nodiscard]] size_t find(String delimiter, size_t startIndex)
+  {
+    if (delimiter.length == 0 || startIndex >= length) {
+      return npos;
+    }
+    for (size_t i = startIndex; i <= length - delimiter.length; ++i) {
+      if (memcmp(data + i, delimiter.data, delimiter.length) == 0) {
+        return i;
+      }
+    }
+    return npos;
+  }
+
+  [[nodiscard]] String substr(size_t startIndex, size_t count = npos) const
+  {
+    if (startIndex >= length) {
+      return { nullptr, 0 };
+    }
+
+    if (count == npos || startIndex + count > length) {
+      count = length - startIndex;
+    }
+
+    return { data + startIndex, count };
+  }
+
+  [[nodiscard]] char get(size_t index)
+  {
+    if (index >= this->length) {
+      panicStr("String index access out of range");
+    }
+    return this->data[index];
+  }
+
+  [[nodiscard]] char operator[](size_t index)
+  {
+    return this->get(index);
+  }
+
   [[nodiscard]] const char* c_str(Arena& arena)
   {
     String s = String::clone(arena, *this);
     return s.data;
+  }
+
+  [[nodiscard]] bool startsWith(String other) const
+  {
+    if (this->length < other.length) {
+      return false;
+    }
+    for (size_t i = 0; i < other.length; i++) {
+      if (this->data[i] != other.data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  [[nodiscard]] bool endsWith(String other) const
+  {
+    if (this->length < other.length) {
+      return false;
+    }
+    for (size_t i = 0; i < other.length; i++) {
+      if (this->data[this->length - other.length + i] != other.data[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   [[nodiscard]] static String clone(Arena& arena, String string)
@@ -259,9 +326,9 @@ struct Optional {
     return this->value();
   }
 
-  [[nodiscard]] T& operator->()
+  [[nodiscard]] T* operator->()
   {
-    return this->value();
+    return &this->_value;
   }
 
   private:
@@ -350,6 +417,7 @@ struct ListElem {
 
 template <typename T>
 struct List {
+  size_t length = { 0 };
 
   void push(Arena& arena, T element)
   {
@@ -364,7 +432,7 @@ struct List {
       lastElement->nextElement = arena.allocate<ListElem<T>>();
       lastElement->nextElement->data = element;
     }
-    this->_length++;
+    this->length++;
   }
 
   void pop()
@@ -375,7 +443,7 @@ struct List {
 
     if (!this->firstElement->nextElement) {
       this->firstElement = 0;
-      this->_length = 0;
+      this->length = 0;
       return;
     }
 
@@ -385,13 +453,13 @@ struct List {
     }
 
     secondToLastElement->nextElement = 0;
-    this->_length--;
+    this->length--;
   }
 
   [[nodiscard]] T& get(size_t index)
   {
-    if (index < 0 || index >= this->length()) {
-      panic("List index out of bounds: {} >= {}", index, this->length());
+    if (index < 0 || index >= this->length) {
+      panic("List index out of bounds: {} >= {}", index, this->length);
     }
     ListElem<T>* elem = this->firstElement;
     for (size_t i = 0; i < index; i++) {
@@ -405,10 +473,12 @@ struct List {
     return this->get(index);
   }
 
-  [[nodiscard]] size_t length()
-  // This is a getter because the length is read-only
+  [[nodiscard]] T& back()
   {
-    return this->_length;
+    if (this->length == 0) {
+      panic("Cannot get back element of a zero element list");
+    }
+    return this->get(this->length - 1);
   }
 
   [[nodiscard]] bool contains(T val)
@@ -468,7 +538,6 @@ struct List {
   }
 
   private:
-  size_t _length = { 0 };
   ListElem<T>* firstElement = { 0 };
 };
 

@@ -70,36 +70,53 @@ void print_stderr(const char* fmt, Args&&... args)
   printf("%s\n", result.c_str());
 }
 
+#define FORMAT_IMPL_T(...)                                        \
+  template String format(Arena& arena, const char*, __VA_ARGS__); \
+  template void print(const char*, __VA_ARGS__);                  \
+  template void print_stderr(const char*, __VA_ARGS__);
+
 #define FORMAT_IMPL_0()                              \
   template String format(Arena& arena, const char*); \
   template void print(const char*);                  \
   template void print_stderr(const char*);
 
-#define FORMAT_IMPL_1(T)                                  \
-  template String format(Arena& arena, const char*, T&);  \
-  template void print(const char*, T&);                   \
-  template void print_stderr(const char*, T&);            \
-  template String format(Arena& arena, const char*, T&&); \
-  template void print(const char*, T&&);                  \
-  template void print_stderr(const char*, T&&);
+#define FORMAT_IMPL_1(T) \
+  FORMAT_IMPL_T(T&)      \
+  FORMAT_IMPL_T(T&&)
 
-#define FORMAT_IMPL_2(T, U)                                    \
-  template String format(Arena& arena, const char*, T&, U&);   \
-  template void print(const char*, T&, U&);                    \
-  template void print_stderr(const char*, T&, U&);             \
-  template String format(Arena& arena, const char*, T&&, U&&); \
-  template void print(const char*, T&&, U&&);                  \
-  template void print_stderr(const char*, T&&, U&&);
+#define FORMAT_IMPL_2(T, U) \
+  FORMAT_IMPL_T(T&, U&)     \
+  FORMAT_IMPL_T(T&, U&&)    \
+  FORMAT_IMPL_T(T&&, U&)    \
+  FORMAT_IMPL_T(T&&, U&&)
 
-#define FORMAT_IMPL_3(T, U, V)                                   \
-  template String format(Arena& arena, const char*, T&, U&, V&); \
-  template void print(const char*, T&, U&, V&);                  \
-  template void print_stderr(const char*, T&, U&, V&);
+#define FORMAT_IMPL_3(T, U, V) \
+  FORMAT_IMPL_T(T&, U&, V&)    \
+  FORMAT_IMPL_T(T&, U&, V&&)   \
+  FORMAT_IMPL_T(T&, U&&, V&)   \
+  FORMAT_IMPL_T(T&, U&&, V&&)  \
+  FORMAT_IMPL_T(T&&, U&, V&)   \
+  FORMAT_IMPL_T(T&&, U&, V&&)  \
+  FORMAT_IMPL_T(T&&, U&&, V&)  \
+  FORMAT_IMPL_T(T&&, U&&, V&&)
 
-#define FORMAT_IMPL_4(T, U, V, W)                                    \
-  template String format(Arena& arena, const char*, T&, U&, V&, W&); \
-  template void print(const char*, T&, U&, V&, W&);                  \
-  template void print_stderr(const char*, T&, U&, V&, W&);
+#define FORMAT_IMPL_4(T, U, V, W)  \
+  FORMAT_IMPL_T(T&, U&, V&, W&)    \
+  FORMAT_IMPL_T(T&, U&, V&, W&&)   \
+  FORMAT_IMPL_T(T&, U&, V&&, W&)   \
+  FORMAT_IMPL_T(T&, U&, V&&, W&&)  \
+  FORMAT_IMPL_T(T&, U&&, V&, W&)   \
+  FORMAT_IMPL_T(T&, U&&, V&, W&&)  \
+  FORMAT_IMPL_T(T&, U&&, V&&, W&)  \
+  FORMAT_IMPL_T(T&, U&&, V&&, W&&) \
+  FORMAT_IMPL_T(T&&, U&, V&, W&)   \
+  FORMAT_IMPL_T(T&&, U&, V&, W&&)  \
+  FORMAT_IMPL_T(T&&, U&, V&&, W&)  \
+  FORMAT_IMPL_T(T&&, U&, V&&, W&&) \
+  FORMAT_IMPL_T(T&&, U&&, V&, W&)  \
+  FORMAT_IMPL_T(T&&, U&&, V&, W&&) \
+  FORMAT_IMPL_T(T&&, U&&, V&&, W&) \
+  FORMAT_IMPL_T(T&&, U&&, V&&, W&&)
 
 FORMAT_IMPL_0()
 FORMAT_IMPL_1(SystemError)

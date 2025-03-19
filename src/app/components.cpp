@@ -1,49 +1,55 @@
 
-#include "../app.h"
+#include "../shared/app.h"
 #include "uiCache.h"
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_system.h>
 
-auto COLORS = Map<String, Clay_Color>();
-auto FONT_SIZES = Map<String, int>();
+List<Pair<String, Color>> COLORS;
+List<Pair<String, int>> FONT_SIZES;
 
-List<String> split(String s, String delimiter)
+List<String> split(Arena& arena, String s, String delimiter)
 {
-  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-  String token;
+  size_t pos_start = 0, pos_end, delim_len = delimiter.length;
   List<String> res;
 
   while ((pos_end = s.find(delimiter, pos_start)) != String::npos) {
-    token = s.substr(pos_start, pos_end - pos_start);
+    String token = s.substr(pos_start, pos_end - pos_start);
     pos_start = pos_end + delim_len;
-    res.push_back(token);
+    res.push(arena, token);
   }
 
-  res.push_back(s.substr(pos_start));
+  res.push(arena, s.substr(pos_start));
   return res;
 }
 
-Clay_String ClayString(Appstate* appstate, String str)
+Clay_String ClayString(String str)
 {
-  appstate->uiCache->stringCache.push_back(str);
   return (Clay_String) {
-    .length = appstate->uiCache->stringCache.back().length(),
-    .chars = appstate->uiCache->stringCache.back().c_str(),
+    .length = str.length,
+    .chars = str.data,
   };
 }
 
-Tuple<String, String> parseClass(String classString)
+Clay_Color ClayColor(Color color)
 {
-  String modifier;
-  String cmd;
-  auto elements = split(classString, ":");
-  if (elements.size() == 1) {
-    cmd = elements[0];
-  } else if (elements.size() == 2) {
-    modifier = elements[0];
-    cmd = elements[1];
+  return (Clay_Color) {
+    .r = color.r,
+    .g = color.g,
+    .b = color.b,
+    .a = color.a,
+  };
+}
+
+Pair<String, String> parseClass(Arena& arena, String classString)
+{
+  auto elements = split(arena, classString, ":"s);
+  if (elements.length == 1) {
+    return { ""s, elements[0] };
+  } else if (elements.length == 2) {
+    return { elements[0], elements[1] };
+  } else {
+    return { ""s, ""s };
   }
-  return std::make_tuple(modifier, cmd);
 }
 
 uint8_t hexToDigit(char letter)
@@ -61,25 +67,25 @@ uint8_t hexToDigit(char letter)
 
 Color parseHexcolor(String hex)
 {
-  if (hex.length() == 4) {
+  if (hex.length == 4) {
     uint8_t r = hexToDigit(hex[1]) + 16 * hexToDigit(hex[1]);
     uint8_t g = hexToDigit(hex[2]) + 16 * hexToDigit(hex[2]);
     uint8_t b = hexToDigit(hex[3]) + 16 * hexToDigit(hex[3]);
     uint8_t a = 255;
     return Color(r, g, b, a);
-  } else if (hex.length() == 5) {
+  } else if (hex.length == 5) {
     uint8_t r = hexToDigit(hex[1]) + 16 * hexToDigit(hex[1]);
     uint8_t g = hexToDigit(hex[2]) + 16 * hexToDigit(hex[2]);
     uint8_t b = hexToDigit(hex[3]) + 16 * hexToDigit(hex[3]);
     uint8_t a = hexToDigit(hex[4]) + 16 * hexToDigit(hex[4]);
     return Color(r, g, b, a);
-  } else if (hex.length() == 7) {
+  } else if (hex.length == 7) {
     uint8_t r = hexToDigit(hex[2]) + 16 * hexToDigit(hex[1]);
     uint8_t g = hexToDigit(hex[4]) + 16 * hexToDigit(hex[3]);
     uint8_t b = hexToDigit(hex[6]) + 16 * hexToDigit(hex[5]);
     uint8_t a = 255;
     return Color(r, g, b, a);
-  } else if (hex.length() == 9) {
+  } else if (hex.length == 9) {
     uint8_t r = hexToDigit(hex[2]) + 16 * hexToDigit(hex[1]);
     uint8_t g = hexToDigit(hex[4]) + 16 * hexToDigit(hex[3]);
     uint8_t b = hexToDigit(hex[6]) + 16 * hexToDigit(hex[5]);
@@ -92,20 +98,22 @@ Color parseHexcolor(String hex)
 
 Optional<Color> parseBgClass(String cls)
 {
-  if (cls.starts_with("bg-[")) {
-    return parseHexcolor(cls.substr(4, cls.length() - 5));
-  } else if (cls.starts_with("bg-")) {
-    auto value = cls.substr(3, cls.length() - 3);
-    if (COLORS.contains(value)) {
-      return COLORS.at(value);
+  if (cls.startsWith("bg-["s)) {
+    return parseHexcolor(cls.substr(4, cls.length - 5));
+  } else if (cls.startsWith("bg-"s)) {
+    auto value = cls.substr(3, cls.length - 3);
+    for (auto [name, color] : COLORS) {
+      if (name == value) {
+        return color;
+      }
     }
   }
   return {};
 }
 
-void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate), Optional<SDL_Texture*> image = {})
+void div(App* app, String classString, void (*cb)(App* app), Optional<SDL_Texture*> image = {})
 {
-  List<String> classes = split(classString, " ");
+  List<String> classes = split(app->frameArena, classString, " "s);
   Clay_SizingAxis width = {};
   Clay_SizingAxis height = {};
   Clay_Padding padding = {};
@@ -118,72 +126,81 @@ void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate),
   size_t textSizePushed = 0;
 
   for (const auto& classString : classes) {
-    const auto [modifier, cmd] = parseClass(classString);
+    const auto [modifier, cmd] = parseClass(app->frameArena, classString);
 
-    if (cmd == "w-full") {
+    if (cmd == "w-full"s) {
       width = CLAY_SIZING_GROW(0);
-    } else if (cmd == "h-full") {
+    } else if (cmd == "h-full"s) {
       height = CLAY_SIZING_GROW(0);
-    } else if (cmd.starts_with("w-[")) {
-      auto unit = cmd.substr(3, cmd.length() - 4);
-      if (unit.ends_with("px")) {
-        try {
-          auto value = std::stol(unit.substr(0, unit.length() - 2));
-          width = CLAY_SIZING_FIXED(value);
-        } catch (...) {
+    } else if (cmd.startsWith("w-["s)) {
+      auto unit = cmd.substr(3, cmd.length - 4);
+      if (unit.endsWith("px"s)) {
+        if (auto value = strToInt(unit.substr(0, unit.length - 2))) {
+          width = CLAY_SIZING_FIXED(value.unwrap());
         }
       }
-    } else if (cmd.starts_with("h-[")) {
-      auto unit = cmd.substr(3, cmd.length() - 4);
-      if (unit.ends_with("px")) {
-        try {
-          auto value = std::stol(unit.substr(0, unit.length() - 2));
-          height = CLAY_SIZING_FIXED(value);
-        } catch (...) {
+    } else if (cmd.startsWith("h-["s)) {
+      auto unit = cmd.substr(3, cmd.length - 4);
+      if (unit.endsWith("px"s)) {
+        if (auto value = strToInt(unit.substr(0, unit.length - 2))) {
+          height = CLAY_SIZING_FIXED(value.unwrap());
         }
       }
-    } else if (cmd.starts_with("id-")) {
-      auto value = cmd.substr(3, cmd.length() - 3);
-      id = CLAY_SIDI(ClayString(appstate, value), 0);
-    } else if (cmd.starts_with("p-[")) {
-      auto unit = cmd.substr(3, cmd.length() - 4);
-      if (unit.ends_with("px")) {
-        try {
-          auto value = std::stol(unit.substr(0, unit.length() - 2));
-          padding = CLAY_PADDING_ALL(value);
-        } catch (...) {
+    } else if (cmd.startsWith("id-"s)) {
+      auto value = cmd.substr(3, cmd.length - 3);
+      id = CLAY_SIDI(ClayString(value), 0);
+    } else if (cmd.startsWith("p-["s)) {
+      auto unit = cmd.substr(3, cmd.length - 4);
+      if (unit.endsWith("px"s)) {
+        if (auto value = strToInt(unit.substr(0, unit.length - 2))) {
+          padding = CLAY_PADDING_ALL(value.unwrap());
         }
       }
-    } else if (cmd == "col") {
+    } else if (cmd == "col"s) {
       layoutDirection = CLAY_TOP_TO_BOTTOM;
       childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_TOP };
     } else if (auto col = parseBgClass(cmd)) {
       backgroundColor = *col;
-    } else if (cmd.starts_with("text-")) {
-      auto value = cmd.substr(5, cmd.length() - 5);
-      if (COLORS.contains(value)) {
-        appstate->uiCache->textColorStack.push_back(COLORS.at(value));
-        textColorPushed++;
-      } else if (FONT_SIZES.contains(value)) {
-        appstate->uiCache->textSizeStack.push_back(FONT_SIZES.at(value));
-        textSizePushed++;
+    } else if (cmd.startsWith("text-"s)) {
+      auto value = cmd.substr(5, cmd.length - 5);
+      for (auto [name, color] : COLORS) {
+        if (name == value) {
+          app->uiCache->textColorStack.push(app->frameArena, color);
+          textColorPushed++;
+        }
+      }
+      for (auto [sizeName, sizePx] : FONT_SIZES) {
+        if (sizeName == value) {
+          app->uiCache->textSizeStack.push(app->frameArena, sizePx);
+          textColorPushed++;
+        }
       }
     }
   }
 
-  Color textColor = COLORS["black"];
-  if (appstate->uiCache->textColorStack.size() > 0) {
-    textColor = appstate->uiCache->textColorStack.back();
+  Color textColor;
+  for (auto& [name, color] : COLORS) {
+    if (name == "black"s) {
+      textColor = color;
+    }
+  }
+  if (app->uiCache->textColorStack.length > 0) {
+    textColor = app->uiCache->textColorStack.back();
   }
 
-  int textsize = FONT_SIZES["base"];
-  if (appstate->uiCache->textSizeStack.size() > 0) {
-    textsize = appstate->uiCache->textSizeStack.back();
+  int textsize = 0;
+  for (auto& [name, size] : FONT_SIZES) {
+    if (name == "base"s) {
+      textsize = size;
+    }
+  }
+  if (app->uiCache->textSizeStack.length > 0) {
+    textsize = app->uiCache->textSizeStack.back();
   }
 
   Clay_ImageElementConfig imageConfig = {};
   if (image && *image) {
-    auto texture = appstate->mainDocumentRenderTexture;
+    auto texture = app->mainDocumentRenderTexture;
     imageConfig = { .imageData = *image, .sourceDimensions = { texture->w, texture->h } };
   }
 
@@ -201,21 +218,21 @@ void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate),
   })
   {
     if (cb) {
-      cb(appstate);
+      cb(app);
     }
   }
 
   for (int i = 0; i < textColorPushed; i++) {
-    appstate->uiCache->textColorStack.pop_back();
+    app->uiCache->textColorStack.pop();
   }
   for (int i = 0; i < textSizePushed; i++) {
-    appstate->uiCache->textSizeStack.pop_back();
+    app->uiCache->textSizeStack.pop();
   }
 }
 
-void text(Appstate* appstate, String classString, String content)
+void text(App* app, String classString, String content)
 {
-  List<String> classes = split(classString, " ");
+  List<String> classes = split(app->frameArena, classString, " "s);
   Clay_SizingAxis width;
   Clay_SizingAxis height;
   Clay_Padding padding;
@@ -225,63 +242,75 @@ void text(Appstate* appstate, String classString, String content)
   size_t textSizePushed = 0;
 
   for (const auto& classString : classes) {
-    const auto [modifier, cmd] = parseClass(classString);
+    const auto [modifier, cmd] = parseClass(app->frameArena, classString);
 
-    if (cmd == "w-full") {
+    if (cmd == "w-full"s) {
       width = CLAY_SIZING_GROW(0);
-    } else if (cmd == "h-full") {
+    } else if (cmd == "h-full"s) {
       height = CLAY_SIZING_GROW(0);
-    } else if (cmd.starts_with("p-[")) {
-      auto unit = cmd.substr(3, cmd.length() - 4);
-      if (unit.ends_with("px")) {
+    } else if (cmd.startsWith("p-["s)) {
+      auto unit = cmd.substr(3, cmd.length - 4);
+      if (unit.endsWith("px"s)) {
         try {
-          auto value = std::stol(unit.substr(0, unit.length() - 2));
-          padding = CLAY_PADDING_ALL(value);
+          auto value = strToInt(unit.substr(0, unit.length - 2));
+          padding = CLAY_PADDING_ALL(value.unwrap());
         } catch (...) {
         }
       }
-    } else if (cmd.starts_with("bg-")) {
-      auto value = cmd.substr(3, cmd.length() - 3);
-      if (COLORS.contains(value)) {
-        backgroundColor = COLORS.at(value);
+    } else if (cmd.startsWith("bg-"s)) {
+      auto value = cmd.substr(3, cmd.length - 3);
+      for (auto& [name, color] : COLORS) {
+        if (name == value) {
+          backgroundColor = color;
+        }
       }
-    } else if (cmd.starts_with("bg-")) {
-      auto value = cmd.substr(3, cmd.length() - 3);
-      if (COLORS.contains(value)) {
-        backgroundColor = COLORS.at(value);
+    } else if (cmd.startsWith("text-"s)) {
+      auto value = cmd.substr(5, cmd.length - 5);
+      for (auto [name, color] : COLORS) {
+        if (name == value) {
+          app->uiCache->textColorStack.push(app->frameArena, color);
+          textColorPushed++;
+        }
       }
-    } else if (cmd.starts_with("text-")) {
-      auto value = cmd.substr(5, cmd.length() - 5);
-      if (COLORS.contains(value)) {
-        appstate->uiCache->textColorStack.push_back(COLORS.at(value));
-        textColorPushed++;
-      } else if (FONT_SIZES.contains(value)) {
-        appstate->uiCache->textSizeStack.push_back(FONT_SIZES.at(value));
-        textSizePushed++;
+      for (auto [sizeName, sizePx] : FONT_SIZES) {
+        if (sizeName == value) {
+          app->uiCache->textSizeStack.push(app->frameArena, sizePx);
+          textColorPushed++;
+        }
       }
     }
   }
 
-  Color textColor = COLORS["black"];
-  if (appstate->uiCache->textColorStack.size() > 0) {
-    textColor = appstate->uiCache->textColorStack.back();
+  Color textColor;
+  for (auto& [name, color] : COLORS) {
+    if (name == "black"s) {
+      textColor = color;
+    }
+  }
+  if (app->uiCache->textColorStack.length > 0) {
+    textColor = app->uiCache->textColorStack.back();
   }
 
-  int textsize = FONT_SIZES["base"];
-  if (appstate->uiCache->textSizeStack.size() > 0) {
-    textsize = appstate->uiCache->textSizeStack.back();
+  int textsize = 0;
+  for (auto& [name, size] : FONT_SIZES) {
+    if (name == "base"s) {
+      textsize = size;
+    }
+  }
+  if (app->uiCache->textSizeStack.length > 0) {
+    textsize = app->uiCache->textSizeStack.back();
   }
 
-  CLAY_TEXT(ClayString(appstate, content),
+  CLAY_TEXT(ClayString(content),
       CLAY_TEXT_CONFIG({
           .textColor = textColor,
           .fontSize = textsize,
       }));
 
   for (int i = 0; i < textColorPushed; i++) {
-    appstate->uiCache->textColorStack.pop_back();
+    app->uiCache->textColorStack.pop();
   }
   for (int i = 0; i < textSizePushed; i++) {
-    appstate->uiCache->textSizeStack.pop_back();
+    app->uiCache->textSizeStack.pop();
   }
 }
