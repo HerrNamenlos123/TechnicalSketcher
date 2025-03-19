@@ -25,6 +25,15 @@ Result<String, SystemError> GetCurrentWorkingDirectory(Arena& arena)
   return String::clone(arena, path);
 }
 
+Result<bool, SystemError> IsRegularFile(Arena& arena, String path)
+{
+  struct stat fileStat;
+  if (stat(path.c_str(arena), &fileStat) != 0) {
+    return (SystemError)errno;
+  }
+  return S_ISREG(fileStat.st_mode);
+}
+
 extern String PlatformFSErrorToString(Arena& arena, SystemError error)
 {
   char buf[4096];
@@ -47,7 +56,7 @@ Result<time_t, SystemError> GetFileModificationDate(String path)
     return SystemError::NameTooLong;
   }
   struct stat fileStat;
-  StackArena<PATH_MAX + 1> arena;
+  Arena arena = Arena::create();
   if (stat(path.c_str(arena), &fileStat) != 0) {
     return (SystemError)errno;
   }

@@ -5,4 +5,5 @@ Diagnostics:
   Suppress: 
    - c++11-narrowing 
    - vla-cxx-extension
+   - user-defined-literals
  

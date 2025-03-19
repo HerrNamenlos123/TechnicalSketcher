@@ -83,61 +83,114 @@ static SDL_AppResult UpdateHotreload(App* app)
   if (elapsed > HOTRELOAD_UPDATE_RATE) {
     app->lastHotreloadUpdate = now;
 
-    StackArena<8192> arena;
+    bool reloadApp = false;
+    if (auto cwd = GetCurrentWorkingDirectory(app->frameArena)) {
+      auto result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/app", cwd.value_or(""s)));
+      for (auto file : result.value_or({})) {
+        if (IsRegularFile(app->frameArena, file).value_or(false)) {
+          auto moddate = GetFileModificationDate(file).value_or(0);
 
-    auto cwd = GetCurrentWorkingDirectory(arena);
-    if (cwd) {
-      auto result = ListDirectory(app->mainArena, format(arena, "{}/src/app", *cwd));
-      if (result) {
-        for (auto list : *result) {
-          print("Path: {}", list);
+          bool found = false;
+          for (auto& [filename, timestamp] : app->fileModificationDates) {
+            if (filename == file) {
+              found = true;
+              if (timestamp != moddate) {
+                timestamp = moddate;
+                reloadApp = true;
+              }
+              break;
+            }
+          }
+          if (!found) {
+            app->fileModificationDates.push(app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
+          }
         }
-        return SDL_APP_SUCCESS;
-      } else {
-        print("Error: {}", result.error());
       }
     }
 
-    // bool reloadApp
-    //     = false;
-    // for (const auto& entry : fs::directory_iterator(fs::current_path() / "src" / "app")) {
-    //   if (entry.is_regular_file()) {
-    //     auto moddate = fs::last_write_time(entry);
-    //     if (app->fileModificationDates.contains(entry.path().string())
-    //         && app->fileModificationDates[entry.path().string()] != moddate) {
-    //       reloadApp = true;
-    //     }
-    //     app->fileModificationDates[entry.path().string()] = moddate;
-    //   }
-    // }
+    bool reloadCore = false;
+    if (auto cwd = GetCurrentWorkingDirectory(app->frameArena)) {
+      auto result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/core", cwd.value_or(""s)));
+      for (auto file : result.value_or({})) {
+        if (IsRegularFile(app->frameArena, file).value_or(false)) {
+          auto moddate = GetFileModificationDate(file).value_or(0);
 
-    // bool reloadCore = false;
-    // for (const auto& entry : fs::directory_iterator(fs::current_path() / "src")) {
-    //   if (entry.is_regular_file()) {
-    //     auto moddate = fs::last_write_time(entry);
-    //     if (app->fileModificationDates.contains(entry.path().string())
-    //         && app->fileModificationDates[entry.path().string()] != moddate) {
-    //       reloadCore = true;
-    //     }
-    //     app->fileModificationDates[entry.path().string()] = moddate;
-    //   }
-    // }
+          bool found = false;
+          for (auto& [filename, timestamp] : app->fileModificationDates) {
+            if (filename == file) {
+              found = true;
+              if (timestamp != moddate) {
+                timestamp = moddate;
+                reloadCore = true;
+              }
+              break;
+            }
+          }
+          if (!found) {
+            app->fileModificationDates.push(app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
+          }
+        }
+      }
+      result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/shared", cwd.value_or(""s)));
+      for (auto file : result.value_or({})) {
+        if (IsRegularFile(app->frameArena, file).value_or(false)) {
+          auto moddate = GetFileModificationDate(file).value_or(0);
 
-    // if (reloadCore) {
-    //   printf("Core code changed, application must be restarted. Closing...\n");
-    //   return SDL_APP_SUCCESS;
-    // }
+          bool found = false;
+          for (auto& [filename, timestamp] : app->fileModificationDates) {
+            if (filename == file) {
+              found = true;
+              if (timestamp != moddate) {
+                timestamp = moddate;
+                reloadCore = true;
+              }
+              break;
+            }
+          }
+          if (!found) {
+            app->fileModificationDates.push(app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
+          }
+        }
+      }
+      result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/shared/platform", cwd.value_or(""s)));
+      for (auto file : result.value_or({})) {
+        if (IsRegularFile(app->frameArena, file).value_or(false)) {
+          auto moddate = GetFileModificationDate(file).value_or(0);
 
-    // if (reloadApp) {
-    //   compileApp(app);
-    //   loadAppLib(app);
-    // }
+          bool found = false;
+          for (auto& [filename, timestamp] : app->fileModificationDates) {
+            if (filename == file) {
+              found = true;
+              if (timestamp != moddate) {
+                timestamp = moddate;
+                reloadCore = true;
+              }
+              break;
+            }
+          }
+          if (!found) {
+            app->fileModificationDates.push(app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
+          }
+        }
+      }
+    }
+
+    if (reloadCore) {
+      printf("Core code changed, application must be restarted. Closing...\n");
+      return SDL_APP_SUCCESS;
+    }
+
+    if (reloadApp) {
+      compileApp(app);
+      loadAppLib(app);
+    }
   }
   return SDL_APP_CONTINUE;
 }
 
 static SDL_AppResult AppLoop(App* app)
 {
+  app->frameArena = Arena::create();
   auto* renderer = app->rendererData.renderer;
   if (auto result = UpdateHotreload(app); result != SDL_APP_CONTINUE) {
     return result;
@@ -154,6 +207,7 @@ static SDL_AppResult AppLoop(App* app)
   }
 
   SDL_RenderPresent(renderer);
+  app->frameArena.free();
   return SDL_APP_CONTINUE;
 }
 
@@ -188,15 +242,22 @@ static SDL_AppResult InitApp(App* app)
     return SDL_APP_FAILURE;
   }
 
-  // auto sizes = List<int> { 12, 14, 16, 18, 20, 24 };
-  // for (auto size : sizes) {
-  //   TTF_Font* font = TTF_OpenFont("resource/Roboto-Regular.ttf", size);
-  //   if (!font) {
-  //     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", SDL_GetError());
-  //     return SDL_APP_FAILURE;
-  //   }
-  //   app->rendererData.fonts.push_back(std::make_tuple(font, size));
-  // }
+  StackArena<1024> arena;
+  List<int> sizes;
+  sizes.push(arena, 12);
+  sizes.push(arena, 14);
+  sizes.push(arena, 16);
+  sizes.push(arena, 18);
+  sizes.push(arena, 20);
+  sizes.push(arena, 24);
+  for (auto size : sizes) {
+    TTF_Font* font = TTF_OpenFont("resource/Roboto-Regular.ttf", size);
+    if (!font) {
+      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", SDL_GetError());
+      return SDL_APP_FAILURE;
+    }
+    app->rendererData.fonts.push(app->persistentApplicationArena, { font, size });
+  }
 
   int w, h;
   SDL_GetRenderOutputSize(app->rendererData.renderer, &w, &h);
@@ -242,7 +303,7 @@ SDL_AppResult SDL_AppInit(void** _app, int argc, char* argv[])
 {
   Arena mainArena = Arena::create();
   *_app = mainArena.allocate<App>();
-  ((App*)(*_app))->mainArena = mainArena;
+  ((App*)(*_app))->persistentApplicationArena = mainArena;
   return InitApp((App*)(*_app));
 }
 
@@ -274,7 +335,7 @@ void SDL_AppQuit(void* _app, SDL_AppResult result)
 
   if (app) {
     DestroyApp(app);
-    Arena arena = app->mainArena; // Shallow copy the arena, because otherwise the method would free its own this pointer
+    Arena arena = app->persistentApplicationArena; // Shallow copy the arena, because otherwise the method would free its own this pointer
     arena.free();
   }
 }

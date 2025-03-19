@@ -52,7 +52,7 @@ struct ClayVideoDemo_Arena {
 struct Clay_SDL3RendererData {
   SDL_Renderer* renderer;
   TTF_TextEngine* textEngine;
-  // List<Tuple<TTF_Font*, int>> fonts;
+  List<Pair<TTF_Font*, int>> fonts;
 };
 
 struct UICache;
@@ -95,7 +95,8 @@ struct App {
   Clay_BoundingBox mainViewportBB;
 
   // Memory stuff
-  Arena mainArena;
+  Arena persistentApplicationArena;
+  Arena frameArena;
 };
 
 #endif // APP_H

@@ -39,8 +39,7 @@ Tuple<String, String> parseClass(String classString)
   auto elements = split(classString, ":");
   if (elements.size() == 1) {
     cmd = elements[0];
-  }
-  else if (elements.size() == 2) {
+  } else if (elements.size() == 2) {
     modifier = elements[0];
     cmd = elements[1];
   }
@@ -51,14 +50,11 @@ uint8_t hexToDigit(char letter)
 {
   if (letter >= '0' && letter <= '9') {
     return letter - '0';
-  }
-  else if (letter >= 'a' && letter <= 'f') {
+  } else if (letter >= 'a' && letter <= 'f') {
     return letter - 'a' + 10;
-  }
-  else if (letter >= 'A' && letter <= 'F') {
+  } else if (letter >= 'A' && letter <= 'F') {
     return letter - 'A' + 10;
-  }
-  else {
+  } else {
     return 0;
   }
 }
@@ -71,29 +67,25 @@ Color parseHexcolor(String hex)
     uint8_t b = hexToDigit(hex[3]) + 16 * hexToDigit(hex[3]);
     uint8_t a = 255;
     return Color(r, g, b, a);
-  }
-  else if (hex.length() == 5) {
+  } else if (hex.length() == 5) {
     uint8_t r = hexToDigit(hex[1]) + 16 * hexToDigit(hex[1]);
     uint8_t g = hexToDigit(hex[2]) + 16 * hexToDigit(hex[2]);
     uint8_t b = hexToDigit(hex[3]) + 16 * hexToDigit(hex[3]);
     uint8_t a = hexToDigit(hex[4]) + 16 * hexToDigit(hex[4]);
     return Color(r, g, b, a);
-  }
-  else if (hex.length() == 7) {
+  } else if (hex.length() == 7) {
     uint8_t r = hexToDigit(hex[2]) + 16 * hexToDigit(hex[1]);
     uint8_t g = hexToDigit(hex[4]) + 16 * hexToDigit(hex[3]);
     uint8_t b = hexToDigit(hex[6]) + 16 * hexToDigit(hex[5]);
     uint8_t a = 255;
     return Color(r, g, b, a);
-  }
-  else if (hex.length() == 9) {
+  } else if (hex.length() == 9) {
     uint8_t r = hexToDigit(hex[2]) + 16 * hexToDigit(hex[1]);
     uint8_t g = hexToDigit(hex[4]) + 16 * hexToDigit(hex[3]);
     uint8_t b = hexToDigit(hex[6]) + 16 * hexToDigit(hex[5]);
     uint8_t a = hexToDigit(hex[8]) + 16 * hexToDigit(hex[7]);
     return Color(r, g, b, a);
-  }
-  else {
+  } else {
     return Color(0, 0, 0, 0);
   }
 }
@@ -102,8 +94,7 @@ Optional<Color> parseBgClass(String cls)
 {
   if (cls.starts_with("bg-[")) {
     return parseHexcolor(cls.substr(4, cls.length() - 5));
-  }
-  else if (cls.starts_with("bg-")) {
+  } else if (cls.starts_with("bg-")) {
     auto value = cls.substr(3, cls.length() - 3);
     if (COLORS.contains(value)) {
       return COLORS.at(value);
@@ -131,61 +122,49 @@ void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate),
 
     if (cmd == "w-full") {
       width = CLAY_SIZING_GROW(0);
-    }
-    else if (cmd == "h-full") {
+    } else if (cmd == "h-full") {
       height = CLAY_SIZING_GROW(0);
-    }
-    else if (cmd.starts_with("w-[")) {
+    } else if (cmd.starts_with("w-[")) {
       auto unit = cmd.substr(3, cmd.length() - 4);
       if (unit.ends_with("px")) {
         try {
           auto value = std::stol(unit.substr(0, unit.length() - 2));
           width = CLAY_SIZING_FIXED(value);
-        }
-        catch (...) {
+        } catch (...) {
         }
       }
-    }
-    else if (cmd.starts_with("h-[")) {
+    } else if (cmd.starts_with("h-[")) {
       auto unit = cmd.substr(3, cmd.length() - 4);
       if (unit.ends_with("px")) {
         try {
           auto value = std::stol(unit.substr(0, unit.length() - 2));
           height = CLAY_SIZING_FIXED(value);
-        }
-        catch (...) {
+        } catch (...) {
         }
       }
-    }
-    else if (cmd.starts_with("id-")) {
+    } else if (cmd.starts_with("id-")) {
       auto value = cmd.substr(3, cmd.length() - 3);
       id = CLAY_SIDI(ClayString(appstate, value), 0);
-    }
-    else if (cmd.starts_with("p-[")) {
+    } else if (cmd.starts_with("p-[")) {
       auto unit = cmd.substr(3, cmd.length() - 4);
       if (unit.ends_with("px")) {
         try {
           auto value = std::stol(unit.substr(0, unit.length() - 2));
           padding = CLAY_PADDING_ALL(value);
-        }
-        catch (...) {
+        } catch (...) {
         }
       }
-    }
-    else if (cmd == "col") {
+    } else if (cmd == "col") {
       layoutDirection = CLAY_TOP_TO_BOTTOM;
       childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_TOP };
-    }
-    else if (auto col = parseBgClass(cmd)) {
+    } else if (auto col = parseBgClass(cmd)) {
       backgroundColor = *col;
-    }
-    else if (cmd.starts_with("text-")) {
+    } else if (cmd.starts_with("text-")) {
       auto value = cmd.substr(5, cmd.length() - 5);
       if (COLORS.contains(value)) {
         appstate->uiCache->textColorStack.push_back(COLORS.at(value));
         textColorPushed++;
-      }
-      else if (FONT_SIZES.contains(value)) {
+      } else if (FONT_SIZES.contains(value)) {
         appstate->uiCache->textSizeStack.push_back(FONT_SIZES.at(value));
         textSizePushed++;
       }
@@ -209,15 +188,16 @@ void div(Appstate* appstate, String classString, void (*cb)(Appstate* appstate),
   }
 
   CLAY({
-    .id = id,
-    .layout = { .sizing = { .width = width, .height = height },
-                     .padding = CLAY_PADDING_ALL(0),
-                     .childGap = 0,
-                     .childAlignment = childAlignment,
-                     .layoutDirection = layoutDirection,
-                     },
-         .backgroundColor = backgroundColor,
-    .image = imageConfig,
+      .id = id,
+      .layout = {
+          .sizing = { .width = width, .height = height },
+          .padding = CLAY_PADDING_ALL(0),
+          .childGap = 0,
+          .childAlignment = childAlignment,
+          .layoutDirection = layoutDirection,
+      },
+      .backgroundColor = backgroundColor,
+      .image = imageConfig,
   })
   {
     if (cb) {
@@ -249,40 +229,33 @@ void text(Appstate* appstate, String classString, String content)
 
     if (cmd == "w-full") {
       width = CLAY_SIZING_GROW(0);
-    }
-    else if (cmd == "h-full") {
+    } else if (cmd == "h-full") {
       height = CLAY_SIZING_GROW(0);
-    }
-    else if (cmd.starts_with("p-[")) {
+    } else if (cmd.starts_with("p-[")) {
       auto unit = cmd.substr(3, cmd.length() - 4);
       if (unit.ends_with("px")) {
         try {
           auto value = std::stol(unit.substr(0, unit.length() - 2));
           padding = CLAY_PADDING_ALL(value);
-        }
-        catch (...) {
+        } catch (...) {
         }
       }
-    }
-    else if (cmd.starts_with("bg-")) {
+    } else if (cmd.starts_with("bg-")) {
       auto value = cmd.substr(3, cmd.length() - 3);
       if (COLORS.contains(value)) {
         backgroundColor = COLORS.at(value);
       }
-    }
-    else if (cmd.starts_with("bg-")) {
+    } else if (cmd.starts_with("bg-")) {
       auto value = cmd.substr(3, cmd.length() - 3);
       if (COLORS.contains(value)) {
         backgroundColor = COLORS.at(value);
       }
-    }
-    else if (cmd.starts_with("text-")) {
+    } else if (cmd.starts_with("text-")) {
       auto value = cmd.substr(5, cmd.length() - 5);
       if (COLORS.contains(value)) {
         appstate->uiCache->textColorStack.push_back(COLORS.at(value));
         textColorPushed++;
-      }
-      else if (FONT_SIZES.contains(value)) {
+      } else if (FONT_SIZES.contains(value)) {
         appstate->uiCache->textSizeStack.push_back(FONT_SIZES.at(value));
         textSizePushed++;
       }
@@ -300,10 +273,10 @@ void text(Appstate* appstate, String classString, String content)
   }
 
   CLAY_TEXT(ClayString(appstate, content),
-            CLAY_TEXT_CONFIG({
-                .textColor = textColor,
-                .fontSize = textsize,
-            }));
+      CLAY_TEXT_CONFIG({
+          .textColor = textColor,
+          .fontSize = textsize,
+      }));
 
   for (int i = 0; i < textColorPushed; i++) {
     appstate->uiCache->textColorStack.pop_back();

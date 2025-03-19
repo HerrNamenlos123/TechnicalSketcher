@@ -24,9 +24,11 @@ enum struct SystemError {
 
 [[nodiscard]] extern Result<String, SystemError> GetCurrentWorkingDirectory(Arena& arena);
 
+[[nodiscard]] extern Result<bool, SystemError> IsRegularFile(Arena& arena, String path);
+
 [[nodiscard]] extern String PlatformFSErrorToString(Arena& arena, SystemError);
 
-[[nodiscard]] extern Result<time_t, SystemError> GetFileModificationDate(Arena& arena, String path);
+[[nodiscard]] extern Result<time_t, SystemError> GetFileModificationDate(String path);
 
 [[nodiscard]] extern Result<List<String>, SystemError> ListDirectory(Arena& arena, String path);
 

@@ -114,6 +114,8 @@ struct Arena {
       current = next;
     }
     this->firstChunk = 0;
+    this->isStackArena = false;
+    this->__initialized = false;
   }
 
   private:
@@ -188,6 +190,14 @@ struct String {
     return String(str, length);
   }
 
+  [[nodiscard]] bool operator==(String other)
+  {
+    if (this->length != other.length) {
+      return false;
+    }
+    return 0 == memcmp(this->data, other.data, this->length);
+  }
+
   private:
   String(const char* str, size_t length)
   {
@@ -195,6 +205,11 @@ struct String {
     this->length = length;
   }
 };
+
+inline String operator""s(const char* str, size_t length)
+{
+  return String::view(str, length);
+}
 
 template <typename... Args>
 void panic(const char* fmt, Args&&... args)
@@ -206,6 +221,126 @@ void panic(const char* fmt, Args&&... args)
   abort();
   arena.free();
 }
+
+template <typename T>
+struct Optional {
+
+  Optional()
+  {
+    this->_hasValue = false;
+  }
+
+  Optional(T value)
+  {
+    this->_hasValue = true;
+    this->_value = value;
+  }
+
+  [[nodiscard]] T& value()
+  {
+    if (!this->_hasValue) {
+      panic("Bad optional access");
+    }
+    return this->_value;
+  }
+
+  [[nodiscard]] bool hasValue()
+  {
+    return this->_hasValue;
+  }
+
+  [[nodiscard]] operator bool()
+  {
+    return this->hasValue();
+  }
+
+  [[nodiscard]] T& operator*()
+  {
+    return this->value();
+  }
+
+  [[nodiscard]] T& operator->()
+  {
+    return this->value();
+  }
+
+  private:
+  T _value;
+  bool _hasValue;
+};
+
+template <typename TVal, typename TErr>
+struct Result {
+
+  Result(TVal succ)
+  {
+    this->_value = succ;
+    this->_hasValue = true;
+  }
+
+  Result(TErr err)
+  {
+    this->_error = err;
+    this->_hasValue = false;
+  }
+
+  [[nodiscard]] TVal& unwrap()
+  {
+    if (!this->_hasValue) {
+      panic("Bad result access");
+    }
+    return this->_value;
+  }
+
+  [[nodiscard]] Optional<TVal> value()
+  {
+    if (!this->_hasValue) {
+      return {};
+    }
+    return this->_value;
+  }
+
+  [[nodiscard]] TVal value_or(TVal fallback)
+  {
+    if (!this->_hasValue) {
+      return fallback;
+    }
+    return this->_value;
+  }
+
+  [[nodiscard]] Optional<TErr> error()
+  {
+    if (this->_hasValue) {
+      return {};
+    }
+    return this->_error;
+  }
+
+  [[nodiscard]] TErr& unwrap_error()
+  {
+    if (this->_hasValue) {
+      panic("Bad result access");
+    }
+    return this->_error;
+  }
+
+  [[nodiscard]] bool hasValue()
+  {
+    return this->_hasValue;
+  }
+
+  [[nodiscard]] operator bool()
+  {
+    return this->hasValue();
+  }
+
+  private:
+  union {
+    TVal _value;
+    TErr _error;
+  };
+  bool _hasValue;
+};
 
 template <typename T>
 struct ListElem {
@@ -276,6 +411,28 @@ struct List {
     return this->_length;
   }
 
+  [[nodiscard]] bool contains(T val)
+  {
+    for (auto& elem : *this) {
+      if (elem == val) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  [[nodiscard]] Optional<size_t> findIndex(T val)
+  {
+    size_t index = 0;
+    for (auto& elem : *this) {
+      if (elem == val) {
+        return index;
+      }
+      index++;
+    }
+    return {};
+  }
+
   struct Iterator {
     ListElem<T>* current;
     Iterator(ListElem<T>* node)
@@ -342,112 +499,6 @@ struct Array {
 
   private:
   T _data[Size];
-};
-
-template <typename T>
-struct Optional {
-
-  Optional()
-  {
-    this->_hasValue = false;
-  }
-
-  Optional(T value)
-  {
-    this->_hasValue = true;
-    this->_value = value;
-  }
-
-  [[nodiscard]] T& value()
-  {
-    if (!this->_hasValue) {
-      panic("Bad optional access");
-    }
-    return this->_value;
-  }
-
-  [[nodiscard]] bool hasValue()
-  {
-    return this->_hasValue;
-  }
-
-  [[nodiscard]] operator bool()
-  {
-    return this->hasValue();
-  }
-
-  [[nodiscard]] T& operator*()
-  {
-    return this->value();
-  }
-
-  [[nodiscard]] T& operator->()
-  {
-    return this->value();
-  }
-
-  private:
-  T _value;
-  bool _hasValue;
-};
-
-template <typename TVal, typename TErr>
-struct Result {
-
-  Result(TVal succ)
-  {
-    this->_value = succ;
-    this->_hasValue = true;
-  }
-
-  Result(TErr err)
-  {
-    this->_error = err;
-    this->_hasValue = false;
-  }
-
-  [[nodiscard]] TVal& value()
-  {
-    if (!this->_hasValue) {
-      panic("Bad result access");
-    }
-    return this->_value;
-  }
-
-  [[nodiscard]] TErr& error()
-  {
-    if (this->_hasValue) {
-      panic("Bad result access");
-    }
-    return this->_error;
-  }
-
-  [[nodiscard]] bool hasValue()
-  {
-    return this->_hasValue;
-  }
-
-  [[nodiscard]] operator bool()
-  {
-    return this->hasValue();
-  }
-
-  [[nodiscard]] TVal& operator*()
-  {
-    return this->value();
-  }
-
-  [[nodiscard]] TVal* operator->()
-  {
-    return &this->_value;
-  }
-
-  private:
-  union {
-    TVal _value;
-    TErr _error;
-  };
-  bool _hasValue;
 };
 
 template <typename T, typename U>
