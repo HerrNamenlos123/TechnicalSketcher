@@ -9,7 +9,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 
-const Vec2 DEFAULT_WINDOW_SIZE = Vec2(640, 480);
+const Vec2 DEFAULT_WINDOW_SIZE = Vec2(1920, 1080);
 const uint64_t HOTRELOAD_UPDATE_RATE = 100;
 
 bool compileApp(App* appstate)
@@ -32,44 +32,53 @@ void closeAppLib(App* appstate)
   if (appstate->appLibraryHandle) {
     appstate->DrawUI = 0;
     appstate->EventHandler = 0;
-    appstate->InitClay = 0;
+    appstate->InitApp = 0;
+    appstate->DestroyApp = 0;
     dlclose(appstate->appLibraryHandle);
     appstate->appLibraryHandle = 0;
   }
 }
 
-bool loadAppLib(App* appstate)
+bool loadAppLib(App* app)
 {
-  closeAppLib(appstate);
+  closeAppLib(app);
 
-  appstate->appLibraryHandle = dlopen("build/libapp.so", RTLD_LAZY);
-  if (!appstate->appLibraryHandle) {
+  app->appLibraryHandle = dlopen("build/libapp.so", RTLD_LAZY);
+  if (!app->appLibraryHandle) {
     printf("Error loading library: %s", dlerror());
     return false;
   }
 
-  appstate->DrawUI = (DrawUI_t)dlsym(appstate->appLibraryHandle, "DrawUI");
-  if (appstate->DrawUI == 0) {
+  app->DrawUI = (DrawUI_t)dlsym(app->appLibraryHandle, "DrawUI");
+  if (app->DrawUI == 0) {
     printf("Failed to load func: %s\n", dlerror());
-    appstate->compileError = true;
+    app->compileError = true;
     return false;
   }
 
-  appstate->EventHandler = (EventHandler_t)dlsym(appstate->appLibraryHandle, "EventHandler");
-  if (appstate->EventHandler == 0) {
+  app->EventHandler = (EventHandler_t)dlsym(app->appLibraryHandle, "EventHandler");
+  if (app->EventHandler == 0) {
     printf("Failed to load func: %s\n", dlerror());
-    appstate->compileError = true;
+    app->compileError = true;
     return false;
   }
 
-  appstate->InitClay = (InitClay_t)dlsym(appstate->appLibraryHandle, "InitClay");
-  if (appstate->InitClay == 0) {
+  app->InitApp = (InitApp_t)dlsym(app->appLibraryHandle, "InitApp");
+  if (app->InitApp == 0) {
     printf("Failed to load func: %s\n", dlerror());
-    appstate->compileError = true;
+    app->compileError = true;
     return false;
   }
 
-  appstate->InitClay(appstate);
+  app->DestroyApp = (InitApp_t)dlsym(app->appLibraryHandle, "DestroyApp");
+  if (app->DestroyApp == 0) {
+    printf("Failed to load func: %s\n", dlerror());
+    app->compileError = true;
+    return false;
+  }
+
+  app->DestroyApp(app);
+  app->InitApp(app);
 
   // Clear any previous errors
   dlerror();
@@ -190,10 +199,14 @@ static SDL_AppResult UpdateHotreload(App* app)
 
 static SDL_AppResult AppLoop(App* app)
 {
-  app->frameArena = Arena::create();
+  app->frameArena.clearAndReinit();
   auto* renderer = app->rendererData.renderer;
   if (auto result = UpdateHotreload(app); result != SDL_APP_CONTINUE) {
     return result;
+  }
+
+  if (SDL_GetTicks() > 3000) {
+    return SDL_APP_SUCCESS;
   }
 
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -207,7 +220,6 @@ static SDL_AppResult AppLoop(App* app)
   }
 
   SDL_RenderPresent(renderer);
-  app->frameArena.free();
   return SDL_APP_CONTINUE;
 }
 
@@ -267,34 +279,47 @@ static SDL_AppResult InitApp(App* app)
   SDL_SetRenderDrawBlendMode(app->rendererData.renderer, SDL_BLENDMODE_BLEND);
 
   compileApp(app);
-  if (!app->compileError) {
-    loadAppLib(app);
+  if (app->compileError) {
+    return SDL_APP_CONTINUE;
   }
+
+  loadAppLib(app);
 
   return SDL_APP_CONTINUE;
 }
 
-static void DestroyApp(App* appstate)
+static void DestroyApp(App* app)
 {
-  // for (size_t i = 0; i < appstate->rendererData.fonts.size(); i++) {
-  //   TTF_CloseFont(std::get<TTF_Font*>(appstate->rendererData.fonts[i]));
-  // }
-
-  if (appstate->rendererData.textEngine) {
-    TTF_DestroyRendererTextEngine(appstate->rendererData.textEngine);
+  if (app->DestroyApp) {
+    app->DestroyApp(app);
   }
 
-  if (appstate->mainDocumentRenderTexture) {
-    SDL_DestroyTexture(appstate->mainDocumentRenderTexture);
+  for (size_t i = 0; i < app->rendererData.fonts.length; i++) {
+    TTF_CloseFont(app->rendererData.fonts[i].first);
   }
 
-  if (appstate->rendererData.renderer) {
-    SDL_DestroyRenderer(appstate->rendererData.renderer);
+  if (app->rendererData.textEngine) {
+    TTF_DestroyRendererTextEngine(app->rendererData.textEngine);
   }
 
-  if (appstate->window) {
-    SDL_DestroyWindow(appstate->window);
+  if (app->mainDocumentRenderTexture) {
+    SDL_DestroyTexture(app->mainDocumentRenderTexture);
   }
+
+  if (app->rendererData.renderer) {
+    SDL_DestroyRenderer(app->rendererData.renderer);
+  }
+
+  if (app->window) {
+    SDL_DestroyWindow(app->window);
+  }
+
+  app->frameArena.free();
+
+  // Shallow copy the arena, because otherwise the method
+  // would free its own this pointer
+  Arena arena = app->persistentApplicationArena;
+  arena.free();
 
   TTF_Quit();
 }
@@ -335,7 +360,5 @@ void SDL_AppQuit(void* _app, SDL_AppResult result)
 
   if (app) {
     DestroyApp(app);
-    Arena arena = app->persistentApplicationArena; // Shallow copy the arena, because otherwise the method would free its own this pointer
-    arena.free();
   }
 }

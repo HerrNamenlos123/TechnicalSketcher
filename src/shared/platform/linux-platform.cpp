@@ -56,7 +56,7 @@ Result<time_t, SystemError> GetFileModificationDate(String path)
     return SystemError::NameTooLong;
   }
   struct stat fileStat;
-  Arena arena = Arena::create();
+  StackArena<PATH_MAX + 1> arena;
   if (stat(path.c_str(arena), &fileStat) != 0) {
     return (SystemError)errno;
   }

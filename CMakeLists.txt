@@ -11,10 +11,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Compiler Flags
-set(SANITIZERS "")
+# set(SANITIZERS "")
 # set(SANITIZERS -fsanitize=address -fsanitize=leak -fsanitize=undefined)
 # set(SANITIZERS -fsanitize=safe-stack)
 # set(SANITIZERS -fsanitize=undefined -fsanitize=shadow-call-stack -fsanitize=integer -flto)
+# set(SANITIZERS -fsanitize=memory)
 # set(SANITIZERS -fsanitize=undefined -fsanitize=memory -fsanitize=shadow-call-stack -fsanitize=integer -flto)
 
 set(COMMON_COMPILER_FLAGS -fPIC -g -Wno-vla-cxx-extension -Wno-c++11-narrowing -I/usr/local/include -Wno-user-defined-literals)

@@ -7,6 +7,14 @@
 
 #include "platform/platform.h"
 
+struct Color;
+enum struct ParseError {
+  NonDigitsRemaining
+};
+[[nodiscard]] Result<int64_t, ParseError> strToInt(String string);
+[[nodiscard]] uint8_t hexToDigit(char letter);
+[[nodiscard]] Color hexToColor(String hex);
+
 struct Color {
   float r = 0;
   float g = 0;
@@ -37,6 +45,16 @@ struct Color {
     this->a = color.a;
   }
 
+  Color(String color)
+  {
+    *this = hexToColor(color);
+  }
+
+  Color(const char* color)
+  {
+    *this = hexToColor(String::view(color));
+  }
+
   operator Clay_Color()
   {
     return (Clay_Color) {
@@ -47,11 +65,5 @@ struct Color {
     };
   }
 };
-
-enum struct ParseError {
-  NonDigitsRemaining
-};
-
-[[nodiscard]] Result<int64_t, ParseError> strToInt(String string);
 
 #endif // SHARED_H

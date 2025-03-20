@@ -5,7 +5,9 @@
 #include <SDL3/SDL_pen.h>
 #include <SDL3/SDL_video.h>
 
-void addDocument(App* appstate)
+const auto RAMER_DOUGLAS_PEUCKER_SMOOTHING = 0.2;
+
+void addDocument(App* app)
 {
   Document document = (Document) {
     .pageWidthPercentOfWindow = 50,
@@ -15,15 +17,75 @@ void addDocument(App* appstate)
     .paperColor = Color(255, 255, 255, 255),
     .arena = Arena::create(),
   };
-  appstate->documents.push(appstate->persistentApplicationArena, document);
+  app->documents.push(app->persistentApplicationArena, document);
 }
-void addPageToDocument(App* appstate, Document& document)
+
+void unloadDocument(App* app, Document& document)
+{
+  for (auto& page : document.pages) {
+    if (page.canvas) {
+      SDL_DestroyTexture(page.canvas);
+    }
+  }
+  document.arena.free();
+}
+
+void addPageToDocument(App* app, Document& document)
 {
   Page page = (Page) {
     .shapes = {},
     .canvas = {},
   };
+
   document.pages.push(document.arena, page);
+}
+
+double perpendicularDistance(Vec2 p, Vec2 p1, Vec2 p2)
+{
+  double dx = p2.x - p1.x;
+  double dy = p2.y - p1.y;
+  if (dx == 0 && dy == 0)
+    return std::hypot(p.x - p1.x, p.y - p1.y);
+  double t = ((p.x - p1.x) * dx + (p.y - p1.y) * dy) / (dx * dx + dy * dy);
+  double projX = p1.x + t * dx;
+  double projY = p1.y + t * dy;
+  return std::hypot(p.x - projX, p.y - projY);
+}
+
+void rdp(Arena& arena, List<InterpolationPoint> points, double epsilon, List<InterpolationPoint>& result)
+{
+  if (points.length < 2)
+    return;
+
+  double maxDist = 0.0;
+  size_t index = 0;
+  for (size_t i = 1; i < points.length - 1; ++i) {
+    double dist = perpendicularDistance(points[i].pos, points[0].pos, points.back().pos);
+    if (dist > maxDist) {
+      maxDist = dist;
+      index = i;
+    }
+  }
+
+  if (maxDist > epsilon) {
+    List<InterpolationPoint> left, right;
+    for (size_t i = 0; i <= index; ++i)
+      left.push(arena, points[i]);
+    for (size_t i = index; i < points.length; ++i)
+      right.push(arena, points[i]);
+
+    List<InterpolationPoint> leftResult, rightResult;
+    rdp(arena, left, epsilon, leftResult);
+    rdp(arena, right, epsilon, rightResult);
+
+    for (size_t i = 0; i < leftResult.length - 1; ++i)
+      result.push(arena, leftResult[i]);
+    for (size_t i = 0; i < rightResult.length; ++i)
+      result.push(arena, rightResult[i]);
+  } else {
+    result.push(arena, points[0]);
+    result.push(arena, points[points.length - 1]);
+  }
 }
 
 void handleZoomPan(App* appstate)
@@ -84,7 +146,7 @@ void processFingerDownEvent(App* app, SDL_TouchFingerEvent event)
       finger.dy = 0;
     }
   }
-  app->touchFingers.push(app->persistentApplicationArena, event);
+  // app->touchFingers.push(app->persistentApplicationArena, event);
   app->prevAveragePos = {};
   app->prevPinchDistance = {};
   handleZoomPan(app);
@@ -149,7 +211,8 @@ void processPenDownEvent(App* appstate, SDL_PenTouchEvent event)
 
     if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
       appstate->currentlyDrawingOnPage = pageIndex;
-      appstate->currentLine = LineShape();
+      document.currentLine = LineShape();
+      document.currentLine.color = Color("#FF0000");
       return;
     }
     pageYOffset += pageHeightPx + pageHeightPx * appstate->pageGapPercentOfHeight / 100;
@@ -158,35 +221,53 @@ void processPenDownEvent(App* appstate, SDL_PenTouchEvent event)
   appstate->currentlyDrawingOnPage = -1;
 }
 
-void processPenUpEvent(App* appstate, SDL_PenTouchEvent event)
+void processPenUpEvent(App* app, SDL_PenTouchEvent event)
 {
-  appstate->currentlyDrawingOnPage = -1;
+  auto& document = app->documents[app->selectedDocument];
+  app->currentlyDrawingOnPage = -1;
+
+  // List<InterpolationPoint> result1;
+  // result1.push(document.arena, document.currentLine.points[0]);
+  // for (size_t i = 1; i < document.currentLine.points.length - 2; i++) {
+  //   auto& prev = document.currentLine.points[i - 1];
+  //   auto& point = document.currentLine.points[i];
+  //   auto& next = document.currentLine.points[i + 1];
+  //   point.pos = (prev.pos + next.pos) / 2.f;
+  //   result1.push(document.arena, document.currentLine.points[i]);
+  // }
+  // result1.push(document.arena, document.currentLine.points.back());
+
+  List<InterpolationPoint> result;
+  rdp(document.arena, document.currentLine.points, RAMER_DOUGLAS_PEUCKER_SMOOTHING, result);
+  document.currentLine.points = result;
 }
 
-void processPenMotionEvent(App* appstate, SDL_PenMotionEvent event)
+void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
 {
-  auto& document = appstate->documents[appstate->selectedDocument];
-  int pageWidthPx = document.pageWidthPercentOfWindow * appstate->mainViewportBB.width / 100.0;
+  auto& document = app->documents[app->selectedDocument];
+  int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
 
   int pageIndex = 0;
-  for (auto& page : document.pages) {
-    Vec2 penPosition = Vec2(event.x - appstate->mainViewportBB.x, event.y - appstate->mainViewportBB.y);
-    Vec2 pageTopLeftPx = Vec2(pageXOffset, pageYOffset);
-    Vec2 pageBottomRightPx = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
-    Vec2 penPosOnPagePx = penPosition - pageTopLeftPx;
-    Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);
+  if (event.pen_state & SDL_PEN_INPUT_DOWN) {
+    for (auto& page : document.pages) {
+      Vec2 penPosition = Vec2(event.x - app->mainViewportBB.x, event.y - app->mainViewportBB.y);
+      Vec2 pageTopLeftPx = Vec2(pageXOffset, pageYOffset);
+      Vec2 pageBottomRightPx = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
+      Vec2 penPosOnPagePx = penPosition - pageTopLeftPx;
+      Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);
 
-    if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
-      InterpolationPoint point;
-      point.pos = penPosOnPage_mm;
-      point.thickness = appstate->currentPenPressure;
-      appstate->currentLine.points.push(document.arena, point);
+      if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
+        InterpolationPoint point;
+        point.pos = penPosOnPage_mm;
+        point.thickness = app->currentPenPressure * 10;
+        document.currentLine.points.push(document.arena, point);
+      }
+      pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100;
+      pageIndex++;
     }
-    pageYOffset += pageHeightPx + pageHeightPx * appstate->pageGapPercentOfHeight / 100;
-    pageIndex++;
   }
 }
 

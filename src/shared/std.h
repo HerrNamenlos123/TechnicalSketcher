@@ -29,7 +29,8 @@ struct Arena {
   ArenaChunk* firstChunk;
   bool isStackArena;
 
-  [[nodiscard]] static Arena create(size_t chunkSize = DEFAULT_ARENA_SIZE)
+  [[nodiscard]] static Arena
+  create(size_t chunkSize = DEFAULT_ARENA_SIZE)
   {
     size_t allocSize = sizeof(ArenaChunk) + chunkSize;
     Arena newArena;
@@ -40,6 +41,7 @@ struct Arena {
       panicSizeT("Arena chunk allocation of size {} failed", allocSize);
     }
     newArena.firstChunk->capacity = chunkSize;
+    print("Creating arena");
     return newArena;
   }
 
@@ -64,6 +66,7 @@ struct Arena {
   void
   enlarge(ArenaChunk** lastChunk, size_t chunkSize = DEFAULT_ARENA_SIZE)
   {
+    print("Warning: Arena was enlarged. Consider more short-lived arenas to prevent excessive memory usage.");
     if (!this->__initialized) {
       panicStr("Arena was not properly initialized");
     }
@@ -95,7 +98,6 @@ struct Arena {
       if (this->isStackArena) {
         panicSizeT("Stack Arena is not large enough for allocation of size {}", size);
       } else {
-        printf("Warning: Arena was enlarged. Consider more short-lived arenas to prevent excessive memory usage.");
         this->enlarge(&lastChunk, tsk_max(DEFAULT_ARENA_SIZE, size));
       }
     }
@@ -116,6 +118,25 @@ struct Arena {
     this->firstChunk = 0;
     this->isStackArena = false;
     this->__initialized = false;
+  }
+
+  void clearAndReinit()
+  {
+    if (!this->__initialized) {
+      *this = Arena::create();
+    } else {
+      // Clear every page except the first, and reset the first page
+      // This means when reiniting an arena, most of the time no allocation is necessary
+      ArenaChunk* current = this->firstChunk->nextChunk;
+      while (current) {
+        ArenaChunk* next = current->nextChunk;
+        ::free(current);
+        current = next;
+      }
+      this->firstChunk->nextChunk = 0;
+      this->firstChunk->used = 0;
+      memset((uint8_t*)this->firstChunk + sizeof(ArenaChunk), 0, this->firstChunk->capacity);
+    }
   }
 
   private:
@@ -139,8 +160,8 @@ struct StackArena {
   }
 
   private:
-  Arena _arena;
-  bool arenaInitialized;
+  Arena _arena = {};
+  bool arenaInitialized = 0;
 };
 
 struct String {

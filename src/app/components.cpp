@@ -30,16 +30,6 @@ Clay_String ClayString(String str)
   };
 }
 
-Clay_Color ClayColor(Color color)
-{
-  return (Clay_Color) {
-    .r = color.r,
-    .g = color.g,
-    .b = color.b,
-    .a = color.a,
-  };
-}
-
 Pair<String, String> parseClass(Arena& arena, String classString)
 {
   auto elements = split(arena, classString, ":"s);
@@ -52,54 +42,10 @@ Pair<String, String> parseClass(Arena& arena, String classString)
   }
 }
 
-uint8_t hexToDigit(char letter)
-{
-  if (letter >= '0' && letter <= '9') {
-    return letter - '0';
-  } else if (letter >= 'a' && letter <= 'f') {
-    return letter - 'a' + 10;
-  } else if (letter >= 'A' && letter <= 'F') {
-    return letter - 'A' + 10;
-  } else {
-    return 0;
-  }
-}
-
-Color parseHexcolor(String hex)
-{
-  if (hex.length == 4) {
-    uint8_t r = hexToDigit(hex[1]) + 16 * hexToDigit(hex[1]);
-    uint8_t g = hexToDigit(hex[2]) + 16 * hexToDigit(hex[2]);
-    uint8_t b = hexToDigit(hex[3]) + 16 * hexToDigit(hex[3]);
-    uint8_t a = 255;
-    return Color(r, g, b, a);
-  } else if (hex.length == 5) {
-    uint8_t r = hexToDigit(hex[1]) + 16 * hexToDigit(hex[1]);
-    uint8_t g = hexToDigit(hex[2]) + 16 * hexToDigit(hex[2]);
-    uint8_t b = hexToDigit(hex[3]) + 16 * hexToDigit(hex[3]);
-    uint8_t a = hexToDigit(hex[4]) + 16 * hexToDigit(hex[4]);
-    return Color(r, g, b, a);
-  } else if (hex.length == 7) {
-    uint8_t r = hexToDigit(hex[2]) + 16 * hexToDigit(hex[1]);
-    uint8_t g = hexToDigit(hex[4]) + 16 * hexToDigit(hex[3]);
-    uint8_t b = hexToDigit(hex[6]) + 16 * hexToDigit(hex[5]);
-    uint8_t a = 255;
-    return Color(r, g, b, a);
-  } else if (hex.length == 9) {
-    uint8_t r = hexToDigit(hex[2]) + 16 * hexToDigit(hex[1]);
-    uint8_t g = hexToDigit(hex[4]) + 16 * hexToDigit(hex[3]);
-    uint8_t b = hexToDigit(hex[6]) + 16 * hexToDigit(hex[5]);
-    uint8_t a = hexToDigit(hex[8]) + 16 * hexToDigit(hex[7]);
-    return Color(r, g, b, a);
-  } else {
-    return Color(0, 0, 0, 0);
-  }
-}
-
 Optional<Color> parseBgClass(String cls)
 {
   if (cls.startsWith("bg-["s)) {
-    return parseHexcolor(cls.substr(4, cls.length - 5));
+    return Color(cls.substr(4, cls.length - 5));
   } else if (cls.startsWith("bg-"s)) {
     auto value = cls.substr(3, cls.length - 3);
     for (auto [name, color] : COLORS) {

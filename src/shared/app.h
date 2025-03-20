@@ -42,6 +42,7 @@ struct Document {
   Vec2 position = {};
   List<Page> pages = {};
   Color paperColor = {};
+  LineShape currentLine;
   Arena arena;
 };
 
@@ -59,9 +60,10 @@ struct Clay_SDL3RendererData {
 struct UICache;
 
 struct App;
-typedef void (*DrawUI_t)(App* appstate);
-typedef SDL_AppResult (*EventHandler_t)(App* appstate, SDL_Event* event);
-typedef void (*InitClay_t)(App* appstate);
+typedef void (*DrawUI_t)(App* app);
+typedef SDL_AppResult (*EventHandler_t)(App* app, SDL_Event* event);
+typedef void (*InitApp_t)(App* app);
+typedef void (*DestroyApp_t)(App* app);
 
 struct App {
   // Actual application data
@@ -69,7 +71,6 @@ struct App {
   size_t selectedDocument = 0;
   Tool tool;
   float currentPenPressure = 0;
-  LineShape currentLine;
   int currentlyDrawingOnPage = 0;
 
   // Constants
@@ -87,7 +88,8 @@ struct App {
   void* appLibraryHandle = 0;
   DrawUI_t DrawUI = 0;
   EventHandler_t EventHandler = 0;
-  InitClay_t InitClay = 0;
+  InitApp_t InitApp = 0;
+  DestroyApp_t DestroyApp = 0;
   UICache* uiCache;
   Clay_Context* clayContext;
   List<Pair<String, time_t>> fileModificationDates;
