@@ -63,6 +63,13 @@ bool loadAppLib(App* app)
     return false;
   }
 
+  app->ResyncApp = (ResyncApp_t)dlsym(app->appLibraryHandle, "ResyncApp");
+  if (app->ResyncApp == 0) {
+    printf("Failed to load func: %s\n", dlerror());
+    app->compileError = true;
+    return false;
+  }
+
   app->InitApp = (InitApp_t)dlsym(app->appLibraryHandle, "InitApp");
   if (app->InitApp == 0) {
     printf("Failed to load func: %s\n", dlerror());
@@ -77,8 +84,7 @@ bool loadAppLib(App* app)
     return false;
   }
 
-  app->DestroyApp(app);
-  app->InitApp(app);
+  // app->InitApp(app);
 
   // Clear any previous errors
   dlerror();
@@ -190,8 +196,12 @@ static SDL_AppResult UpdateHotreload(App* app)
     }
 
     if (reloadApp) {
-      compileApp(app);
-      loadAppLib(app);
+      if (compileApp(app)) {
+        loadAppLib(app);
+        if (app->ResyncApp) {
+          app->ResyncApp(app);
+        }
+      }
     }
   }
   return SDL_APP_CONTINUE;
@@ -203,10 +213,6 @@ static SDL_AppResult AppLoop(App* app)
   auto* renderer = app->rendererData.renderer;
   if (auto result = UpdateHotreload(app); result != SDL_APP_CONTINUE) {
     return result;
-  }
-
-  if (SDL_GetTicks() > 3000) {
-    return SDL_APP_SUCCESS;
   }
 
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -285,6 +291,9 @@ static SDL_AppResult InitApp(App* app)
 
   loadAppLib(app);
 
+  app->InitApp(app);
+  app->ResyncApp(app);
+
   return SDL_APP_CONTINUE;
 }
 
@@ -314,6 +323,7 @@ static void DestroyApp(App* app)
     SDL_DestroyWindow(app->window);
   }
 
+  app->clayArena.free();
   app->frameArena.free();
 
   // Shallow copy the arena, because otherwise the method

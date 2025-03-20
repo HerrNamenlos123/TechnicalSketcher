@@ -18,7 +18,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # set(SANITIZERS -fsanitize=memory)
 # set(SANITIZERS -fsanitize=undefined -fsanitize=memory -fsanitize=shadow-call-stack -fsanitize=integer -flto)
 
-set(COMMON_COMPILER_FLAGS -fPIC -g -Wno-vla-cxx-extension -Wno-c++11-narrowing -I/usr/local/include -Wno-user-defined-literals)
+set(COMMON_COMPILER_FLAGS -Wall -Wextra -fPIC -g -Wno-vla-cxx-extension -Wno-c++11-narrowing -I/usr/local/include -Wno-user-defined-literals -Werror -Wreturn-type -Wno-missing-designated-field-initializers -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -Wno-unused-but-set-variable)
 set(COMMON_LINKER_FLAGS  -Wl,--no-undefined)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL3 REQUIRED sdl3)

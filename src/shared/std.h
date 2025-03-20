@@ -456,6 +456,12 @@ struct List {
     this->length++;
   }
 
+  void clear()
+  {
+    this->length = 0;
+    this->firstElement = 0;
+  }
+
   void pop()
   {
     if (!this->firstElement) {
@@ -564,6 +570,11 @@ struct List {
 
 template <typename T, size_t Size>
 struct Array {
+  [[nodiscard]] T* data()
+  {
+    return this->_data;
+  }
+
   [[nodiscard]] T& get(size_t index)
   {
     if (index < 0 || index >= this->length()) {

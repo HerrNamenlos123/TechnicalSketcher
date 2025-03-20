@@ -15,7 +15,18 @@ const auto PAGE_OUTLINE_COLOR = Color("#888"s);
 const auto APP_BACKGROUND_COLOR = Color("#DDD"s);
 const auto PAGE_GRID_COLOR = Color("#A8C9E3"s);
 
-Vec2 CatmullRom(float t, const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3)
+double clamp(double v, double a, double b)
+{
+  if (v < a) {
+    return a;
+  } else if (v > b) {
+    return b;
+  } else {
+    return v;
+  }
+}
+
+Vec2 CatmullRomSection(float t, const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3)
 {
   float t2 = t * t;
   float t3 = t2 * t;
@@ -26,6 +37,47 @@ Vec2 CatmullRom(float t, const Vec2& p0, const Vec2& p1, const Vec2& p2, const V
   };
 }
 
+List<Vec2> MakeSplinePoints(Arena& arena, List<Vec2> points, float tolerance)
+{
+  List<Vec2> result;
+  if (points.length < 2) {
+    return points;
+  }
+  List<Vec2> splinePoints;
+  splinePoints.push(arena, points[0] - (points[1] - points[0]));
+  for (auto& point : points) {
+    splinePoints.push(arena, point);
+  }
+  splinePoints.push(arena, points[points.length - 1] - (points[points.length - 2] - points[points.length - 1]));
+  for (int i = 0; i < points.length - 1; i++) {
+    for (float t = 0; t < 1; t += 0.1f) {
+      result.push(arena, CatmullRomSection(t, splinePoints[i], splinePoints[i + 1], splinePoints[i + 2], splinePoints[i + 3]));
+    }
+  }
+  result.push(arena, splinePoints[splinePoints.length - 2]);
+  if (tolerance == 0) {
+    return result;
+  }
+  return rdp(arena, result, tolerance);
+}
+
+void DrawPoint(App* app, Vec2 pos, Color color, int size = 3)
+{
+  SDL_FRect rect;
+  rect.x = pos.x - (size - 1) / 2.f;
+  rect.y = pos.y - (size - 1) / 2.f;
+  rect.w = size;
+  rect.h = size;
+  SDL_SetRenderDrawColor(app->rendererData.renderer, color.r, color.g, color.b, color.a);
+  SDL_RenderFillRect(app->rendererData.renderer, &rect);
+}
+
+void DrawLine(App* app, Vec2 from, Vec2 to, Color color)
+{
+  SDL_SetRenderDrawColor(app->rendererData.renderer, color.r, color.g, color.b, color.a);
+  SDL_RenderLine(app->rendererData.renderer, from.x, from.y, to.x, to.y);
+}
+
 void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
 {
   auto& renderer = app->rendererData.renderer;
@@ -33,16 +85,39 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
   int pageHeightPx = pageWidthPx * 297 / 210;
   auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
 
-  if (shape.points.length == 0) {
+  if (shape.points.length <= 1) {
     return;
   }
 
-  for (size_t i = 0; i < shape.points.length - 1; i++) {
-    auto& point = shape.points[i];
-    point.thickness = 5;
-    Vec2 pos = point.pos;
-    Vec2 nextPos = shape.points[i + 1].pos;
-    // Vec2 size = Vec2(point.thickness, point.thickness);
+  List<float> thicknessProfile;
+  List<Vec2> centerPoints;
+  for (auto& point : shape.points) {
+    if (centerPoints.length > 0) {
+      auto alpha = 0.5;
+      Vec2 lastPoint = centerPoints.back();
+      Vec2 newPoint = Vec2(lastPoint.x * (1 - alpha) + point.pos.x * alpha, lastPoint.y * (1 - alpha) + point.pos.y * alpha);
+      centerPoints.push(app->frameArena, newPoint);
+    } else {
+      centerPoints.push(app->frameArena, point.pos);
+    }
+    thicknessProfile.push(app->frameArena, point.thickness);
+  }
+  centerPoints = rdp(app->frameArena, centerPoints, 0.2);
+
+  List<Vec2>
+      centerSplines = MakeSplinePoints(app->frameArena, centerPoints, 0.1);
+  for (size_t i = 0; i < centerSplines.length - 1; i++) {
+    DrawLine(app, centerSplines[i] * pageProj, centerSplines[i + 1] * pageProj, "#F00");
+    DrawPoint(app, centerSplines[i] * pageProj, "#0F0");
+  }
+
+  List<Vec2> leftOutline;
+  List<Vec2> rightOutline;
+  for (size_t i = 0; i < centerSplines.length - 1; i++) {
+    auto& pos = centerSplines[i];
+    float lengthProgress = (float)i / (centerSplines.length - 1);
+    float thickness = thicknessProfile[(size_t)clamp(floor(lengthProgress * thicknessProfile.length), 0, thicknessProfile.length)];
+    Vec2 nextPos = centerSplines[i + 1];
 
     Vec2 posPx = pos * pageProj;
     Vec2 nextPosPx = nextPos * pageProj;
@@ -52,42 +127,39 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
     rect.y = posPx.y;
     rect.w = 2;
     rect.h = 2;
-    SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 0, 255);
-    // SDL_RenderLine(app->rendererData.renderer, posPx.x, posPx.y, nextPosPx.x, nextPosPx.y);
-    SDL_SetRenderDrawColor(app->rendererData.renderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(app->rendererData.renderer, &rect);
 
     Vec2 dirToNextPoint = (nextPos - pos).normalize();
     Vec2 perp = Vec2(-dirToNextPoint.y, dirToNextPoint.x);
 
     SDL_SetRenderDrawColor(app->rendererData.renderer, 0, 255, 0, 255);
-    Vec2 left = pos + perp * shape.points[i].thickness / 2;
-    Vec2 right = pos - perp * shape.points[i].thickness / 2;
-    // SDL_RenderLine(app->rendererData.renderer, posPx.x, posPx.y, posPx.x + perp.x * 15, posPx.y + perp.y * 15);
+    Vec2 left = pos + perp * thickness / 2;
+    Vec2 right = pos - perp * thickness / 2;
+    SDL_RenderLine(app->rendererData.renderer, posPx.x, posPx.y, posPx.x + perp.x * 15, posPx.y + perp.y * 15);
     SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 0, 255);
 
     rect.x = left.x * pageProj.x;
     rect.y = left.y * pageProj.y;
     rect.w = 2;
     rect.h = 2;
-    // SDL_RenderFillRect(app->rendererData.renderer, &rect);
+    SDL_RenderFillRect(app->rendererData.renderer, &rect);
+    leftOutline.push(app->frameArena, left);
 
     rect.x = right.x * pageProj.x;
     rect.y = right.y * pageProj.y;
-    // SDL_RenderFillRect(app->rendererData.renderer, &rect);
+    SDL_RenderFillRect(app->rendererData.renderer, &rect);
+    rightOutline.push(app->frameArena, right);
 
     SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 255, 255);
   }
 
-  if (shape.points.length < 4)
-    return;
+  List<Vec2> spline = MakeSplinePoints(app->frameArena, leftOutline, 0.1);
+  for (size_t i = 0; i < spline.length - 1; i++) {
+    DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
+  }
 
-  for (size_t i = 1; i < shape.points.length - 2; ++i) {
-    for (float t = 0; t <= 1; t += 0.1f) {
-      Vec2 p = CatmullRom(t, shape.points[i - 1].pos, shape.points[i].pos, shape.points[i + 1].pos, shape.points[i + 2].pos);
-      Vec2 pp = p * pageProj;
-      SDL_RenderPoint(renderer, (int)pp.x, (int)pp.y);
-    }
+  spline = MakeSplinePoints(app->frameArena, rightOutline, 0.1);
+  for (size_t i = 0; i < spline.length - 1; i++) {
+    DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
   }
 }
 
@@ -96,26 +168,44 @@ void RenderShapesOnPage(App* app, Document& document, Page& page)
   auto renderer = app->rendererData.renderer;
   int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
+  auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
 
   while (page.shapes.length > 0) {
     page.shapes.pop();
   }
   LineShape shape;
-  shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(50, 80), .thickness = 5 });
-  shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(80, 100), .thickness = 10 });
-  shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(120, 90), .thickness = 5 });
-  shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(160, 120), .thickness = 8 });
-  shape.color = Color("#FF0000");
-  page.shapes.push(document.arena, shape);
+  // shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(50, 80), .thickness = 5 });
+  // shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(80, 100), .thickness = 10 });
+  // shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(120, 90), .thickness = 5 });
+  // shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(160, 120), .thickness = 8 });
+  // shape.color = Color("#FF0000");
+  // page.shapes.push(document.arena, shape);
 
-  for (auto& shape : page.shapes) {
-    SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
-    // constructLineshapeOutline(app, document, shape);
-  }
+  // for (auto& shape : page.shapes) {
+  //   SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
+  //   // constructLineshapeOutline(app, document, shape);
+  // }
 
   shape = document.currentLine;
   SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
   constructLineshapeOutline(app, document, shape);
+
+  // List<Vec2> points;
+  // points.push(app->frameArena, Vec2(30, 45));
+  // points.push(app->frameArena, Vec2(50, 80));
+  // points.push(app->frameArena, Vec2(60, 85));
+  // points.push(app->frameArena, Vec2(100, 50));
+  // points.push(app->frameArena, Vec2(130, 110));
+  // points.push(app->frameArena, Vec2(160, 70));
+
+  // for (auto& point : points) {
+  //   DrawPoint(app, point * pageProj, "#FF0000", 11);
+  // }
+
+  // List<Vec2> spline = MakeSplinePoints(app->frameArena, points, 0.1);
+  // for (size_t i = 0; i < spline.length - 1; i++) {
+  //   DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
+  // }
 }
 
 void RenderPage(App* appstate, Document& document, Page& page)
@@ -251,11 +341,13 @@ void HandleClayErrors(Clay_ErrorData errorData)
   printf("%s", errorData.errorText.chars);
 }
 
-extern "C" void InitApp(App* app)
+extern "C" void ResyncApp(App* app)
 {
+  app->clayArena.clearAndReinit();
+
   uint64_t totalMemorySize = Clay_MinMemorySize();
-  Clay_Arena clayMemory = (Clay_Arena) { .capacity = totalMemorySize,
-    .memory = (char*)SDL_malloc(totalMemorySize) };
+  char* memory = app->clayArena.allocate<char>(totalMemorySize);
+  Clay_Arena clayMemory = (Clay_Arena) { .capacity = totalMemorySize, .memory = memory };
 
   int width, height;
   SDL_GetWindowSize(app->window, &width, &height);
@@ -263,7 +355,10 @@ extern "C" void InitApp(App* app)
   Clay_Initialize(clayMemory, (Clay_Dimensions) { (float)width, (float)height },
       (Clay_ErrorHandler) { HandleClayErrors });
   Clay_SetMeasureTextFunction(SDL_MeasureText, app);
+}
 
+extern "C" void InitApp(App* app)
+{
   COLORS.push(app->persistentApplicationArena, { "white"s, Color(255, 255, 255, 255) });
   COLORS.push(app->persistentApplicationArena, { "black"s, Color(0, 0, 0, 255) });
   COLORS.push(app->persistentApplicationArena, { "red"s, Color(255, 0, 0, 255) });

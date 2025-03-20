@@ -52,7 +52,7 @@ double perpendicularDistance(Vec2 p, Vec2 p1, Vec2 p2)
   return std::hypot(p.x - projX, p.y - projY);
 }
 
-void rdp(Arena& arena, List<InterpolationPoint> points, double epsilon, List<InterpolationPoint>& result)
+void rdp_impl(Arena& arena, List<Vec2> points, double epsilon, List<Vec2>& result)
 {
   if (points.length < 2)
     return;
@@ -60,7 +60,7 @@ void rdp(Arena& arena, List<InterpolationPoint> points, double epsilon, List<Int
   double maxDist = 0.0;
   size_t index = 0;
   for (size_t i = 1; i < points.length - 1; ++i) {
-    double dist = perpendicularDistance(points[i].pos, points[0].pos, points.back().pos);
+    double dist = perpendicularDistance(points[i], points[0], points.back());
     if (dist > maxDist) {
       maxDist = dist;
       index = i;
@@ -68,15 +68,15 @@ void rdp(Arena& arena, List<InterpolationPoint> points, double epsilon, List<Int
   }
 
   if (maxDist > epsilon) {
-    List<InterpolationPoint> left, right;
+    List<Vec2> left, right;
     for (size_t i = 0; i <= index; ++i)
       left.push(arena, points[i]);
     for (size_t i = index; i < points.length; ++i)
       right.push(arena, points[i]);
 
-    List<InterpolationPoint> leftResult, rightResult;
-    rdp(arena, left, epsilon, leftResult);
-    rdp(arena, right, epsilon, rightResult);
+    List<Vec2> leftResult, rightResult;
+    rdp_impl(arena, left, epsilon, leftResult);
+    rdp_impl(arena, right, epsilon, rightResult);
 
     for (size_t i = 0; i < leftResult.length - 1; ++i)
       result.push(arena, leftResult[i]);
@@ -86,6 +86,13 @@ void rdp(Arena& arena, List<InterpolationPoint> points, double epsilon, List<Int
     result.push(arena, points[0]);
     result.push(arena, points[points.length - 1]);
   }
+}
+
+List<Vec2> rdp(Arena& arena, List<Vec2> points, double epsilon)
+{
+  List<Vec2> result;
+  rdp_impl(arena, points, epsilon, result);
+  return result;
 }
 
 void handleZoomPan(App* appstate)
@@ -237,9 +244,9 @@ void processPenUpEvent(App* app, SDL_PenTouchEvent event)
   // }
   // result1.push(document.arena, document.currentLine.points.back());
 
-  List<InterpolationPoint> result;
-  rdp(document.arena, document.currentLine.points, RAMER_DOUGLAS_PEUCKER_SMOOTHING, result);
-  document.currentLine.points = result;
+  // List<Vec2> result;
+  // rdp(document.arena, document.currentLine.points, RAMER_DOUGLAS_PEUCKER_SMOOTHING, result);
+  // document.currentLine.points = result;
 }
 
 void processPenMotionEvent(App* app, SDL_PenMotionEvent event)

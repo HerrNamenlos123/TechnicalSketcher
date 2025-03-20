@@ -63,6 +63,7 @@ struct App;
 typedef void (*DrawUI_t)(App* app);
 typedef SDL_AppResult (*EventHandler_t)(App* app, SDL_Event* event);
 typedef void (*InitApp_t)(App* app);
+typedef void (*ResyncApp_t)(App* app);
 typedef void (*DestroyApp_t)(App* app);
 
 struct App {
@@ -89,6 +90,7 @@ struct App {
   DrawUI_t DrawUI = 0;
   EventHandler_t EventHandler = 0;
   InitApp_t InitApp = 0;
+  ResyncApp_t ResyncApp = 0;
   DestroyApp_t DestroyApp = 0;
   UICache* uiCache;
   Clay_Context* clayContext;
@@ -100,6 +102,7 @@ struct App {
   // Memory stuff
   Arena persistentApplicationArena;
   Arena frameArena;
+  Arena clayArena;
 };
 
 #endif // APP_H
