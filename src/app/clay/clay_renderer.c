@@ -1,7 +1,7 @@
 
-#include "../shared/app.h"
+#include "clay_renderer.h"
+#include "../../shared/clay.h"
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
 
 /* Global for convenience. Even in 4K this is enough for smooth curves (low radius or rect size coupled with
  * no AA or low resolution might make it appear as jagged curves) */
@@ -25,8 +25,8 @@ static void SDL_Clay_RenderFillRoundedRect(Clay_SDL3RendererData* rendererData,
   int totalVertices = 4 + (4 * (numCircleSegments * 2)) + 2 * 4;
   int totalIndices = 6 + (4 * (numCircleSegments * 3)) + 6 * 4;
 
-  SDL_Vertex vertices[totalVertices];
-  int indices[totalIndices];
+  SDL_Vertex* vertices = (SDL_Vertex*)alloca(totalVertices * sizeof(SDL_Vertex));
+  int* indices = (int*)alloca(totalIndices * sizeof(int));
 
   // define center rectangle
   vertices[vertexCount++]
@@ -168,7 +168,7 @@ static void SDL_Clay_RenderArc(Clay_SDL3RendererData* rendererData,
                                     // numCircleSegments might cause artifacts.
 
   for (float t = thicknessStep; t < thickness - thicknessStep; t += thicknessStep) {
-    SDL_FPoint points[numCircleSegments + 1];
+    SDL_FPoint* points = (SDL_FPoint*)alloca((numCircleSegments + 1) * sizeof(SDL_FPoint));
     const float clampedRadius = SDL_max(radius - t, 1.0f);
 
     for (int i = 0; i <= numCircleSegments; i++) {
@@ -182,7 +182,7 @@ static void SDL_Clay_RenderArc(Clay_SDL3RendererData* rendererData,
 
 SDL_Rect currentClippingRectangle;
 
-static void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Clay_RenderCommandArray* rcommands)
+void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Clay_RenderCommandArray* rcommands)
 {
   for (size_t i = 0; i < rcommands->length; i++) {
     Clay_RenderCommand* rcmd = Clay_RenderCommandArray_Get(rcommands, i);
@@ -207,14 +207,15 @@ static void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Cla
     } break;
     case CLAY_RENDER_COMMAND_TYPE_TEXT: {
       Clay_TextRenderData* config = &rcmd->renderData.text;
-      TTF_Font* font = rendererData->fonts[0].first;
-      for (auto [_font, size] : rendererData->fonts) {
-        if (size == config->fontSize) {
-          font = _font;
+      FontData font = rendererData->fonts[0];
+      for (size_t i = 0; i < rendererData->numberOfFonts; i++) {
+        if (rendererData->fonts[i].size == config->fontSize) {
+          font = rendererData->fonts[i];
+          break;
         }
       }
       TTF_Text* text
-          = TTF_CreateText(rendererData->textEngine, font, config->stringContents.chars, config->stringContents.length);
+          = TTF_CreateText(rendererData->textEngine, font.font, config->stringContents.chars, config->stringContents.length);
       TTF_SetTextColor(text, config->textColor.r, config->textColor.g, config->textColor.b, config->textColor.a);
       TTF_DrawRendererText(text, rect.x, rect.y);
       TTF_DestroyText(text);

@@ -9,7 +9,7 @@ const auto RAMER_DOUGLAS_PEUCKER_SMOOTHING = 0.2;
 
 void addDocument(App* app)
 {
-  Document document = (Document) {
+  Document document = Document {
     .pageWidthPercentOfWindow = 50,
     .pageScroll = 0,
     .position = Vec2(),
@@ -32,7 +32,7 @@ void unloadDocument(App* app, Document& document)
 
 void addPageToDocument(App* app, Document& document)
 {
-  Page page = (Page) {
+  Page page = Page {
     .shapes = {},
     .canvas = {},
   };
@@ -45,11 +45,11 @@ double perpendicularDistance(Vec2 p, Vec2 p1, Vec2 p2)
   double dx = p2.x - p1.x;
   double dy = p2.y - p1.y;
   if (dx == 0 && dy == 0)
-    return std::hypot(p.x - p1.x, p.y - p1.y);
+    return hypot(p.x - p1.x, p.y - p1.y);
   double t = ((p.x - p1.x) * dx + (p.y - p1.y) * dy) / (dx * dx + dy * dy);
   double projX = p1.x + t * dx;
   double projY = p1.y + t * dy;
-  return std::hypot(p.x - projX, p.y - projY);
+  return hypot(p.x - projX, p.y - projY);
 }
 
 void rdp_impl(Arena& arena, List<Vec2> points, double epsilon, List<Vec2>& result)

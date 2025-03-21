@@ -6,36 +6,35 @@
 #include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <dlfcn.h>
 #include <stdio.h>
 
 const Vec2 DEFAULT_WINDOW_SIZE = Vec2(1920, 1080);
 const uint64_t HOTRELOAD_UPDATE_RATE = 100;
 
-bool compileApp(App* appstate)
+bool compileApp(App* app)
 {
   printf("Application code changed, recompiling...\n");
   auto result = system("cmake --build build --target app");
   if (result != 0) {
     printf("Failed to build app!\n");
-    appstate->compileError = true;
+    app->compileError = true;
     return false;
   }
 
   printf("Done, reloaded app!\n");
-  appstate->compileError = false;
+  app->compileError = false;
   return true;
 }
 
-void closeAppLib(App* appstate)
+void closeAppLib(App* app)
 {
-  if (appstate->appLibraryHandle) {
-    appstate->DrawUI = 0;
-    appstate->EventHandler = 0;
-    appstate->InitApp = 0;
-    appstate->DestroyApp = 0;
-    dlclose(appstate->appLibraryHandle);
-    appstate->appLibraryHandle = 0;
+  if (app->appLibraryHandle) {
+    app->DrawUI = 0;
+    app->EventHandler = 0;
+    app->InitApp = 0;
+    app->DestroyApp = 0;
+    UnloadLibrary(app->appLibraryHandle);
+    app->appLibraryHandle = 0;
   }
 }
 
@@ -43,51 +42,43 @@ bool loadAppLib(App* app)
 {
   closeAppLib(app);
 
-  app->appLibraryHandle = dlopen("build/libapp.so", RTLD_LAZY);
-  if (!app->appLibraryHandle) {
-    printf("Error loading library: %s", dlerror());
+  if (auto result = LoadLibrary(app->frameArena, "build/libapp.so"_s)) {
+    app->appLibraryHandle = result.unwrap();
+  } else {
+    print("Error loading library: {}", result.unwrap_error());
     return false;
   }
 
-  app->DrawUI = (DrawUI_t)dlsym(app->appLibraryHandle, "DrawUI");
-  if (app->DrawUI == 0) {
-    printf("Failed to load func: %s\n", dlerror());
-    app->compileError = true;
-    return false;
+  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "DrawUI"_s)) {
+    app->DrawUI = (DrawUI_t)result.unwrap();
+  } else {
+    print("Failed to load func: {}", result.unwrap_error());
   }
 
-  app->EventHandler = (EventHandler_t)dlsym(app->appLibraryHandle, "EventHandler");
-  if (app->EventHandler == 0) {
-    printf("Failed to load func: %s\n", dlerror());
-    app->compileError = true;
-    return false;
+  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "EventHandler"_s)) {
+    app->EventHandler = (EventHandler_t)result.unwrap();
+  } else {
+    print("Failed to load func: {}", result.unwrap_error());
   }
 
-  app->ResyncApp = (ResyncApp_t)dlsym(app->appLibraryHandle, "ResyncApp");
-  if (app->ResyncApp == 0) {
-    printf("Failed to load func: %s\n", dlerror());
-    app->compileError = true;
-    return false;
+  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "ResyncApp"_s)) {
+    app->ResyncApp = (ResyncApp_t)result.unwrap();
+  } else {
+    print("Failed to load func: {}", result.unwrap_error());
   }
 
-  app->InitApp = (InitApp_t)dlsym(app->appLibraryHandle, "InitApp");
-  if (app->InitApp == 0) {
-    printf("Failed to load func: %s\n", dlerror());
-    app->compileError = true;
-    return false;
+  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "InitApp"_s)) {
+    app->InitApp = (InitApp_t)result.unwrap();
+  } else {
+    print("Failed to load func: {}", result.unwrap_error());
   }
 
-  app->DestroyApp = (InitApp_t)dlsym(app->appLibraryHandle, "DestroyApp");
-  if (app->DestroyApp == 0) {
-    printf("Failed to load func: %s\n", dlerror());
-    app->compileError = true;
-    return false;
+  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "DestroyApp"_s)) {
+    app->DestroyApp = (DestroyApp_t)result.unwrap();
+  } else {
+    print("Failed to load func: {}", result.unwrap_error());
   }
 
-  // app->InitApp(app);
-
-  // Clear any previous errors
-  dlerror();
   return true;
 }
 
@@ -100,7 +91,7 @@ static SDL_AppResult UpdateHotreload(App* app)
 
     bool reloadApp = false;
     if (auto cwd = GetCurrentWorkingDirectory(app->frameArena)) {
-      auto result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/app", cwd.value_or(""s)));
+      auto result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/app", cwd.value_or(""_s)));
       for (auto file : result.value_or({})) {
         if (IsRegularFile(app->frameArena, file).value_or(false)) {
           auto moddate = GetFileModificationDate(file).value_or(0);
@@ -125,7 +116,7 @@ static SDL_AppResult UpdateHotreload(App* app)
 
     bool reloadCore = false;
     if (auto cwd = GetCurrentWorkingDirectory(app->frameArena)) {
-      auto result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/core", cwd.value_or(""s)));
+      auto result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/core", cwd.value_or(""_s)));
       for (auto file : result.value_or({})) {
         if (IsRegularFile(app->frameArena, file).value_or(false)) {
           auto moddate = GetFileModificationDate(file).value_or(0);
@@ -146,7 +137,7 @@ static SDL_AppResult UpdateHotreload(App* app)
           }
         }
       }
-      result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/shared", cwd.value_or(""s)));
+      result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/shared", cwd.value_or(""_s)));
       for (auto file : result.value_or({})) {
         if (IsRegularFile(app->frameArena, file).value_or(false)) {
           auto moddate = GetFileModificationDate(file).value_or(0);
@@ -167,7 +158,7 @@ static SDL_AppResult UpdateHotreload(App* app)
           }
         }
       }
-      result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/shared/platform", cwd.value_or(""s)));
+      result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/shared/platform", cwd.value_or(""_s)));
       for (auto file : result.value_or({})) {
         if (IsRegularFile(app->frameArena, file).value_or(false)) {
           auto moddate = GetFileModificationDate(file).value_or(0);
@@ -240,8 +231,8 @@ static SDL_AppResult InitApp(App* app)
   }
 
   if (!SDL_CreateWindowAndRenderer("examples/pen/drawing-lines",
-          DEFAULT_WINDOW_SIZE.x,
-          DEFAULT_WINDOW_SIZE.y,
+          (int)DEFAULT_WINDOW_SIZE.x,
+          (int)DEFAULT_WINDOW_SIZE.y,
           0,
           &app->window,
           &app->rendererData.renderer)) {
@@ -268,13 +259,15 @@ static SDL_AppResult InitApp(App* app)
   sizes.push(arena, 18);
   sizes.push(arena, 20);
   sizes.push(arena, 24);
+  FontData* fonts = app->persistentApplicationArena.allocate<FontData>(sizes.length);
+  app->rendererData.numberOfFonts = 0;
   for (auto size : sizes) {
     TTF_Font* font = TTF_OpenFont("resource/Roboto-Regular.ttf", size);
     if (!font) {
       SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", SDL_GetError());
       return SDL_APP_FAILURE;
     }
-    app->rendererData.fonts.push(app->persistentApplicationArena, { font, size });
+    fonts[app->rendererData.numberOfFonts++] = { font, size };
   }
 
   int w, h;
@@ -303,8 +296,8 @@ static void DestroyApp(App* app)
     app->DestroyApp(app);
   }
 
-  for (size_t i = 0; i < app->rendererData.fonts.length; i++) {
-    TTF_CloseFont(app->rendererData.fonts[i].first);
+  for (size_t i = 0; i < app->rendererData.numberOfFonts; i++) {
+    TTF_CloseFont(app->rendererData.fonts[i].font);
   }
 
   if (app->rendererData.textEngine) {

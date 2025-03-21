@@ -1,19 +1,20 @@
 
 #include "../shared/app.h"
 #include "../shared/clay.h"
-#include "clay_renderer.cpp"
+#include "clay/clay_renderer.h"
 #include "document.cpp"
 #include "ui.cpp"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-const auto PAGE_OUTLINE_COLOR = Color("#888"s);
-const auto APP_BACKGROUND_COLOR = Color("#DDD"s);
-const auto PAGE_GRID_COLOR = Color("#A8C9E3"s);
+const auto PAGE_OUTLINE_COLOR = Color("#888");
+const auto APP_BACKGROUND_COLOR = Color("#DDD");
+const auto PAGE_GRID_COLOR = Color("#A8C9E3");
 
 double clamp(double v, double a, double b)
 {
@@ -291,8 +292,8 @@ void RenderMainViewport(App* app)
     if (app->mainDocumentRenderTexture) {
       SDL_DestroyTexture(app->mainDocumentRenderTexture);
     }
-    int w = std::max(size.width, 1.f);
-    int h = std::max(size.height, 1.f);
+    int w = tsk_max(size.width, 1.f);
+    int h = tsk_max(size.height, 1.f);
     app->mainDocumentRenderTexture = SDL_CreateTexture(
         app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32,
         SDL_TEXTUREACCESS_TARGET, w, h);
@@ -320,20 +321,22 @@ static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text,
 {
   App* app = (App*)_app;
   auto& fonts = app->rendererData.fonts;
-  TTF_Font* font = fonts[0].first;
-  for (auto [_font, size] : fonts) {
-    if (size == config->fontSize) {
-      font = _font;
+  FontData font = app->rendererData.fonts[0];
+  for (size_t i = 0; i < app->rendererData.numberOfFonts; i++) {
+    if (app->rendererData.fonts[i].size == config->fontSize) {
+      font = app->rendererData.fonts[i];
+      break;
     }
   }
+
   int width, height;
 
-  if (!TTF_GetStringSize(font, text.chars, text.length, &width, &height)) {
+  if (!TTF_GetStringSize(font.font, text.chars, text.length, &width, &height)) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to measure text: %s",
         SDL_GetError());
   }
 
-  return (Clay_Dimensions) { (float)width, (float)height };
+  return Clay_Dimensions { (float)width, (float)height };
 }
 
 void HandleClayErrors(Clay_ErrorData errorData)
@@ -347,33 +350,33 @@ extern "C" void ResyncApp(App* app)
 
   uint64_t totalMemorySize = Clay_MinMemorySize();
   char* memory = app->clayArena.allocate<char>(totalMemorySize);
-  Clay_Arena clayMemory = (Clay_Arena) { .capacity = totalMemorySize, .memory = memory };
+  Clay_Arena clayMemory = Clay_Arena { .capacity = totalMemorySize, .memory = memory };
 
   int width, height;
   SDL_GetWindowSize(app->window, &width, &height);
 
-  Clay_Initialize(clayMemory, (Clay_Dimensions) { (float)width, (float)height },
-      (Clay_ErrorHandler) { HandleClayErrors });
+  Clay_Initialize(clayMemory, Clay_Dimensions { (float)width, (float)height },
+      Clay_ErrorHandler { HandleClayErrors });
   Clay_SetMeasureTextFunction(SDL_MeasureText, app);
 }
 
 extern "C" void InitApp(App* app)
 {
-  COLORS.push(app->persistentApplicationArena, { "white"s, Color(255, 255, 255, 255) });
-  COLORS.push(app->persistentApplicationArena, { "black"s, Color(0, 0, 0, 255) });
-  COLORS.push(app->persistentApplicationArena, { "red"s, Color(255, 0, 0, 255) });
-  COLORS.push(app->persistentApplicationArena, { "green"s, Color(0, 255, 0, 255) });
-  COLORS.push(app->persistentApplicationArena, { "blue"s, Color(0, 0, 255, 255) });
-  COLORS.push(app->persistentApplicationArena, { "yellow"s, Color(255, 255, 0, 255) });
-  COLORS.push(app->persistentApplicationArena, { "magenta"s, Color(255, 0, 255, 255) });
-  COLORS.push(app->persistentApplicationArena, { "cyan"s, Color(0, 255, 255, 255) });
-  COLORS.push(app->persistentApplicationArena, { "transparent"s, Color(255, 255, 255, 255) });
-  FONT_SIZES.push(app->persistentApplicationArena, { "xs"s, 12 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "sm"s, 14 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "base"s, 16 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "lg"s, 18 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "xl"s, 20 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "2xl"s, 24 });
+  COLORS.push(app->persistentApplicationArena, { "white"_s, Color(255, 255, 255, 255) });
+  COLORS.push(app->persistentApplicationArena, { "black"_s, Color(0, 0, 0, 255) });
+  COLORS.push(app->persistentApplicationArena, { "red"_s, Color(255, 0, 0, 255) });
+  COLORS.push(app->persistentApplicationArena, { "green"_s, Color(0, 255, 0, 255) });
+  COLORS.push(app->persistentApplicationArena, { "blue"_s, Color(0, 0, 255, 255) });
+  COLORS.push(app->persistentApplicationArena, { "yellow"_s, Color(255, 255, 0, 255) });
+  COLORS.push(app->persistentApplicationArena, { "magenta"_s, Color(255, 0, 255, 255) });
+  COLORS.push(app->persistentApplicationArena, { "cyan"_s, Color(0, 255, 255, 255) });
+  COLORS.push(app->persistentApplicationArena, { "transparent"_s, Color(255, 255, 255, 255) });
+  FONT_SIZES.push(app->persistentApplicationArena, { "xs"_s, 12 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "sm"_s, 14 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "base"_s, 16 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "lg"_s, 18 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "xl"_s, 20 });
+  FONT_SIZES.push(app->persistentApplicationArena, { "2xl"_s, 24 });
 
   addDocument(app);
   addPageToDocument(app, app->documents.back());
@@ -399,23 +402,23 @@ extern "C" SDL_AppResult EventHandler(App* app, SDL_Event* event)
     break;
 
   case SDL_EVENT_WINDOW_RESIZED:
-    Clay_SetLayoutDimensions((Clay_Dimensions) { (float)event->window.data1,
+    Clay_SetLayoutDimensions(Clay_Dimensions { (float)event->window.data1,
         (float)event->window.data2 });
     break;
 
   case SDL_EVENT_MOUSE_MOTION:
-    Clay_SetPointerState((Clay_Vector2) { event->motion.x, event->motion.y },
+    Clay_SetPointerState(Clay_Vector2 { event->motion.x, event->motion.y },
         event->motion.state & SDL_BUTTON_LMASK);
     break;
 
   case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    Clay_SetPointerState((Clay_Vector2) { event->button.x, event->button.y },
+    Clay_SetPointerState(Clay_Vector2 { event->button.x, event->button.y },
         event->button.button == SDL_BUTTON_LEFT);
     break;
 
   case SDL_EVENT_MOUSE_WHEEL:
     Clay_UpdateScrollContainers(
-        true, (Clay_Vector2) { event->wheel.x, event->wheel.y }, 0.01f);
+        true, Clay_Vector2 { event->wheel.x, event->wheel.y }, 0.01f);
     break;
 
   case SDL_EVENT_FINGER_DOWN:

@@ -3,7 +3,9 @@
 #define SHARED_H
 
 #include "clay.h"
+#include "format.h"
 #include "std.h"
+
 
 #include "platform/platform.h"
 
@@ -57,12 +59,13 @@ struct Color {
 
   operator Clay_Color()
   {
-    return (Clay_Color) {
+    Clay_Color color = {
       .r = r,
       .g = g,
       .b = b,
       .a = a,
     };
+    return color;
   }
 };
 

@@ -1,15 +1,8 @@
 
-#ifndef BASE_H
-#define BASE_H
+#ifndef STD_H
+#define STD_H
 
 #include "stddecl.h"
-
-#include "format.h"
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define tsk_min(a, b) (((a) < (b)) ? (a) : (b))
 #define tsk_max(a, b) (((a) > (b)) ? (a) : (b))
@@ -28,59 +21,15 @@ struct ArenaChunk {
 struct Arena {
   ArenaChunk* firstChunk;
   bool isStackArena;
+  bool __initialized;
 
   [[nodiscard]] static Arena
-  create(size_t chunkSize = DEFAULT_ARENA_SIZE)
-  {
-    size_t allocSize = sizeof(ArenaChunk) + chunkSize;
-    Arena newArena;
-    newArena.firstChunk = (ArenaChunk*)calloc(allocSize, 1);
-    newArena.isStackArena = false;
-    newArena.__initialized = true;
-    if (newArena.firstChunk == 0) {
-      panicSizeT("Arena chunk allocation of size {} failed", allocSize);
-    }
-    newArena.firstChunk->capacity = chunkSize;
-    print("Creating arena");
-    return newArena;
-  }
+  create(size_t chunkSize = DEFAULT_ARENA_SIZE);
 
-  [[nodiscard]] static Arena createFromBuffer(char* buffer, size_t bufferSize)
-  {
-    if (bufferSize <= sizeof(ArenaChunk)) {
-      panicStr("Cannot create arena from buffer: Buffer too small");
-    }
-    ArenaChunk* chunk = (ArenaChunk*)buffer;
-    chunk->nextChunk = 0;
-    chunk->capacity = bufferSize - sizeof(ArenaChunk);
-    chunk->used = 0;
-    memset((uint8_t*)chunk + sizeof(ArenaChunk), 0, chunk->capacity);
-
-    Arena arena;
-    arena.firstChunk = chunk;
-    arena.isStackArena = true;
-    arena.__initialized = true;
-    return arena;
-  }
+  [[nodiscard]] static Arena createFromBuffer(char* buffer, size_t bufferSize);
 
   void
-  enlarge(ArenaChunk** lastChunk, size_t chunkSize = DEFAULT_ARENA_SIZE)
-  {
-    print("Warning: Arena was enlarged. Consider more short-lived arenas to prevent excessive memory usage.");
-    if (!this->__initialized) {
-      panicStr("Arena was not properly initialized");
-    }
-    if (this->isStackArena) {
-      panicStr("Cannot enlarge a stack-based arena");
-    }
-    size_t allocSize = sizeof(ArenaChunk) + chunkSize;
-    (*lastChunk)->nextChunk = (ArenaChunk*)calloc(allocSize, 1);
-    if ((*lastChunk)->nextChunk == 0) {
-      panicSizeT("Arena chunk allocation of size {} failed", allocSize);
-    }
-    (*lastChunk) = (*lastChunk)->nextChunk;
-    (*lastChunk)->capacity = chunkSize;
-  }
+  enlarge(ArenaChunk** lastChunk, size_t chunkSize = DEFAULT_ARENA_SIZE);
 
   template <typename T>
   [[nodiscard]] T* allocate(size_t elementCount = 1)
@@ -107,40 +56,8 @@ struct Arena {
     return (T*)data;
   }
 
-  void free()
-  {
-    ArenaChunk* current = this->firstChunk;
-    while (current) {
-      ArenaChunk* next = current->nextChunk;
-      ::free(current);
-      current = next;
-    }
-    this->firstChunk = 0;
-    this->isStackArena = false;
-    this->__initialized = false;
-  }
-
-  void clearAndReinit()
-  {
-    if (!this->__initialized) {
-      *this = Arena::create();
-    } else {
-      // Clear every page except the first, and reset the first page
-      // This means when reiniting an arena, most of the time no allocation is necessary
-      ArenaChunk* current = this->firstChunk->nextChunk;
-      while (current) {
-        ArenaChunk* next = current->nextChunk;
-        ::free(current);
-        current = next;
-      }
-      this->firstChunk->nextChunk = 0;
-      this->firstChunk->used = 0;
-      memset((uint8_t*)this->firstChunk + sizeof(ArenaChunk), 0, this->firstChunk->capacity);
-    }
-  }
-
-  private:
-  bool __initialized;
+  void free();
+  void clearAndReinit();
 };
 
 template <size_t Size>
@@ -170,120 +87,38 @@ struct String {
 
   static const size_t npos = -1;
 
-  [[nodiscard]] String concat(Arena& arena, String other)
+  [[nodiscard]] String concat(Arena& arena, String other);
+
+  [[nodiscard]] size_t find(String delimiter, size_t startIndex);
+
+  [[nodiscard]] String substr(size_t startIndex, size_t count = npos) const;
+
+  [[nodiscard]] char get(size_t index);
+
+  [[nodiscard]] char operator[](size_t index);
+
+  [[nodiscard]] const char* c_str(Arena& arena);
+
+  [[nodiscard]] bool startsWith(String other) const;
+
+  [[nodiscard]] bool endsWith(String other) const;
+
+  [[nodiscard]] static String clone(Arena& arena, String string);
+
+  [[nodiscard]] static String clone(Arena& arena, const char* str);
+
+  [[nodiscard]] static String clone(Arena& arena, const char* str, size_t length);
+
+  [[nodiscard]] static String view(const char* str);
+
+  [[nodiscard]] static String view(const char* str, size_t length);
+
+  [[nodiscard]] bool operator==(String other);
+
+  String()
+      : data(0)
+      , length(0)
   {
-    char* buf = arena.allocate<char>(this->length + other.length + 1);
-    memcpy(buf, this->data, this->length);
-    memcpy(buf + this->length, other.data, other.length);
-    return String(buf, this->length + other.length);
-  }
-
-  [[nodiscard]] size_t find(String delimiter, size_t startIndex)
-  {
-    if (delimiter.length == 0 || startIndex >= length) {
-      return npos;
-    }
-    for (size_t i = startIndex; i <= length - delimiter.length; ++i) {
-      if (memcmp(data + i, delimiter.data, delimiter.length) == 0) {
-        return i;
-      }
-    }
-    return npos;
-  }
-
-  [[nodiscard]] String substr(size_t startIndex, size_t count = npos) const
-  {
-    if (startIndex >= length) {
-      return { nullptr, 0 };
-    }
-
-    if (count == npos || startIndex + count > length) {
-      count = length - startIndex;
-    }
-
-    return { data + startIndex, count };
-  }
-
-  [[nodiscard]] char get(size_t index)
-  {
-    if (index >= this->length) {
-      panicStr("String index access out of range");
-    }
-    return this->data[index];
-  }
-
-  [[nodiscard]] char operator[](size_t index)
-  {
-    return this->get(index);
-  }
-
-  [[nodiscard]] const char* c_str(Arena& arena)
-  {
-    String s = String::clone(arena, *this);
-    return s.data;
-  }
-
-  [[nodiscard]] bool startsWith(String other) const
-  {
-    if (this->length < other.length) {
-      return false;
-    }
-    for (size_t i = 0; i < other.length; i++) {
-      if (this->data[i] != other.data[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  [[nodiscard]] bool endsWith(String other) const
-  {
-    if (this->length < other.length) {
-      return false;
-    }
-    for (size_t i = 0; i < other.length; i++) {
-      if (this->data[this->length - other.length + i] != other.data[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  [[nodiscard]] static String clone(Arena& arena, String string)
-  {
-    char* buf = arena.allocate<char>(string.length + 1);
-    memcpy(buf, string.data, string.length);
-    return String(buf, string.length);
-  }
-
-  [[nodiscard]] static String clone(Arena& arena, const char* str)
-  {
-    return String::clone(arena, str, strlen(str));
-  }
-
-  [[nodiscard]] static String clone(Arena& arena, const char* str, size_t length)
-  {
-    char* buf = arena.allocate<char>(length + 1);
-    memcpy(buf, str, length);
-    return String(buf, length);
-  }
-
-  [[nodiscard]] static String view(const char* str)
-  {
-    return String(str, strlen(str));
-  }
-
-  [[nodiscard]] static String view(const char* str, size_t length)
-  {
-    return String(str, length);
-  }
-
-  [[nodiscard]] bool operator==(String other)
-  {
-    if (this->length != other.length) {
-      return false;
-    }
-    return 0 == memcmp(this->data, other.data, this->length);
   }
 
   private:
@@ -294,7 +129,7 @@ struct String {
   }
 };
 
-inline String operator""s(const char* str, size_t length)
+inline String operator""_s(const char* str, size_t length)
 {
   return String::view(str, length);
 }
@@ -305,8 +140,7 @@ void panic(const char* fmt, Args&&... args)
   Arena arena = Arena::create();
   String str = format(arena, fmt, args...);
   print_stderr("[FATAL] Thread panicked: {}", str);
-  fflush(stderr);
-  abort();
+  __panicImpl();
   arena.free();
 }
 
@@ -314,14 +148,14 @@ template <typename T>
 struct Optional {
 
   Optional()
+      : _hasValue(false)
   {
-    this->_hasValue = false;
   }
 
   Optional(T value)
+      : _value(value)
+      , _hasValue(true)
   {
-    this->_hasValue = true;
-    this->_value = value;
   }
 
   [[nodiscard]] T& value()
@@ -608,4 +442,4 @@ struct Pair {
   U second;
 };
 
-#endif // BASE_H
+#endif // STD_H

@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <cstddef>
 #include <dirent.h>
+#include <dlfcn.h>
 #include <errno.h>
 #include <linux/limits.h>
 #include <sys/stat.h>
@@ -87,4 +88,27 @@ Result<List<String>, SystemError> ListDirectory(Arena& arena, String path)
 
   closedir(dp);
   return list;
+}
+
+Result<void*, String> LoadLibrary(Arena& arena, String path)
+{
+  auto handle = dlopen(path.c_str(arena), RTLD_LAZY);
+  if (!handle) {
+    return String::clone(arena, dlerror());
+  }
+  return handle;
+}
+
+Result<void*, String> LoadLibraryFunc(Arena& arena, void* library, String funcname)
+{
+  auto func = dlsym(library, funcname.c_str(arena));
+  if (!func) {
+    return String::clone(arena, dlerror());
+  }
+  return func;
+}
+
+void UnloadLibrary(void* handle)
+{
+  dlclose(handle);
 }

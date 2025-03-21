@@ -1,6 +1,7 @@
 #ifndef APP_H
 #define APP_H
 
+#include "../app/clay/clay_renderer.h"
 #include "clay.h"
 #include "std.h"
 #include "stdlib.h"
@@ -11,6 +12,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <stdint.h>
+
 
 #include "shared.h"
 
@@ -49,12 +51,6 @@ struct Document {
 struct ClayVideoDemo_Arena {
   intptr_t offset;
   intptr_t memory;
-};
-
-struct Clay_SDL3RendererData {
-  SDL_Renderer* renderer;
-  TTF_TextEngine* textEngine;
-  List<Pair<TTF_Font*, int>> fonts;
 };
 
 struct UICache;

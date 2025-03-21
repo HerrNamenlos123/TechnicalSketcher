@@ -5,6 +5,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(TechnicalSketcher)
+include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,12 +19,18 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # set(SANITIZERS -fsanitize=memory)
 # set(SANITIZERS -fsanitize=undefined -fsanitize=memory -fsanitize=shadow-call-stack -fsanitize=integer -flto)
 
-set(COMMON_COMPILER_FLAGS -Wall -Wextra -fPIC -g -Wno-vla-cxx-extension -Wno-c++11-narrowing -I/usr/local/include -Wno-user-defined-literals -Werror -Wreturn-type -Wno-missing-designated-field-initializers -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -Wno-unused-but-set-variable)
+if (NOT MSVC)
+set(CLANG_FLAGS -Wall -Wextra -Wno-vla-cxx-extension -Wno-c++11-narrowing -Wno-user-defined-literals -Werror -Wreturn-type -Wno-missing-designated-field-initializers -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -Wno-unused-but-set-variable)
+endif()
+
+set(COMMON_COMPILER_FLAGS -I/usr/local/include ${CLANG_FLAGS})
+if (NOT MSVC)
 set(COMMON_LINKER_FLAGS  -Wl,--no-undefined)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(SDL3 REQUIRED sdl3)
+endif()
+# find_package(PkgConfig REQUIRED)
+# pkg_check_modules(SDL3 REQUIRED sdl3)
 set(SDL_COMPILER_FLAGS ${SDL3_CFLAGS})
-set(SDL_LINKER_FLAGS ${SDL3_LDFLAGS} -lSDL3_ttf -lSDL3_image)
+set(SDL_LINKER_FLAGS ${SDL3_LDFLAGS})
 
 # Shared Library
 add_library(shared OBJECT src/shared/shared.cpp)
@@ -37,10 +44,28 @@ target_compile_options(core PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS} ${SDL
 target_link_options(core PRIVATE ${SDL_LINKER_FLAGS} ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 
 # App Shared Library
-add_library(app EXCLUDE_FROM_ALL SHARED src/app/app.cpp $<TARGET_OBJECTS:shared>)
+add_library(app EXCLUDE_FROM_ALL SHARED src/app/app.cpp src/app/clay/clay_renderer.c $<TARGET_OBJECTS:shared>)
 target_compile_options(app PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS} ${SDL_COMPILER_FLAGS})
 target_link_options(app PRIVATE ${SDL_LINKER_FLAGS} ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 set_target_properties(app PROPERTIES OUTPUT_NAME "app" LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build")
+
+if (MSVC)
+target_compile_definitions(shared PUBLIC TSK_WINDOWS UNICODE)
+target_compile_options(shared PUBLIC /wd4244 /wd4267 /wd4838 /wd4305)
+else()
+target_compile_definitions(shared PUBLIC TSK_LINUX)
+endif ()
+
+find_package(SDL3 REQUIRED)
+find_package(SDL3_ttf REQUIRED)
+find_package(SDL3_image REQUIRED)
+
+target_link_libraries(core PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image)
+target_link_libraries(shared PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image)
+target_link_libraries(app PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image)
+
+target_link_libraries(core PRIVATE shared)
+target_link_libraries(app PRIVATE shared)
 
 # Custom Run Target
 add_custom_target(run
@@ -54,17 +79,3 @@ set_target_properties(core PROPERTIES OUTPUT_NAME "TechnicalSketcher")
 set_target_properties(core PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 set_target_properties(shared PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 set_target_properties(app PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
-
-# FMT library for proper string formatting
-include(FetchContent)
-FetchContent_Declare(
-        fmt
-        GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
-        GIT_TAG         11.1.4
-        GIT_PROGRESS    TRUE
-        USES_TERMINAL_DOWNLOAD TRUE
-)
-FetchContent_MakeAvailable(fmt)
-target_link_libraries(core PRIVATE fmt::fmt)
-target_link_libraries(shared PRIVATE fmt::fmt)
-target_link_libraries(app PRIVATE fmt::fmt)

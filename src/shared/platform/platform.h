@@ -32,4 +32,10 @@ enum struct SystemError {
 
 [[nodiscard]] extern Result<List<String>, SystemError> ListDirectory(Arena& arena, String path);
 
+[[nodiscard]] extern Result<void*, String> LoadLibrary(Arena& arena, String path);
+
+[[nodiscard]] extern Result<void*, String> LoadLibraryFunc(Arena& arena, void* library, String funcname);
+
+extern void UnloadLibrary(void* handle);
+
 #endif // TSK_PLATFORM_H
