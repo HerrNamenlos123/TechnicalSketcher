@@ -72,9 +72,9 @@ String format(Arena& arena, const char* fmt, Args&&... args)
     }
   }
 
-  printf("Formatted: '%s'", fmt);
+  printf("Formatted: '%s'\n", fmt);
   for (size_t i = 0; i < numFormatArgs; i++) {
-    printf("Arg %zu: '%s'", i, formatArgs[i].c_str(arena));
+    printf("Arg %zu: '%s'\n", i, formatArgs[i].c_str(arena));
   }
 
   //   format_impl(arena, 50, "");
@@ -104,7 +104,7 @@ void print_stderr(const char* fmt, Args&&... args)
   //   } catch (const std::exception& e) {
   //     result = fmt::format("{{{}}}", e.what());
   //   }
-  //   printf("%s\n", result.c_str());
+  fprintf(stderr, "%s\n", fmt);
 }
 
 #endif // FORMAT_H

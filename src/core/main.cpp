@@ -42,7 +42,13 @@ bool loadAppLib(App* app)
 {
   closeAppLib(app);
 
-  if (auto result = LoadLibrary(app->frameArena, "build/libapp.so"_s)) {
+#ifdef TSK_WINDOWS
+  String libraryPath = "build/Debug/app.dll"_s;
+#else
+  String libraryPath = "build/libapp.so"_s;
+#endif
+
+  if (auto result = LoadLibrary(app->frameArena, libraryPath)) {
     app->appLibraryHandle = result.unwrap();
   } else {
     print("Error loading library: {}", result.unwrap_error());
@@ -259,7 +265,7 @@ static SDL_AppResult InitApp(App* app)
   sizes.push(arena, 18);
   sizes.push(arena, 20);
   sizes.push(arena, 24);
-  FontData* fonts = app->persistentApplicationArena.allocate<FontData>(sizes.length);
+  app->rendererData.fonts = app->persistentApplicationArena.allocate<FontData>(sizes.length);
   app->rendererData.numberOfFonts = 0;
   for (auto size : sizes) {
     TTF_Font* font = TTF_OpenFont("resource/Roboto-Regular.ttf", size);
@@ -267,7 +273,7 @@ static SDL_AppResult InitApp(App* app)
       SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", SDL_GetError());
       return SDL_APP_FAILURE;
     }
-    fonts[app->rendererData.numberOfFonts++] = { font, size };
+    app->rendererData.fonts[app->rendererData.numberOfFonts++] = { font, size };
   }
 
   int w, h;
@@ -284,8 +290,12 @@ static SDL_AppResult InitApp(App* app)
 
   loadAppLib(app);
 
-  app->InitApp(app);
-  app->ResyncApp(app);
+  if (app->InitApp) {
+    app->InitApp(app);
+  }
+  if (app->ResyncApp) {
+    app->ResyncApp(app);
+  }
 
   return SDL_APP_CONTINUE;
 }
@@ -332,6 +342,7 @@ SDL_AppResult SDL_AppInit(void** _app, int argc, char* argv[])
   Arena mainArena = Arena::create();
   *_app = mainArena.allocate<App>();
   ((App*)(*_app))->persistentApplicationArena = mainArena;
+  ((App*)(*_app))->frameArena.clearAndReinit();
   return InitApp((App*)(*_app));
 }
 

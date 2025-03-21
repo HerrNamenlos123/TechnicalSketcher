@@ -320,7 +320,6 @@ static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text,
     void* _app)
 {
   App* app = (App*)_app;
-  auto& fonts = app->rendererData.fonts;
   FontData font = app->rendererData.fonts[0];
   for (size_t i = 0; i < app->rendererData.numberOfFonts; i++) {
     if (app->rendererData.fonts[i].size == config->fontSize) {
@@ -344,7 +343,7 @@ void HandleClayErrors(Clay_ErrorData errorData)
   printf("%s", errorData.errorText.chars);
 }
 
-extern "C" void ResyncApp(App* app)
+extern "C" __declspec(dllexport) void ResyncApp(App* app)
 {
   app->clayArena.clearAndReinit();
 
@@ -360,7 +359,7 @@ extern "C" void ResyncApp(App* app)
   Clay_SetMeasureTextFunction(SDL_MeasureText, app);
 }
 
-extern "C" void InitApp(App* app)
+extern "C" __declspec(dllexport) void InitApp(App* app)
 {
   COLORS.push(app->persistentApplicationArena, { "white"_s, Color(255, 255, 255, 255) });
   COLORS.push(app->persistentApplicationArena, { "black"_s, Color(0, 0, 0, 255) });
@@ -387,14 +386,14 @@ extern "C" void InitApp(App* app)
   app->documents.back().pageWidthPercentOfWindow = 70;
 }
 
-extern "C" void DestroyApp(App* app)
+extern "C" __declspec(dllexport) void DestroyApp(App* app)
 {
   for (auto& document : app->documents) {
     unloadDocument(app, document);
   }
 }
 
-extern "C" SDL_AppResult EventHandler(App* app, SDL_Event* event)
+extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event* event)
 {
   switch (event->type) {
   case SDL_EVENT_QUIT:
@@ -467,7 +466,7 @@ extern "C" SDL_AppResult EventHandler(App* app, SDL_Event* event)
   return SDL_APP_CONTINUE;
 }
 
-extern "C" void DrawUI(App* app)
+extern "C" __declspec(dllexport) void DrawUI(App* app)
 {
   RenderMainViewport(app);
 
