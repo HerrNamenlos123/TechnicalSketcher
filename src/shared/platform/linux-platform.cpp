@@ -1,15 +1,17 @@
 
 #include "platform.h"
-#include <cerrno>
-#include <cstddef>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <linux/limits.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
+#include "../format.h"
 #include "platform.h"
 
 #if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !_GNU_SOURCE

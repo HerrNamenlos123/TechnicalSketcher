@@ -1,5 +1,6 @@
 BasedOnStyle: WebKit
 IndentWidth: 2
+ColumnLimit: 120
 AllowShortFunctionsOnASingleLine: false
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false

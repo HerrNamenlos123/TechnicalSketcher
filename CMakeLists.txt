@@ -20,7 +20,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # set(SANITIZERS -fsanitize=undefined -fsanitize=memory -fsanitize=shadow-call-stack -fsanitize=integer -flto)
 
 if (NOT MSVC)
-set(CLANG_FLAGS -Wall -Wextra -Wno-vla-cxx-extension -Wno-c++11-narrowing -Wno-user-defined-literals -Werror -Wreturn-type -Wno-missing-designated-field-initializers -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -Wno-unused-but-set-variable)
+set(CLANG_FLAGS -g -Wall -Wextra -fdeclspec -Wno-ignored-attributes -Wno-vla-cxx-extension -Wno-c++11-narrowing -Wno-user-defined-literals -Werror -Wreturn-type -Wno-missing-designated-field-initializers -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -Wno-unused-but-set-variable -Wno-unused-function)
 endif()
 
 set(COMMON_COMPILER_FLAGS -I/usr/local/include ${CLANG_FLAGS})

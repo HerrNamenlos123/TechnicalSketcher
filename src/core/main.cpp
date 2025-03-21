@@ -114,7 +114,8 @@ static SDL_AppResult UpdateHotreload(App* app)
             }
           }
           if (!found) {
-            app->fileModificationDates.push(app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
+            app->fileModificationDates.push(
+                app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
           }
         }
       }
@@ -139,7 +140,8 @@ static SDL_AppResult UpdateHotreload(App* app)
             }
           }
           if (!found) {
-            app->fileModificationDates.push(app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
+            app->fileModificationDates.push(
+                app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
           }
         }
       }
@@ -160,7 +162,8 @@ static SDL_AppResult UpdateHotreload(App* app)
             }
           }
           if (!found) {
-            app->fileModificationDates.push(app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
+            app->fileModificationDates.push(
+                app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
           }
         }
       }
@@ -181,7 +184,8 @@ static SDL_AppResult UpdateHotreload(App* app)
             }
           }
           if (!found) {
-            app->fileModificationDates.push(app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
+            app->fileModificationDates.push(
+                app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
           }
         }
       }
@@ -236,12 +240,8 @@ static SDL_AppResult InitApp(App* app)
     return SDL_APP_FAILURE;
   }
 
-  if (!SDL_CreateWindowAndRenderer("examples/pen/drawing-lines",
-          (int)DEFAULT_WINDOW_SIZE.x,
-          (int)DEFAULT_WINDOW_SIZE.y,
-          0,
-          &app->window,
-          &app->rendererData.renderer)) {
+  if (!SDL_CreateWindowAndRenderer("examples/pen/drawing-lines", (int)DEFAULT_WINDOW_SIZE.x, (int)DEFAULT_WINDOW_SIZE.y,
+          0, &app->window, &app->rendererData.renderer)) {
     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }

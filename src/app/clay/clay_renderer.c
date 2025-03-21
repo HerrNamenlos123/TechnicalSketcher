@@ -330,8 +330,8 @@ void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Clay_Rende
       // SDL_DestroyTexture(texture);
       break;
     }
-    // default:
-      // SDL_Log("Unknown render command type: %d", rcmd->commandType);
+    default:
+      SDL_Log("Unknown render command type: %d", rcmd->commandType);
     }
   }
 }

@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <vadefs.h>
 
 Arena Arena::create(size_t chunkSize)
 {
@@ -208,8 +207,9 @@ bool String::operator==(String other)
   return 0 == memcmp(this->data, other.data, this->length);
 }
 
-void __panicImpl()
+void __panicImpl(String str)
 {
+  print_stderr("[FATAL] Thread panicked: {}", str);
   fflush(stderr);
   abort();
 }
@@ -225,4 +225,19 @@ void __format_vsnprintf(char* buffer, size_t bufferSize, const char* format, ...
 size_t __format_strlen(const char* str)
 {
   return strlen(str);
+}
+
+void* __memset(void* dest, int ch, size_t count)
+{
+  return memset(dest, ch, count);
+}
+
+void __format_output_stdout(String string)
+{
+  fwrite(string.data, 1, string.length, stdout);
+}
+
+void __format_output_stderr(String string)
+{
+  fwrite(string.data, 1, string.length, stderr);
 }

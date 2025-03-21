@@ -139,8 +139,7 @@ void panic(const char* fmt, Args&&... args)
 {
   Arena arena = Arena::create();
   String str = format(arena, fmt, args...);
-  print_stderr("[FATAL] Thread panicked: {}", str);
-  __panicImpl();
+  __panicImpl(str);
   arena.free();
 }
 
@@ -429,7 +428,7 @@ struct Array {
 
   void zeroFill()
   {
-    memset(this->_data, 0, sizeof(this->_data));
+    __memset(this->_data, 0, sizeof(this->_data));
   }
 
   private:

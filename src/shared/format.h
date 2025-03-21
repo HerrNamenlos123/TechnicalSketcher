@@ -3,108 +3,167 @@
 #define FORMAT_H
 
 #include "std.h"
+#include "stddecl.h"
 
-// Formatting:
-// {} - default formatting
-// The format_impl() function is called twice for formatting each argument.
-// On the first call, target is null and you must return the length of the formatted string.
-// Then, a buffer is allocated that is just large enough. Finally, format_impl() is called again with a buffer.
+const int FORMAT_MAX_FORMATTER_LENGTH = 20;
 
-static inline size_t format_value(int value, String formatString, Optional<char*> buffer, size_t remainingBufferSize)
+template <typename T> struct remove_cv_ref {
+  using type = T;
+};
+
+template <typename T> struct remove_cv_ref<const T> {
+  using type = T;
+};
+
+template <typename T> struct remove_cv_ref<volatile T> {
+  using type = T;
+};
+
+template <typename T> struct remove_cv_ref<const volatile T> {
+  using type = T;
+};
+
+template <typename T> struct remove_cv_ref<T&> {
+  using type = T;
+};
+
+template <typename T> struct remove_cv_ref<const T&> {
+  using type = T;
+};
+
+template <typename T> struct remove_cv_ref<volatile T&> {
+  using type = T;
+};
+
+template <typename T> struct remove_cv_ref<const volatile T&> {
+  using type = T;
+};
+
+// Custom is_same implementation that ignores const, volatile, and references
+template <typename T, typename U> struct is_same {
+  static const bool value = false;
+};
+
+template <typename T> struct is_same<T, T> {
+  static const bool value = true;
+};
+
+template <typename T, typename U>
+inline constexpr bool is_same_v = is_same<typename remove_cv_ref<T>::type, typename remove_cv_ref<U>::type>::value;
+
+template <typename T> size_t format_value(T value, String formatArg, char* buffer, size_t remainingBufferSize)
 {
-  if (buffer) {
-    __format_vsnprintf(buffer.value(), remainingBufferSize, "%d", value);
-    return __format_strlen(buffer.value());
-  } else {
-    char buffer[21] = { 0 };
-    __format_vsnprintf(buffer, sizeof(buffer) - 1, "%d", value);
+  if constexpr (is_same_v<T, int>) {
+    __format_vsnprintf(buffer, remainingBufferSize, "%d", value);
     return __format_strlen(buffer);
+  } else if constexpr (is_same_v<T, double>) {
+    __format_vsnprintf(buffer, remainingBufferSize, "%lf", value);
+    return __format_strlen(buffer);
+  } else if constexpr (is_same_v<T, unsigned long>) {
+    __format_vsnprintf(buffer, remainingBufferSize, "%lu", value);
+    return __format_strlen(buffer);
+  } else if constexpr (is_same_v<T, float>) {
+    __format_vsnprintf(buffer, remainingBufferSize, "%f", value);
+    return __format_strlen(buffer);
+  } else if constexpr (is_same_v<T, String>) {
+    for (size_t i = 0; i < value.length; i++) {
+      if (i < remainingBufferSize) {
+        buffer[i] = value.data[i];
+      }
+    }
+    return value.length;
+  } else if constexpr (is_same_v<T, const char*>) {
+    __format_vsnprintf(buffer, remainingBufferSize, "%s", value);
+    return __format_strlen(buffer);
+  } else if constexpr (is_same_v<T, char*>) {
+    __format_vsnprintf(buffer, remainingBufferSize, "%s", value);
+    return __format_strlen(buffer);
+  } else {
+    static_assert(false, "No formatter available for this type");
   }
 }
 
 template <typename... Args>
-String format_impl(Arena& arena, const char* fmt)
+void format_impl(String formatStr, int currentArg, int desiredArg, char* buf, size_t bufsize, size_t& currentLength)
 {
 }
 
 template <typename T, typename... Args>
-String format_impl(Arena& arena, const char* fmt, Optional<char*> buffer, T&& value, Args&&... args)
+void format_impl(String formatStr, int currentArg, int desiredArg, char* buf, size_t bufsize, size_t& currentLength,
+    T&& value, Args&&... args)
 {
-  if (buffer) {
-
+  if (currentArg == desiredArg) {
+    size_t size = format_value(value, formatStr, buf + currentLength, bufsize - currentLength);
+    currentLength += size;
   } else {
-    size_t requiredSize = format_value(value, "", {}, 0);
-    return format_impl(arena, fmt, args...);
+    format_impl(formatStr, currentArg + 1, desiredArg, buf, bufsize, currentLength, args...);
   }
 }
 
-#include <stdio.h>
-
-template <typename... Args>
-String format(Arena& arena, const char* fmt, Args&&... args)
+inline void __format_concat(char* buf, size_t& buflen, size_t maxBufferLength, char* src, size_t len)
 {
-  // I don't want to use dynamic allocations to keep the main arena clean,
-  // hence just use a fixed size buffer and limit the maximum number of arguments.
-  Array<char[20], 20> formatArgsBuf;
-  Array<String, 20> formatArgs;
-  size_t numFormatArgs = 0;
+  for (size_t i = 0; i < len; i++) {
+    if (buflen < maxBufferLength) {
+      buf[buflen++] = src[i];
+    }
+  }
+}
+
+template <size_t MaxSize = 8192, typename... Args> String format(Arena& arena, const char* fmt, Args&&... args)
+{
+  char buf[MaxSize];
+  size_t buflen = 0;
+  char formatStr[FORMAT_MAX_FORMATTER_LENGTH];
+  size_t formatStrLength = 0;
+  size_t argIndex = 0;
 
   bool isParsingArg = false;
   size_t fmtLen = __format_strlen(fmt);
   for (size_t i = 0; i < fmtLen; i++) {
+    char c = fmt[i];
+    char cnext = i != fmtLen - 1 ? fmt[i + 1] : '\0';
     if (!isParsingArg) {
-      if (fmt[i] == '{') {
+      if (c == '{' && cnext != '{') {
         isParsingArg = true;
-        formatArgs[numFormatArgs] = String::view(formatArgsBuf[numFormatArgs], 0);
+        formatStrLength = 0;
+      } else if (c == '{' && cnext == '{') {
+        __format_concat(buf, buflen, MaxSize, &c, 1);
+        i++;
+      } else if (c == '}' && cnext == '}') {
+        __format_concat(buf, buflen, MaxSize, &c, 1);
+        i++;
+      } else {
+        __format_concat(buf, buflen, MaxSize, &c, 1);
       }
     } else {
-      if (fmt[i] == '{') {
+      if (c == '}') {
         isParsingArg = false;
-      } else if (fmt[i] == '}') {
-        isParsingArg = false;
-        numFormatArgs++;
+        format_impl(String::view(formatStr, formatStrLength), 0, argIndex, buf, MaxSize, buflen, args...);
+        argIndex++;
       } else {
-        if (formatArgs[numFormatArgs].length < sizeof(formatArgsBuf[numFormatArgs])) {
-          formatArgsBuf[numFormatArgs][formatArgs[numFormatArgs].length] = fmt[i];
-          formatArgs[numFormatArgs].length++;
+        if (formatStrLength < FORMAT_MAX_FORMATTER_LENGTH) {
+          formatStr[formatStrLength++] = fmt[i];
         }
       }
     }
   }
-
-  printf("Formatted: '%s'\n", fmt);
-  for (size_t i = 0; i < numFormatArgs; i++) {
-    printf("Arg %zu: '%s'\n", i, formatArgs[i].c_str(arena));
-  }
-
-  //   format_impl(arena, 50, "");
-  // std::string result = fmt::format(fmt::runtime(fmt), std::forward<Args>(args)...);
-  //   return String::clone(arena, result.c_str(), result.length());
-  return "[formatted]"_s;
+  return String::clone(arena, buf, buflen);
 }
 
-template <typename... Args>
-void print(const char* fmt, Args&&... args)
+template <size_t MaxSize = 8192, typename... Args> void print(const char* fmt, Args&&... args)
 {
-  //   std::string result;
-  //   try {
-  //     result = fmt::format(fmt::runtime(fmt), std::forward<Args>(args)...);
-  //   } catch (const std::exception& e) {
-  //     result = fmt::format("{{{}}}", e.what());
-  //   }
-  //   printf("%s\n", result.c_str());
+  StackArena<MaxSize> arena;
+  String result = format(arena, fmt, args...);
+  __format_output_stdout(result);
+  __format_output_stdout("\n"_s);
 }
 
-template <typename... Args>
-void print_stderr(const char* fmt, Args&&... args)
+template <size_t MaxSize = 8192, typename... Args> void print_stderr(const char* fmt, Args&&... args)
 {
-  //   std::string result;
-  //   try {
-  //     result = fmt::format(fmt::runtime(fmt), std::forward<Args>(args)...);
-  //   } catch (const std::exception& e) {
-  //     result = fmt::format("{{{}}}", e.what());
-  //   }
-  fprintf(stderr, "%s\n", fmt);
+  StackArena<MaxSize> arena;
+  String result = format(arena, fmt, args...);
+  __format_output_stderr(result);
+  __format_output_stderr("\n"_s);
 }
 
 #endif // FORMAT_H

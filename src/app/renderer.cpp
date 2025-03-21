@@ -32,10 +32,12 @@ Vec2 CatmullRomSection(float t, const Vec2& p0, const Vec2& p1, const Vec2& p2, 
   float t2 = t * t;
   float t3 = t2 * t;
 
-  return {
-    0.5f * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
-    0.5f * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)
-  };
+  return { 0.5f
+        * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2
+            + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+    0.5f
+        * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2
+            + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3) };
 }
 
 List<Vec2> MakeSplinePoints(Arena& arena, List<Vec2> points, float tolerance)
@@ -52,7 +54,8 @@ List<Vec2> MakeSplinePoints(Arena& arena, List<Vec2> points, float tolerance)
   splinePoints.push(arena, points[points.length - 1] - (points[points.length - 2] - points[points.length - 1]));
   for (int i = 0; i < points.length - 1; i++) {
     for (float t = 0; t < 1; t += 0.1f) {
-      result.push(arena, CatmullRomSection(t, splinePoints[i], splinePoints[i + 1], splinePoints[i + 2], splinePoints[i + 3]));
+      result.push(
+          arena, CatmullRomSection(t, splinePoints[i], splinePoints[i + 1], splinePoints[i + 2], splinePoints[i + 3]));
     }
   }
   result.push(arena, splinePoints[splinePoints.length - 2]);
@@ -96,7 +99,8 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
     if (centerPoints.length > 0) {
       auto alpha = 0.5;
       Vec2 lastPoint = centerPoints.back();
-      Vec2 newPoint = Vec2(lastPoint.x * (1 - alpha) + point.pos.x * alpha, lastPoint.y * (1 - alpha) + point.pos.y * alpha);
+      Vec2 newPoint
+          = Vec2(lastPoint.x * (1 - alpha) + point.pos.x * alpha, lastPoint.y * (1 - alpha) + point.pos.y * alpha);
       centerPoints.push(app->frameArena, newPoint);
     } else {
       centerPoints.push(app->frameArena, point.pos);
@@ -105,8 +109,7 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
   }
   centerPoints = rdp(app->frameArena, centerPoints, 0.2);
 
-  List<Vec2>
-      centerSplines = MakeSplinePoints(app->frameArena, centerPoints, 0.1);
+  List<Vec2> centerSplines = MakeSplinePoints(app->frameArena, centerPoints, 0.1);
   for (size_t i = 0; i < centerSplines.length - 1; i++) {
     DrawLine(app, centerSplines[i] * pageProj, centerSplines[i + 1] * pageProj, "#F00");
     DrawPoint(app, centerSplines[i] * pageProj, "#0F0");
@@ -117,7 +120,8 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
   for (size_t i = 0; i < centerSplines.length - 1; i++) {
     auto& pos = centerSplines[i];
     float lengthProgress = (float)i / (centerSplines.length - 1);
-    float thickness = thicknessProfile[(size_t)clamp(floor(lengthProgress * thicknessProfile.length), 0, thicknessProfile.length)];
+    float thickness
+        = thicknessProfile[(size_t)clamp(floor(lengthProgress * thicknessProfile.length), 0, thicknessProfile.length)];
     Vec2 nextPos = centerSplines[i + 1];
 
     Vec2 posPx = pos * pageProj;
@@ -217,12 +221,11 @@ void RenderPage(App* appstate, Document& document, Page& page)
   int gridSpacing = 5;
 
   SDL_SetRenderTarget(renderer, page.canvas);
-  SDL_SetRenderDrawColor(renderer, document.paperColor.r, document.paperColor.g,
-      document.paperColor.b, document.paperColor.a);
+  SDL_SetRenderDrawColor(
+      renderer, document.paperColor.r, document.paperColor.g, document.paperColor.b, document.paperColor.a);
   SDL_RenderFillRect(renderer, NULL);
 
-  SDL_SetRenderDrawColor(renderer, PAGE_GRID_COLOR.r, PAGE_GRID_COLOR.g,
-      PAGE_GRID_COLOR.b, PAGE_GRID_COLOR.a);
+  SDL_SetRenderDrawColor(renderer, PAGE_GRID_COLOR.r, PAGE_GRID_COLOR.g, PAGE_GRID_COLOR.b, PAGE_GRID_COLOR.a);
   for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
     float x_px = x_mm / 210.0 * pageWidthPx;
     SDL_RenderLine(renderer, x_px, 0, x_px, pageHeightPx);
@@ -253,11 +256,9 @@ void RenderDocuments(App* app)
         SDL_DestroyTexture(page.canvas);
       }
       page.canvas = SDL_CreateTexture(
-          app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32,
-          SDL_TEXTUREACCESS_TARGET, pageWidthPx, pageHeightPx);
+          app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, pageWidthPx, pageHeightPx);
       if (!page.canvas) {
-        fprintf(stderr, "Failed to create SDL texture for page\n");
-        abort();
+        panic("Failed to create SDL texture for page");
       }
     }
 
@@ -269,14 +270,11 @@ void RenderDocuments(App* app)
 
       auto renderer = app->rendererData.renderer;
       SDL_SetRenderTarget(renderer, app->mainDocumentRenderTexture);
-      SDL_FRect destRect = { pageXOffset, pageYOffset, page.canvas->w,
-        page.canvas->h };
+      SDL_FRect destRect = { pageXOffset, pageYOffset, page.canvas->w, page.canvas->h };
       SDL_RenderTexture(renderer, page.canvas, NULL, &destRect);
-      SDL_SetRenderDrawColor(renderer, PAGE_OUTLINE_COLOR.r,
-          PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b,
-          PAGE_OUTLINE_COLOR.a);
-      SDL_FRect outlineRect = { pageXOffset, pageYOffset, page.canvas->w,
-        page.canvas->h };
+      SDL_SetRenderDrawColor(
+          renderer, PAGE_OUTLINE_COLOR.r, PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b, PAGE_OUTLINE_COLOR.a);
+      SDL_FRect outlineRect = { pageXOffset, pageYOffset, page.canvas->w, page.canvas->h };
       SDL_RenderRect(renderer, &outlineRect);
       SDL_SetRenderTarget(renderer, NULL);
     }
@@ -287,37 +285,33 @@ void RenderDocuments(App* app)
 
 void RenderMainViewport(App* app)
 {
-  if (!app->mainDocumentRenderTexture || app->mainDocumentRenderTexture->w != app->mainViewportBB.width || app->mainDocumentRenderTexture->h != app->mainViewportBB.height) {
+  if (!app->mainDocumentRenderTexture || app->mainDocumentRenderTexture->w != app->mainViewportBB.width
+      || app->mainDocumentRenderTexture->h != app->mainViewportBB.height) {
     auto size = app->mainViewportBB;
     if (app->mainDocumentRenderTexture) {
       SDL_DestroyTexture(app->mainDocumentRenderTexture);
     }
     int w = tsk_max(size.width, 1.f);
     int h = tsk_max(size.height, 1.f);
-    app->mainDocumentRenderTexture = SDL_CreateTexture(
-        app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32,
-        SDL_TEXTUREACCESS_TARGET, w, h);
+    app->mainDocumentRenderTexture
+        = SDL_CreateTexture(app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
     if (!app->mainDocumentRenderTexture) {
-      fprintf(stderr, "Failed to create SDL texture for viewport\n");
-      abort();
+      panic("Failed to create SDL texture for viewport");
     }
   }
 
   auto renderer = app->rendererData.renderer;
   auto texture = app->mainDocumentRenderTexture;
   SDL_SetRenderTarget(renderer, texture);
-  SDL_SetRenderDrawColor(renderer, APP_BACKGROUND_COLOR.r,
-      APP_BACKGROUND_COLOR.g, APP_BACKGROUND_COLOR.b,
-      APP_BACKGROUND_COLOR.a);
+  SDL_SetRenderDrawColor(
+      renderer, APP_BACKGROUND_COLOR.r, APP_BACKGROUND_COLOR.g, APP_BACKGROUND_COLOR.b, APP_BACKGROUND_COLOR.a);
   SDL_RenderClear(renderer);
 
   RenderDocuments(app);
   SDL_SetRenderTarget(renderer, NULL);
 }
 
-static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text,
-    Clay_TextElementConfig* config,
-    void* _app)
+static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextElementConfig* config, void* _app)
 {
   App* app = (App*)_app;
   FontData font = app->rendererData.fonts[0];
@@ -331,8 +325,7 @@ static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text,
   int width, height;
 
   if (!TTF_GetStringSize(font.font, text.chars, text.length, &width, &height)) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to measure text: %s",
-        SDL_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to measure text: %s", SDL_GetError());
   }
 
   return Clay_Dimensions { (float)width, (float)height };
@@ -340,7 +333,7 @@ static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text,
 
 void HandleClayErrors(Clay_ErrorData errorData)
 {
-  printf("%s", errorData.errorText.chars);
+  print("{}", errorData.errorText.chars);
 }
 
 extern "C" __declspec(dllexport) void ResyncApp(App* app)
@@ -354,8 +347,7 @@ extern "C" __declspec(dllexport) void ResyncApp(App* app)
   int width, height;
   SDL_GetWindowSize(app->window, &width, &height);
 
-  Clay_Initialize(clayMemory, Clay_Dimensions { (float)width, (float)height },
-      Clay_ErrorHandler { HandleClayErrors });
+  Clay_Initialize(clayMemory, Clay_Dimensions { (float)width, (float)height }, Clay_ErrorHandler { HandleClayErrors });
   Clay_SetMeasureTextFunction(SDL_MeasureText, app);
 }
 
@@ -401,23 +393,19 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
     break;
 
   case SDL_EVENT_WINDOW_RESIZED:
-    Clay_SetLayoutDimensions(Clay_Dimensions { (float)event->window.data1,
-        (float)event->window.data2 });
+    Clay_SetLayoutDimensions(Clay_Dimensions { (float)event->window.data1, (float)event->window.data2 });
     break;
 
   case SDL_EVENT_MOUSE_MOTION:
-    Clay_SetPointerState(Clay_Vector2 { event->motion.x, event->motion.y },
-        event->motion.state & SDL_BUTTON_LMASK);
+    Clay_SetPointerState(Clay_Vector2 { event->motion.x, event->motion.y }, event->motion.state & SDL_BUTTON_LMASK);
     break;
 
   case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    Clay_SetPointerState(Clay_Vector2 { event->button.x, event->button.y },
-        event->button.button == SDL_BUTTON_LEFT);
+    Clay_SetPointerState(Clay_Vector2 { event->button.x, event->button.y }, event->button.button == SDL_BUTTON_LEFT);
     break;
 
   case SDL_EVENT_MOUSE_WHEEL:
-    Clay_UpdateScrollContainers(
-        true, Clay_Vector2 { event->wheel.x, event->wheel.y }, 0.01f);
+    Clay_UpdateScrollContainers(true, Clay_Vector2 { event->wheel.x, event->wheel.y }, 0.01f);
     break;
 
   case SDL_EVENT_FINGER_DOWN:
