@@ -7,6 +7,7 @@
 #include "ui.cpp"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_stdinc.h>
@@ -16,6 +17,14 @@
 const auto PAGE_OUTLINE_COLOR = Color("#888");
 const auto APP_BACKGROUND_COLOR = Color("#DDD");
 const auto PAGE_GRID_COLOR = Color("#A8C9E3");
+
+struct GLRenderState {
+  GLint vbo;
+  GLint vao;
+  GLint fbo;
+  GLint rbo;
+  GLint viewport[4];
+};
 
 const char* vertexShaderSrc = R"(
 #version 330 core
@@ -250,80 +259,28 @@ void RenderShapesOnPage(App* app, Document& document, Page& page)
 
   Vec2 bbSize = bottomRight - topLeft;
   Vec2 bbSizePx = bbSize * pageProj;
+}
 
-  GLuint fbo, glTexture;
+GLRenderState saveRenderState()
+{
+  GLRenderState state;
 
-  glUseProgram(app->lineshapeShaderprogram);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &state.fbo);
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &state.vao);
+  glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &state.vbo);
+  glGetIntegerv(GL_RENDERBUFFER_BINDING, &state.rbo);
+  glGetIntegerv(GL_VIEWPORT, state.viewport);
 
-  GLint prevFBO = 0;
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
-  GLint prevVAO = 0;
-  GLint prevVBO = 0;
-  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prevVAO);
-  glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prevVBO);
+  return state;
+}
 
-  glGenFramebuffers(1, &fbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-  GLuint tex;
-  glGenTextures(1, &tex);
-  glBindTexture(GL_TEXTURE_2D, tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->pageSoftwareTexture->w, app->pageSoftwareTexture->h, 0, GL_RGBA,
-      GL_UNSIGNED_BYTE, nullptr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
-
-  GLuint rbo;
-  glGenRenderbuffers(1, &rbo);
-  glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, app->pageSoftwareTexture->w, app->pageSoftwareTexture->h);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    SDL_Log("Framebuffer not complete!");
-    return;
-  }
-
-  float vertices[] = { -0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f };
-  GLuint VAO, VBO;
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-
-  // glBindVertexArray(VAO);
-  // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-  // glEnableVertexAttribArray(0);
-
-  // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-  // glViewport(0, 0, app->pageSoftwareTexture->w, app->pageSoftwareTexture->h);
-  // glClearColor(0, 0, 0, 0.f);
-  // glClear(GL_COLOR_BUFFER_BIT);
-  // glDrawArrays(GL_TRIANGLES, 0, 3);
-
-  // unsigned char* buf
-  //     = app->frameArena.allocate<unsigned char>(app->pageSoftwareTexture->w * app->pageSoftwareTexture->h * 4);
-  // glReadPixels(0, 0, app->pageSoftwareTexture->w, app->pageSoftwareTexture->h, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-
-  // glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-  // glBindBuffer(GL_ARRAY_BUFFER, prevVBO);
-  // glBindVertexArray(prevVAO);
-  // glDisableVertexAttribArray(0);
-
-  // void* pixels;
-  // int pitch;
-  // SDL_LockTexture(app->pageSoftwareTexture, NULL, &pixels, &pitch);
-  // memcpy(pixels, buf, pitch * app->pageSoftwareTexture->h);
-  // SDL_UnlockTexture(app->pageSoftwareTexture);
-  // SDL_RenderTexture(renderer, app->pageSoftwareTexture, NULL, NULL);
-
-  glDeleteTextures(1, &tex);
-  glDeleteFramebuffers(1, &fbo);
-  glDeleteRenderbuffers(1, &rbo);
-  glDeleteVertexArrays(1, &VAO);
-  glDeleteBuffers(1, &VBO);
-  // // glUseProgram(0);
+void restoreRenderState(GLRenderState state)
+{
+  glBindFramebuffer(GL_FRAMEBUFFER, state.fbo);
+  glBindVertexArray(state.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, state.vbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, state.rbo);
+  glViewport(state.viewport[0], state.viewport[1], state.viewport[2], state.viewport[3]);
 }
 
 void RenderPage(App* app, Document& document, Page& page)
@@ -333,22 +290,22 @@ void RenderPage(App* app, Document& document, Page& page)
   int pageHeightPx = pageWidthPx * 297 / 210;
   int gridSpacing = 5;
 
-  SDL_SetRenderTarget(renderer, app->pageRenderTarget);
-  SDL_SetRenderDrawColor(
-      renderer, document.paperColor.r, document.paperColor.g, document.paperColor.b, document.paperColor.a);
-  SDL_RenderFillRect(renderer, NULL);
+  // SDL_SetRenderTarget(renderer, app->pageRenderTarget);
+  // SDL_SetRenderDrawColor(
+  //     renderer, document.paperColor.r, document.paperColor.g, document.paperColor.b, document.paperColor.a);
+  // SDL_RenderFillRect(renderer, NULL);
 
-  SDL_SetRenderDrawColor(renderer, PAGE_GRID_COLOR.r, PAGE_GRID_COLOR.g, PAGE_GRID_COLOR.b, PAGE_GRID_COLOR.a);
-  for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
-    float x_px = x_mm / 210.0 * pageWidthPx;
-    SDL_RenderLine(renderer, x_px, 0, x_px, pageHeightPx);
-  }
-  for (int y_mm = 0; y_mm < 297; y_mm += gridSpacing) {
-    float y_px = y_mm / 297.0 * pageHeightPx;
-    SDL_RenderLine(renderer, 0, y_px, pageWidthPx, y_px);
-  }
+  // SDL_SetRenderDrawColor(renderer, PAGE_GRID_COLOR.r, PAGE_GRID_COLOR.g, PAGE_GRID_COLOR.b, PAGE_GRID_COLOR.a);
+  // for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
+  //   float x_px = x_mm / 210.0 * pageWidthPx;
+  //   SDL_RenderLine(renderer, x_px, 0, x_px, pageHeightPx);
+  // }
+  // for (int y_mm = 0; y_mm < 297; y_mm += gridSpacing) {
+  //   float y_px = y_mm / 297.0 * pageHeightPx;
+  //   SDL_RenderLine(renderer, 0, y_px, pageWidthPx, y_px);
+  // }
 
-  RenderShapesOnPage(app, document, page);
+  // RenderShapesOnPage(app, document, page);
 
   SDL_SetRenderTarget(renderer, NULL);
 }
@@ -364,43 +321,48 @@ void RenderDocuments(App* app)
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
   for (auto& page : document.pages) {
-    if (!app->pageRenderTarget || app->pageRenderTarget->w != pageWidthPx || app->pageRenderTarget->h != pageHeightPx) {
-      if (app->pageRenderTarget) {
-        SDL_DestroyTexture(app->pageRenderTarget);
-      }
-      app->pageRenderTarget = SDL_CreateTexture(
-          app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, pageWidthPx, pageHeightPx);
-      if (!app->pageRenderTarget) {
-        panic("Failed to create SDL texture for page");
-      }
-    }
-    if (!app->pageSoftwareTexture || app->pageSoftwareTexture->w != pageWidthPx
-        || app->pageSoftwareTexture->h != pageHeightPx) {
-      if (app->pageSoftwareTexture) {
-        SDL_DestroyTexture(app->pageSoftwareTexture);
-      }
-      app->pageSoftwareTexture = SDL_CreateTexture(
-          app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, pageWidthPx, pageHeightPx);
-      if (!app->pageSoftwareTexture) {
-        panic("Failed to create SDL software texture for page");
-      }
-    }
+    // if (!app->pageRenderTarget || app->pageRenderTarget->w != pageWidthPx || app->pageRenderTarget->h !=
+    // pageHeightPx) {
+    //   print("");
+    //   if (app->pageRenderTarget) {
+    //     SDL_DestroyTexture(app->pageRenderTarget);
+    //     print("Delete texture");
+    //   }
+    //   app->pageRenderTarget = SDL_CreateTexture(
+    //       app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, pageWidthPx, pageHeightPx);
+    //   print("Create texture {} {}", pageWidthPx, pageHeightPx);
+    //   if (!app->pageRenderTarget) {
+    //     panic("Failed to create SDL texture for page");
+    //   }
+    // }
+    // if (!app->pageSoftwareTexture || app->pageSoftwareTexture->w != pageWidthPx
+    //     || app->pageSoftwareTexture->h != pageHeightPx) {
+    //   if (app->pageSoftwareTexture) {
+    //     SDL_DestroyTexture(app->pageSoftwareTexture);
+    //   }
+    //   // app->pageSoftwareTexture = SDL_CreateTexture(
+    //   //     app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, pageWidthPx,
+    //   //     pageHeightPx);
+    //   // if (!app->pageSoftwareTexture) {
+    //   //   panic("Failed to create SDL software texture for page");
+    //   // }
+    // }
 
     Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
     Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
     auto bb = app->mainViewportBB;
     if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
-      RenderPage(app, document, page);
+      // RenderPage(app, document, page);
 
-      auto renderer = app->rendererData.renderer;
-      SDL_SetRenderTarget(renderer, app->mainViewportRenderTexture);
-      SDL_FRect destRect = { pageXOffset, pageYOffset, app->pageRenderTarget->w, app->pageRenderTarget->h };
-      SDL_RenderTexture(renderer, app->pageRenderTarget, NULL, &destRect);
-      SDL_SetRenderDrawColor(
-          renderer, PAGE_OUTLINE_COLOR.r, PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b, PAGE_OUTLINE_COLOR.a);
-      SDL_FRect outlineRect = { pageXOffset, pageYOffset, app->pageRenderTarget->w, app->pageRenderTarget->h };
-      SDL_RenderRect(renderer, &outlineRect);
-      SDL_SetRenderTarget(renderer, NULL);
+      // auto renderer = app->rendererData.renderer;
+      // SDL_SetRenderTarget(renderer, app->mainViewportRenderTexture);
+      // SDL_FRect destRect = { pageXOffset, pageYOffset, app->pageRenderTarget->w, app->pageRenderTarget->h };
+      // SDL_RenderTexture(renderer, app->pageRenderTarget, NULL, &destRect);
+      // SDL_SetRenderDrawColor(
+      //     renderer, PAGE_OUTLINE_COLOR.r, PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b, PAGE_OUTLINE_COLOR.a);
+      // SDL_FRect outlineRect = { pageXOffset, pageYOffset, app->pageRenderTarget->w, app->pageRenderTarget->h };
+      // SDL_RenderRect(renderer, &outlineRect);
+      // SDL_SetRenderTarget(renderer, NULL);
     }
 
     pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100;
@@ -409,44 +371,78 @@ void RenderDocuments(App* app)
 
 void RenderMainViewport(App* app)
 {
-  if (!app->mainViewportRenderTexture || app->mainViewportRenderTexture->w != app->mainViewportBB.width
-      || app->mainViewportRenderTexture->h != app->mainViewportBB.height) {
+  if (!app->mainViewportSoftwareTexture || app->mainViewportSoftwareTexture->w != app->mainViewportBB.width
+      || app->mainViewportSoftwareTexture->h != app->mainViewportBB.height) {
     auto size = app->mainViewportBB;
-    if (app->mainViewportRenderTexture) {
-      SDL_DestroyTexture(app->mainViewportRenderTexture);
+    if (app->mainViewportSoftwareTexture) {
+      SDL_DestroyTexture(app->mainViewportSoftwareTexture);
     }
     int w = tsk_max(size.width, 1.f);
     int h = tsk_max(size.height, 1.f);
-    app->mainViewportRenderTexture
-        = SDL_CreateTexture(app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
-    if (!app->mainViewportRenderTexture) {
-      panic("Failed to create SDL texture for viewport");
+    app->mainViewportSoftwareTexture
+        = SDL_CreateTexture(app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
+    if (!app->mainViewportSoftwareTexture) {
+      panic("Failed to create SDL texture for viewport: {} {}", w, h);
     }
-  }
-  if (!app->lineshapeShaderprogram) {
-    GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSrc);
-    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
-    app->lineshapeShaderprogram = glCreateProgram();
-    glAttachShader(app->lineshapeShaderprogram, vertexShader);
-    glAttachShader(app->lineshapeShaderprogram, fragmentShader);
-    glLinkProgram(app->lineshapeShaderprogram);
-    GLint linkStatus;
-    glGetProgramiv(app->lineshapeShaderprogram, GL_LINK_STATUS, &linkStatus);
-    if (linkStatus != GL_TRUE) {
-      print("Failed to build shaders");
+
+    glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glRenderbufferStorage(
+        GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, app->mainViewportRBO);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      SDL_Log("Framebuffer not complete!");
+      return;
     }
-    print("Made shader");
   }
 
+  GLRenderState renderState = saveRenderState();
   auto renderer = app->rendererData.renderer;
-  auto texture = app->mainViewportRenderTexture;
-  SDL_SetRenderTarget(renderer, texture);
-  SDL_SetRenderDrawColor(
-      renderer, APP_BACKGROUND_COLOR.r, APP_BACKGROUND_COLOR.g, APP_BACKGROUND_COLOR.b, APP_BACKGROUND_COLOR.a);
-  SDL_RenderClear(renderer);
+  glUseProgram(app->lineshapeShaderprogram);
 
-  RenderDocuments(app);
-  SDL_SetRenderTarget(renderer, NULL);
+  // glBindFramebuffer(GL_FRAMEBUFFER, app->mainViewportFBO);
+  // glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
+  // glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
+
+  // glBindVertexArray(app->mainViewportVAO);
+  // glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+  // glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
+  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, app->mainViewportTEX, 0);
+
+  // float vertices[] = { -0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f };
+
+  // glBindVertexArray(app->mainViewportVAO);
+  // glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+  // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+  // glEnableVertexAttribArray(0);
+
+  // glBindFramebuffer(GL_FRAMEBUFFER, app->mainViewportFBO);
+  // glViewport(0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h);
+  // glClearColor(0, 0, 0, 0.f);
+  // glClear(GL_COLOR_BUFFER_BIT);
+  // glDrawArrays(GL_TRIANGLES, 0, 3);
+
+  // unsigned char* buf = app->frameArena.allocate<unsigned char>(
+  //     app->mainViewportSoftwareTexture->w * app->mainViewportSoftwareTexture->h * 4);
+  // glReadPixels(
+  //     0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h, GL_RGBA, GL_UNSIGNED_BYTE,
+  //     buf);
+
+  // void* pixels;
+  // int pitch;
+  // SDL_LockTexture(app->mainViewportSoftwareTexture, NULL, &pixels, &pitch);
+  // memcpy(pixels, buf, pitch * app->mainViewportSoftwareTexture->h);
+  // SDL_UnlockTexture(app->mainViewportSoftwareTexture);
+  // SDL_RenderTexture(renderer, app->mainViewportSoftwareTexture, NULL, NULL);
+
+  // RenderDocuments(app);
+  // SDL_SetRenderTarget(renderer, NULL);
+  restoreRenderState(renderState);
 }
 
 static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextElementConfig* config, void* _app)
@@ -492,17 +488,30 @@ extern "C" __declspec(dllexport) void ResyncApp(App* app)
     SDL_Log("Couldn't load GLAD");
   }
 
-  // GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSrc);
-  // GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
-  // app->lineshapeShaderprogram = glCreateProgram();
-  // glAttachShader(app->lineshapeShaderprogram, vertexShader);
-  // glAttachShader(app->lineshapeShaderprogram, fragmentShader);
-  // glLinkProgram(app->lineshapeShaderprogram);
-  // GLint linkStatus;
-  // glGetProgramiv(app->lineshapeShaderprogram, GL_LINK_STATUS, &linkStatus);
-  // if (linkStatus != GL_TRUE) {
-  //   print("Failed to build shaders");
-  // }
+  // We seem to have to create a texture once, it seems to initialize some internal stuff, which
+  // is required to make the shader work. Without creating a texture, the shader does not work. (??? :/)
+  SDL_DestroyTexture(
+      SDL_CreateTexture(app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 1, 1));
+
+  GLRenderState renderState = saveRenderState();
+  GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSrc);
+  GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
+  app->lineshapeShaderprogram = glCreateProgram();
+  glAttachShader(app->lineshapeShaderprogram, vertexShader);
+  glAttachShader(app->lineshapeShaderprogram, fragmentShader);
+  glLinkProgram(app->lineshapeShaderprogram);
+  GLint linkStatus;
+  glGetProgramiv(app->lineshapeShaderprogram, GL_LINK_STATUS, &linkStatus);
+  if (linkStatus != GL_TRUE) {
+    print("Failed to build shaders");
+  }
+
+  glGenVertexArrays(1, &app->mainViewportVAO);
+  glGenBuffers(1, &app->mainViewportVBO);
+  glGenFramebuffers(1, &app->mainViewportFBO);
+  glGenTextures(1, &app->mainViewportTEX);
+  glGenRenderbuffers(1, &app->mainViewportRBO);
+  restoreRenderState(renderState);
 }
 
 extern "C" __declspec(dllexport) void InitApp(App* app)
@@ -537,6 +546,18 @@ extern "C" __declspec(dllexport) void DestroyApp(App* app)
   for (auto& document : app->documents) {
     unloadDocument(app, document);
   }
+
+  if (app->mainViewportSoftwareTexture) {
+    SDL_DestroyTexture(app->mainViewportSoftwareTexture);
+  }
+
+  glDeleteTextures(1, &app->mainViewportTEX);
+  glDeleteFramebuffers(1, &app->mainViewportFBO);
+  glDeleteRenderbuffers(1, &app->mainViewportRBO);
+  glDeleteVertexArrays(1, &app->mainViewportVAO);
+  glDeleteBuffers(1, &app->mainViewportVBO);
+
+  glDeleteProgram(app->lineshapeShaderprogram);
 }
 
 extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event* event)

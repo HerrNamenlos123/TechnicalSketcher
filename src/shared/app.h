@@ -92,11 +92,10 @@ struct App {
   Clay_Context* clayContext;
   List<Pair<String, time_t>> fileModificationDates;
   SDL_Window* window;
-  SDL_Texture* mainViewportRenderTexture;
   Clay_BoundingBox mainViewportBB;
 
-  SDL_Texture* pageRenderTarget = 0;
-  SDL_Texture* pageSoftwareTexture = 0;
+  GLuint mainViewportRenderTexture;
+  SDL_Texture* mainViewportSoftwareTexture;
 
   // Memory stuff
   Arena persistentApplicationArena;
@@ -106,6 +105,11 @@ struct App {
   // OpenGL
   SDL_GLContext glContext;
   GLuint lineshapeShaderprogram;
+  GLuint mainViewportVAO;
+  GLuint mainViewportFBO;
+  GLuint mainViewportVBO;
+  GLuint mainViewportRBO;
+  GLuint mainViewportTEX;
 };
 
 #endif // APP_H

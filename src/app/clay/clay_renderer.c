@@ -2,16 +2,15 @@
 #include "clay_renderer.h"
 #include "../../shared/clay.h"
 #include <SDL3/SDL.h>
+#include <stdio.h>
 
 /* Global for convenience. Even in 4K this is enough for smooth curves (low radius or rect size coupled with
  * no AA or low resolution might make it appear as jagged curves) */
 static int NUM_CIRCLE_SEGMENTS = 16;
 
 // all rendering is performed by a single SDL call, avoiding multiple RenderRect + plumbing choice for circles.
-static void SDL_Clay_RenderFillRoundedRect(Clay_SDL3RendererData* rendererData,
-    const SDL_FRect rect,
-    const float cornerRadius,
-    const Clay_Color _color)
+static void SDL_Clay_RenderFillRoundedRect(
+    Clay_SDL3RendererData* rendererData, const SDL_FRect rect, const float cornerRadius, const Clay_Color _color)
 {
   const SDL_FColor color = { _color.r / 255, _color.g / 255, _color.b / 255, _color.a / 255 };
 
@@ -33,8 +32,7 @@ static void SDL_Clay_RenderFillRoundedRect(Clay_SDL3RendererData* rendererData,
       = (SDL_Vertex) { { rect.x + clampedRadius, rect.y + clampedRadius }, color, { 0, 0 } }; // 0 center TL
   vertices[vertexCount++]
       = (SDL_Vertex) { { rect.x + rect.w - clampedRadius, rect.y + clampedRadius }, color, { 1, 0 } }; // 1 center TR
-  vertices[vertexCount++] = (SDL_Vertex) { { rect.x + rect.w - clampedRadius, rect.y + rect.h - clampedRadius },
-    color,
+  vertices[vertexCount++] = (SDL_Vertex) { { rect.x + rect.w - clampedRadius, rect.y + rect.h - clampedRadius }, color,
     { 1, 1 } }; // 2 center BR
   vertices[vertexCount++]
       = (SDL_Vertex) { { rect.x + clampedRadius, rect.y + rect.h - clampedRadius }, color, { 0, 1 } }; // 3 center BL
@@ -86,12 +84,10 @@ static void SDL_Clay_RenderFillRoundedRect(Clay_SDL3RendererData* rendererData,
 
       vertices[vertexCount++] = (SDL_Vertex) { { cx + SDL_cosf(angle1) * clampedRadius * signX,
                                                    cy + SDL_sinf(angle1) * clampedRadius * signY },
-        color,
-        { 0, 0 } };
+        color, { 0, 0 } };
       vertices[vertexCount++] = (SDL_Vertex) { { cx + SDL_cosf(angle2) * clampedRadius * signX,
                                                    cy + SDL_sinf(angle2) * clampedRadius * signY },
-        color,
-        { 0, 0 } };
+        color, { 0, 0 } };
 
       indices[indexCount++] = j; // Connect to corresponding central rectangle vertex
       indices[indexCount++] = vertexCount - 2;
@@ -147,13 +143,8 @@ static void SDL_Clay_RenderFillRoundedRect(Clay_SDL3RendererData* rendererData,
   SDL_RenderGeometry(rendererData->renderer, NULL, vertices, vertexCount, indices, indexCount);
 }
 
-static void SDL_Clay_RenderArc(Clay_SDL3RendererData* rendererData,
-    const SDL_FPoint center,
-    const float radius,
-    const float startAngle,
-    const float endAngle,
-    const float thickness,
-    const Clay_Color color)
+static void SDL_Clay_RenderArc(Clay_SDL3RendererData* rendererData, const SDL_FPoint center, const float radius,
+    const float startAngle, const float endAngle, const float thickness, const Clay_Color color)
 {
   SDL_SetRenderDrawColor(rendererData->renderer, color.r, color.g, color.b, color.a);
 
@@ -194,11 +185,8 @@ void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Clay_Rende
     case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
       Clay_RectangleRenderData* config = &rcmd->renderData.rectangle;
       SDL_SetRenderDrawBlendMode(rendererData->renderer, SDL_BLENDMODE_BLEND);
-      SDL_SetRenderDrawColor(rendererData->renderer,
-          config->backgroundColor.r,
-          config->backgroundColor.g,
-          config->backgroundColor.b,
-          config->backgroundColor.a);
+      SDL_SetRenderDrawColor(rendererData->renderer, config->backgroundColor.r, config->backgroundColor.g,
+          config->backgroundColor.b, config->backgroundColor.a);
       if (config->cornerRadius.topLeft > 0) {
         SDL_Clay_RenderFillRoundedRect(rendererData, rect, config->cornerRadius.topLeft, config->backgroundColor);
       } else {
@@ -214,8 +202,8 @@ void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Clay_Rende
           break;
         }
       }
-      TTF_Text* text
-          = TTF_CreateText(rendererData->textEngine, font.font, config->stringContents.chars, config->stringContents.length);
+      TTF_Text* text = TTF_CreateText(
+          rendererData->textEngine, font.font, config->stringContents.chars, config->stringContents.length);
       TTF_SetTextColor(text, config->textColor.r, config->textColor.g, config->textColor.b, config->textColor.a);
       TTF_DrawRendererText(text, rect.x, rect.y);
       TTF_DestroyText(text);
@@ -263,47 +251,27 @@ void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Clay_Rende
       if (config->cornerRadius.topLeft > 0) {
         const float centerX = rect.x + clampedRadii.topLeft - 1;
         const float centerY = rect.y + clampedRadii.topLeft;
-        SDL_Clay_RenderArc(rendererData,
-            (SDL_FPoint) { centerX, centerY },
-            clampedRadii.topLeft,
-            180.0f,
-            270.0f,
-            config->width.top,
-            config->color);
+        SDL_Clay_RenderArc(rendererData, (SDL_FPoint) { centerX, centerY }, clampedRadii.topLeft, 180.0f, 270.0f,
+            config->width.top, config->color);
       }
       if (config->cornerRadius.topRight > 0) {
         const float centerX = rect.x + rect.w - clampedRadii.topRight - 1;
         const float centerY = rect.y + clampedRadii.topRight;
-        SDL_Clay_RenderArc(rendererData,
-            (SDL_FPoint) { centerX, centerY },
-            clampedRadii.topRight,
-            270.0f,
-            360.0f,
-            config->width.top,
-            config->color);
+        SDL_Clay_RenderArc(rendererData, (SDL_FPoint) { centerX, centerY }, clampedRadii.topRight, 270.0f, 360.0f,
+            config->width.top, config->color);
       }
       if (config->cornerRadius.bottomLeft > 0) {
         const float centerX = rect.x + clampedRadii.bottomLeft - 1;
         const float centerY = rect.y + rect.h - clampedRadii.bottomLeft - 1;
-        SDL_Clay_RenderArc(rendererData,
-            (SDL_FPoint) { centerX, centerY },
-            clampedRadii.bottomLeft,
-            90.0f,
-            180.0f,
-            config->width.bottom,
-            config->color);
+        SDL_Clay_RenderArc(rendererData, (SDL_FPoint) { centerX, centerY }, clampedRadii.bottomLeft, 90.0f, 180.0f,
+            config->width.bottom, config->color);
       }
       if (config->cornerRadius.bottomRight > 0) {
         const float centerX
             = rect.x + rect.w - clampedRadii.bottomRight - 1; // TODO: why need to -1 in all calculations???
         const float centerY = rect.y + rect.h - clampedRadii.bottomRight - 1;
-        SDL_Clay_RenderArc(rendererData,
-            (SDL_FPoint) { centerX, centerY },
-            clampedRadii.bottomRight,
-            0.0f,
-            90.0f,
-            config->width.bottom,
-            config->color);
+        SDL_Clay_RenderArc(rendererData, (SDL_FPoint) { centerX, centerY }, clampedRadii.bottomRight, 0.0f, 90.0f,
+            config->width.bottom, config->color);
       }
 
     } break;
@@ -326,7 +294,9 @@ void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Clay_Rende
       SDL_Texture* texture = (SDL_Texture*)rcmd->renderData.image.imageData;
       const SDL_FRect dest = { rect.x, rect.y, rect.w, rect.h };
 
-      SDL_RenderTexture(rendererData->renderer, texture, NULL, &dest);
+      if (!SDL_RenderTexture(rendererData->renderer, texture, NULL, &dest)) {
+        fprintf(stderr, "[clay_renderer.c] Failed to render SDL texture: %s\n", SDL_GetError());
+      }
       // SDL_DestroyTexture(texture);
       break;
     }

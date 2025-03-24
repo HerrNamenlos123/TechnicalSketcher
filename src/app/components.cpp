@@ -146,8 +146,7 @@ template <typename TFunc> void div(App* app, String classString, TFunc&& cb, Opt
 
   Clay_ImageElementConfig imageConfig = {};
   if (image && *image) {
-    auto texture = app->mainViewportRenderTexture;
-    imageConfig = { .imageData = *image, .sourceDimensions = { (float)texture->w, (float)texture->h } };
+    imageConfig = { .imageData = *image, .sourceDimensions = { (float)image.value()->w, (float)image.value()->h } };
   }
 
   CLAY({

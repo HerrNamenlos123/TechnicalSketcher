@@ -22,7 +22,7 @@ void ui(App* app)
       div(app, "h-full bg-[#333] w-[200px] text-white"_s,
           [&](App* app) { text(app, ""_s, format(app->frameArena, "FPS: {}", fps)); });
       div(app, "id-editor-viewport h-full w-full"_s,
-          [](App* app) { div(app, "h-full w-full"_s, [](App* app) { }, app->mainViewportRenderTexture); });
+          [](App* app) { div(app, "h-full w-full"_s, [](App* app) { }, app->mainViewportSoftwareTexture); });
     });
   });
   Clay_ElementData viewportSize = Clay_GetElementData(CLAY_ID("editor-viewport"));

@@ -319,18 +319,6 @@ static void DestroyApp(App* app)
     TTF_DestroyRendererTextEngine(app->rendererData.textEngine);
   }
 
-  if (app->pageRenderTarget) {
-    SDL_DestroyTexture(app->pageRenderTarget);
-  }
-
-  if (app->pageSoftwareTexture) {
-    SDL_DestroyTexture(app->pageSoftwareTexture);
-  }
-
-  if (app->mainViewportRenderTexture) {
-    SDL_DestroyTexture(app->mainViewportRenderTexture);
-  }
-
   if (app->rendererData.renderer) {
     SDL_DestroyRenderer(app->rendererData.renderer);
   }
