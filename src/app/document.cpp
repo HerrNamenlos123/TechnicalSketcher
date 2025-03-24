@@ -1,7 +1,9 @@
 
+#include "../GL/glad.h"
 #include "../shared/app.h"
 #include "documentrenderer.cpp"
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_pen.h>
 #include <SDL3/SDL_video.h>
 
@@ -23,9 +25,6 @@ void addDocument(App* app)
 void unloadDocument(App* app, Document& document)
 {
   for (auto& page : document.pages) {
-    if (page.canvas) {
-      SDL_DestroyTexture(page.canvas);
-    }
   }
   document.arena.free();
 }
@@ -34,7 +33,6 @@ void addPageToDocument(App* app, Document& document)
 {
   Page page = Page {
     .shapes = {},
-    .canvas = {},
   };
 
   document.pages.push(document.arena, page);
@@ -153,7 +151,7 @@ void processFingerDownEvent(App* app, SDL_TouchFingerEvent event)
       finger.dy = 0;
     }
   }
-  // app->touchFingers.push(app->persistentApplicationArena, event);
+  app->touchFingers.push(app->persistentApplicationArena, event);
   app->prevAveragePos = {};
   app->prevPinchDistance = {};
   handleZoomPan(app);
@@ -172,10 +170,7 @@ void processFingerMotionEvent(App* appstate, SDL_TouchFingerEvent event)
 
 void processFingerUpEvent(App* appstate, SDL_TouchFingerEvent event)
 {
-  // appstate->touchFingers.erase(std::remove_if(appstate->touchFingers.begin(),
-  //                                  appstate->touchFingers.end(),
-  //                                  [&](SDL_TouchFingerEvent e) { return e.fingerID == event.fingerID; }),
-  //     appstate->touchFingers.end());
+  appstate->touchFingers.remove_if([&](auto& elem) -> bool { return elem.fingerID == event.fingerID; });
   appstate->prevAveragePos = {};
   appstate->prevPinchDistance = {};
   handleZoomPan(appstate);
@@ -183,10 +178,7 @@ void processFingerUpEvent(App* appstate, SDL_TouchFingerEvent event)
 
 void processFingerCancelledEvent(App* appstate, SDL_TouchFingerEvent event)
 {
-  // appstate->touchFingers.erase(std::remove_if(appstate->touchFingers.begin(),
-  //                                  appstate->touchFingers.end(),
-  //                                  [&](SDL_TouchFingerEvent e) { return e.fingerID == event.fingerID; }),
-  //     appstate->touchFingers.end());
+  appstate->touchFingers.remove_if([&](auto& elem) -> bool { return elem.fingerID == event.fingerID; });
   appstate->prevAveragePos = {};
   appstate->prevPinchDistance = {};
   handleZoomPan(appstate);

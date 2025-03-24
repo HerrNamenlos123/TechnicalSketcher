@@ -8,11 +8,12 @@
 #include "vector.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <stdint.h>
-
 
 #include "shared.h"
 
@@ -35,7 +36,6 @@ struct LineShape {
 
 struct Page {
   List<LineShape> shapes;
-  SDL_Texture* canvas = 0;
 };
 
 struct Document {
@@ -92,13 +92,20 @@ struct App {
   Clay_Context* clayContext;
   List<Pair<String, time_t>> fileModificationDates;
   SDL_Window* window;
-  SDL_Texture* mainDocumentRenderTexture;
+  SDL_Texture* mainViewportRenderTexture;
   Clay_BoundingBox mainViewportBB;
+
+  SDL_Texture* pageRenderTarget = 0;
+  SDL_Texture* pageSoftwareTexture = 0;
 
   // Memory stuff
   Arena persistentApplicationArena;
   Arena frameArena;
   Arena clayArena;
+
+  // OpenGL
+  SDL_GLContext glContext;
+  GLuint lineshapeShaderprogram;
 };
 
 #endif // APP_H

@@ -23,16 +23,13 @@ struct Arena {
   bool isStackArena;
   bool __initialized;
 
-  [[nodiscard]] static Arena
-  create(size_t chunkSize = DEFAULT_ARENA_SIZE);
+  [[nodiscard]] static Arena create(size_t chunkSize = DEFAULT_ARENA_SIZE);
 
   [[nodiscard]] static Arena createFromBuffer(char* buffer, size_t bufferSize);
 
-  void
-  enlarge(ArenaChunk** lastChunk, size_t chunkSize = DEFAULT_ARENA_SIZE);
+  void enlarge(ArenaChunk** lastChunk, size_t chunkSize = DEFAULT_ARENA_SIZE);
 
-  template <typename T>
-  [[nodiscard]] T* allocate(size_t elementCount = 1)
+  template <typename T> [[nodiscard]] T* allocate(size_t elementCount = 1)
   {
     if (!this->__initialized) {
       panicStr("Arena was not properly initialized");
@@ -134,8 +131,7 @@ inline String operator""_s(const char* str, size_t length)
   return String::view(str, length);
 }
 
-template <typename... Args>
-void panic(const char* fmt, Args&&... args)
+template <typename... Args> void panic(const char* fmt, Args&&... args)
 {
   Arena arena = Arena::create();
   String str = format(arena, fmt, args...);
@@ -143,8 +139,7 @@ void panic(const char* fmt, Args&&... args)
   arena.free();
 }
 
-template <typename T>
-struct Optional {
+template <typename T> struct Optional {
 
   Optional()
       : _hasValue(false)
@@ -190,8 +185,7 @@ struct Optional {
   bool _hasValue;
 };
 
-template <typename TVal, typename TErr>
-struct Result {
+template <typename TVal, typename TErr> struct Result {
 
   Result(TVal succ)
   {
@@ -263,14 +257,12 @@ struct Result {
   bool _hasValue;
 };
 
-template <typename T>
-struct ListElem {
+template <typename T> struct ListElem {
   T data;
   ListElem<T>* nextElement;
 };
 
-template <typename T>
-struct List {
+template <typename T> struct List {
   size_t length = { 0 };
 
   void push(Arena& arena, T element)
@@ -314,6 +306,24 @@ struct List {
 
     secondToLastElement->nextElement = 0;
     this->length--;
+  }
+
+  template <typename TFunc> void remove_if(TFunc&& pred)
+  {
+    while (firstElement && pred(firstElement->data)) {
+      firstElement = firstElement->nextElement;
+      length--;
+    }
+
+    ListElem<T>* curr = firstElement;
+    while (curr && curr->nextElement) {
+      if (pred(curr->nextElement->data)) {
+        curr->nextElement = curr->nextElement->nextElement;
+        length--;
+      } else {
+        curr = curr->nextElement;
+      }
+    }
   }
 
   [[nodiscard]] T& get(size_t index)
@@ -401,8 +411,7 @@ struct List {
   ListElem<T>* firstElement = { 0 };
 };
 
-template <typename T, size_t Size>
-struct Array {
+template <typename T, size_t Size> struct Array {
   [[nodiscard]] T* data()
   {
     return this->_data;
@@ -435,8 +444,7 @@ struct Array {
   T _data[Size];
 };
 
-template <typename T, typename U>
-struct Pair {
+template <typename T, typename U> struct Pair {
   T first;
   U second;
 };

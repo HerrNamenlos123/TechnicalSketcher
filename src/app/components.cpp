@@ -57,7 +57,7 @@ Optional<Color> parseBgClass(String cls)
   return {};
 }
 
-void div(App* app, String classString, void (*cb)(App* app), Optional<SDL_Texture*> image = {})
+template <typename TFunc> void div(App* app, String classString, TFunc&& cb, Optional<SDL_Texture*> image = {})
 {
   List<String> classes = split(app->frameArena, classString, " "_s);
   Clay_SizingAxis width = {};
@@ -146,7 +146,7 @@ void div(App* app, String classString, void (*cb)(App* app), Optional<SDL_Textur
 
   Clay_ImageElementConfig imageConfig = {};
   if (image && *image) {
-    auto texture = app->mainDocumentRenderTexture;
+    auto texture = app->mainViewportRenderTexture;
     imageConfig = { .imageData = *image, .sourceDimensions = { (float)texture->w, (float)texture->h } };
   }
 
@@ -163,9 +163,7 @@ void div(App* app, String classString, void (*cb)(App* app), Optional<SDL_Textur
       .image = imageConfig,
   })
   {
-    if (cb) {
-      cb(app);
-    }
+    cb(app);
   }
 
   for (int i = 0; i < textColorPushed; i++) {

@@ -1,5 +1,8 @@
+#include <SDL3/SDL_video.h>
 #define SDL_MAIN_USE_CALLBACKS 1
+#include "../GL/glad.h"
 #include "../shared/app.h"
+#include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_oldnames.h>
@@ -241,11 +244,13 @@ static SDL_AppResult InitApp(App* app)
   }
 
   if (!SDL_CreateWindowAndRenderer("examples/pen/drawing-lines", (int)DEFAULT_WINDOW_SIZE.x, (int)DEFAULT_WINDOW_SIZE.y,
-          0, &app->window, &app->rendererData.renderer)) {
+          SDL_WINDOW_OPENGL, &app->window, &app->rendererData.renderer)) {
     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
   SDL_SetWindowResizable(app->window, true);
+
+  app->glContext = SDL_GL_CreateContext(app->window);
 
   if (!TTF_Init()) {
     return SDL_APP_FAILURE;
@@ -314,13 +319,23 @@ static void DestroyApp(App* app)
     TTF_DestroyRendererTextEngine(app->rendererData.textEngine);
   }
 
-  if (app->mainDocumentRenderTexture) {
-    SDL_DestroyTexture(app->mainDocumentRenderTexture);
+  if (app->pageRenderTarget) {
+    SDL_DestroyTexture(app->pageRenderTarget);
+  }
+
+  if (app->pageSoftwareTexture) {
+    SDL_DestroyTexture(app->pageSoftwareTexture);
+  }
+
+  if (app->mainViewportRenderTexture) {
+    SDL_DestroyTexture(app->mainViewportRenderTexture);
   }
 
   if (app->rendererData.renderer) {
     SDL_DestroyRenderer(app->rendererData.renderer);
   }
+
+  SDL_GL_DestroyContext(app->glContext);
 
   if (app->window) {
     SDL_DestroyWindow(app->window);

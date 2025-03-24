@@ -25,7 +25,7 @@ endif()
 
 set(COMMON_COMPILER_FLAGS -I/usr/local/include ${CLANG_FLAGS})
 if (NOT MSVC)
-set(COMMON_LINKER_FLAGS  -Wl,--no-undefined)
+set(COMMON_LINKER_FLAGS  -Wl,--no-undefined -lGL)
 endif()
 # find_package(PkgConfig REQUIRED)
 # pkg_check_modules(SDL3 REQUIRED sdl3)
@@ -33,7 +33,7 @@ set(SDL_COMPILER_FLAGS ${SDL3_CFLAGS})
 set(SDL_LINKER_FLAGS ${SDL3_LDFLAGS})
 
 # Shared Library
-add_library(shared OBJECT src/shared/shared.cpp)
+add_library(shared OBJECT src/shared/shared.cpp src/GL/glad.c)
 target_compile_options(shared PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS})
 target_link_options(shared PRIVATE ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 
