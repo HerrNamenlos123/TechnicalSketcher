@@ -36,6 +36,9 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
     FONT_SIZES.push(app->persistentApplicationArena, { "2xl"_s, 24 });
   }
 
+  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+    SDL_Log("Couldn't load GLAD");
+  }
   app->lineshapeShaderprogram = CreateShaderProgram();
 
   float vertices[] = { // Positions       // Colors
@@ -172,4 +175,9 @@ extern "C" __declspec(dllexport) void RenderApp(App* app)
 
   Clay_RenderCommandArray renderCommands = Clay_EndLayout();
   SDL_Clay_RenderClayCommands(&app->rendererData, &renderCommands);
+
+  glClear(GL_COLOR_BUFFER_BIT);
+  glUseProgram(app->lineshapeShaderprogram);
+  glBindVertexArray(app->mainViewportVAO);
+  glDrawArrays(GL_TRIANGLES, 0, 3);
 }

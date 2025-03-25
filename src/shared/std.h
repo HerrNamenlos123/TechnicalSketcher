@@ -73,6 +73,12 @@ struct StackArena {
     return this->_arena;
   }
 
+  template <typename T> [[nodiscard]] T* allocate(size_t elementCount = 1)
+  {
+    Arena& arena = *this;
+    return arena.allocate<T>(elementCount);
+  }
+
   private:
   Arena _arena = {};
   bool arenaInitialized = 0;
