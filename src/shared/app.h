@@ -103,6 +103,7 @@ struct App {
   Arena clayArena;
 
   // OpenGL
+  bool recreateGlTexture;
   SDL_GLContext glContext;
   GLuint lineshapeShaderprogram;
   GLuint mainViewportVAO;

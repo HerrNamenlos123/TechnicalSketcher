@@ -13,6 +13,8 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <ctime>
+#include <unistd.h>
 
 const auto PAGE_OUTLINE_COLOR = Color("#888");
 const auto APP_BACKGROUND_COLOR = Color("#DDD");
@@ -385,6 +387,11 @@ void RenderMainViewport(App* app)
       panic("Failed to create SDL texture for viewport: {} {}", w, h);
     }
 
+    app->recreateGlTexture = true;
+  }
+
+  if (app->recreateGlTexture) {
+    app->recreateGlTexture = false;
     glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h,
         0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -404,44 +411,42 @@ void RenderMainViewport(App* app)
   auto renderer = app->rendererData.renderer;
   glUseProgram(app->lineshapeShaderprogram);
 
-  // glBindFramebuffer(GL_FRAMEBUFFER, app->mainViewportFBO);
-  // glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
-  // glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, app->mainViewportFBO);
+  glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
+  glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
 
-  // glBindVertexArray(app->mainViewportVAO);
-  // glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
-  // glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
-  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, app->mainViewportTEX, 0);
+  glBindVertexArray(app->mainViewportVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+  glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, app->mainViewportTEX, 0);
 
-  // float vertices[] = { -0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f };
+  float vertices[] = { -0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f };
 
-  // glBindVertexArray(app->mainViewportVAO);
-  // glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
-  // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-  // glEnableVertexAttribArray(0);
+  glBindVertexArray(app->mainViewportVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
 
-  // glBindFramebuffer(GL_FRAMEBUFFER, app->mainViewportFBO);
-  // glViewport(0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h);
-  // glClearColor(0, 0, 0, 0.f);
-  // glClear(GL_COLOR_BUFFER_BIT);
-  // glDrawArrays(GL_TRIANGLES, 0, 3);
+  glViewport(0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h);
+  glClearColor(0, 0, 0, 0.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glDrawArrays(GL_TRIANGLES, 0, 3);
 
-  // unsigned char* buf = app->frameArena.allocate<unsigned char>(
-  //     app->mainViewportSoftwareTexture->w * app->mainViewportSoftwareTexture->h * 4);
-  // glReadPixels(
-  //     0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h, GL_RGBA, GL_UNSIGNED_BYTE,
-  //     buf);
+  unsigned char* buf = app->frameArena.allocate<unsigned char>(
+      app->mainViewportSoftwareTexture->w * app->mainViewportSoftwareTexture->h * 4);
+  glReadPixels(
+      0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h, GL_RGBA, GL_UNSIGNED_BYTE, buf);
 
-  // void* pixels;
-  // int pitch;
-  // SDL_LockTexture(app->mainViewportSoftwareTexture, NULL, &pixels, &pitch);
-  // memcpy(pixels, buf, pitch * app->mainViewportSoftwareTexture->h);
-  // SDL_UnlockTexture(app->mainViewportSoftwareTexture);
-  // SDL_RenderTexture(renderer, app->mainViewportSoftwareTexture, NULL, NULL);
+  void* pixels;
+  int pitch;
+  SDL_LockTexture(app->mainViewportSoftwareTexture, NULL, &pixels, &pitch);
+  memcpy(pixels, buf, pitch * app->mainViewportSoftwareTexture->h);
+  SDL_UnlockTexture(app->mainViewportSoftwareTexture);
+  SDL_RenderTexture(renderer, app->mainViewportSoftwareTexture, NULL, NULL);
 
-  // RenderDocuments(app);
-  // SDL_SetRenderTarget(renderer, NULL);
+  RenderDocuments(app);
+  SDL_SetRenderTarget(renderer, NULL);
   restoreRenderState(renderState);
 }
 
@@ -512,6 +517,8 @@ extern "C" __declspec(dllexport) void ResyncApp(App* app)
   glGenTextures(1, &app->mainViewportTEX);
   glGenRenderbuffers(1, &app->mainViewportRBO);
   restoreRenderState(renderState);
+
+  app->recreateGlTexture = true;
 }
 
 extern "C" __declspec(dllexport) void InitApp(App* app)
@@ -558,6 +565,7 @@ extern "C" __declspec(dllexport) void DestroyApp(App* app)
   glDeleteBuffers(1, &app->mainViewportVBO);
 
   glDeleteProgram(app->lineshapeShaderprogram);
+  app->lineshapeShaderprogram = 0;
 }
 
 extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event* event)
@@ -649,6 +657,11 @@ extern "C" __declspec(dllexport) void DrawUI(App* app)
   {
     ui(app);
   }
+
+  double seconds = 0.016;
+  struct timespec t = { 0 };
+  t.tv_nsec = seconds * 1000000000.0;
+  nanosleep(&t, NULL);
 
   Clay_RenderCommandArray renderCommands = Clay_EndLayout();
   SDL_Clay_RenderClayCommands(&app->rendererData, &renderCommands);
