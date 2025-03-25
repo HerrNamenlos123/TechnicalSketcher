@@ -46,3 +46,5 @@ build/
 !premake5/**
 !resource/**
 .cache
+
+!.vscode/launch.json

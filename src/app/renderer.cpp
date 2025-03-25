@@ -1,5 +1,4 @@
 
-#include "../GL/glad.h"
 #include "../shared/app.h"
 #include "../shared/clay.h"
 #include "clay/clay_renderer.h"
@@ -7,7 +6,6 @@
 #include "ui.cpp"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
-#include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_stdinc.h>
@@ -27,28 +25,6 @@ struct GLRenderState {
   GLint rbo;
   GLint viewport[4];
 };
-
-const char* vertexShaderSrc = R"(
-#version 330 core
-layout (location = 0) in vec2 aPos;
-void main() {
-    gl_Position = vec4(aPos, 0.0, 1.0);
-})";
-
-const char* fragmentShaderSrc = R"(
-#version 330 core
-out vec4 FragColor;
-void main() {
-    FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red fill
-})";
-
-GLuint compileShader(GLenum type, const char* source)
-{
-  GLuint shader = glCreateShader(type);
-  glShaderSource(shader, 1, &source, nullptr);
-  glCompileShader(shader);
-  return shader;
-}
 
 double clamp(double v, double a, double b)
 {
@@ -106,19 +82,19 @@ void DrawPoint(App* app, Vec2 pos, Color color, int size = 3)
   rect.y = pos.y - (size - 1) / 2.f;
   rect.w = size;
   rect.h = size;
-  SDL_SetRenderDrawColor(app->rendererData.renderer, color.r, color.g, color.b, color.a);
-  SDL_RenderFillRect(app->rendererData.renderer, &rect);
+  // SDL_SetRenderDrawColor(app->rendererData.renderer, color.r, color.g, color.b, color.a);
+  // SDL_RenderFillRect(app->rendererData.renderer, &rect);
 }
 
 void DrawLine(App* app, Vec2 from, Vec2 to, Color color)
 {
-  SDL_SetRenderDrawColor(app->rendererData.renderer, color.r, color.g, color.b, color.a);
-  SDL_RenderLine(app->rendererData.renderer, from.x, from.y, to.x, to.y);
+  // SDL_SetRenderDrawColor(app->rendererData.renderer, color.r, color.g, color.b, color.a);
+  // SDL_RenderLine(app->rendererData.renderer, from.x, from.y, to.x, to.y);
 }
 
 void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
 {
-  auto& renderer = app->rendererData.renderer;
+  // auto& renderer = app->rendererData.renderer;
   int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
@@ -170,25 +146,25 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
     Vec2 dirToNextPoint = (nextPos - pos).normalize();
     Vec2 perp = Vec2(-dirToNextPoint.y, dirToNextPoint.x);
 
-    SDL_SetRenderDrawColor(app->rendererData.renderer, 0, 255, 0, 255);
-    Vec2 left = pos + perp * thickness / 2;
-    Vec2 right = pos - perp * thickness / 2;
-    SDL_RenderLine(app->rendererData.renderer, posPx.x, posPx.y, posPx.x + perp.x * 15, posPx.y + perp.y * 15);
-    SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 0, 255);
+    // SDL_SetRenderDrawColor(app->rendererData.renderer, 0, 255, 0, 255);
+    // Vec2 left = pos + perp * thickness / 2;
+    // Vec2 right = pos - perp * thickness / 2;
+    // SDL_RenderLine(app->rendererData.renderer, posPx.x, posPx.y, posPx.x + perp.x * 15, posPx.y + perp.y * 15);
+    // SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 0, 255);
 
-    rect.x = left.x * pageProj.x;
-    rect.y = left.y * pageProj.y;
-    rect.w = 2;
-    rect.h = 2;
-    SDL_RenderFillRect(app->rendererData.renderer, &rect);
-    leftOutline.push(app->frameArena, left);
+    // rect.x = left.x * pageProj.x;
+    // rect.y = left.y * pageProj.y;
+    // rect.w = 2;
+    // rect.h = 2;
+    // SDL_RenderFillRect(app->rendererData.renderer, &rect);
+    // leftOutline.push(app->frameArena, left);
 
-    rect.x = right.x * pageProj.x;
-    rect.y = right.y * pageProj.y;
-    SDL_RenderFillRect(app->rendererData.renderer, &rect);
-    rightOutline.push(app->frameArena, right);
+    // rect.x = right.x * pageProj.x;
+    // rect.y = right.y * pageProj.y;
+    // SDL_RenderFillRect(app->rendererData.renderer, &rect);
+    // rightOutline.push(app->frameArena, right);
 
-    SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 255, 255);
+    // SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 255, 255);
   }
 
   List<Vec2> spline = MakeSplinePoints(app->frameArena, leftOutline, 0.1);
@@ -204,7 +180,7 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
 
 void RenderShapesOnPage(App* app, Document& document, Page& page)
 {
-  auto renderer = app->rendererData.renderer;
+  // auto renderer = app->rendererData.renderer;
   int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
@@ -225,7 +201,7 @@ void RenderShapesOnPage(App* app, Document& document, Page& page)
   //   // constructLineshapeOutline(app, document, shape);
   // }
   shape = document.currentLine;
-  SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
+  // SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
 
   if (shape.points.length == 0) {
     return;
@@ -257,7 +233,7 @@ void RenderShapesOnPage(App* app, Document& document, Page& page)
     .w = bottomRight.x * pageProj.x - topLeft.x * pageProj.x,
     .h = bottomRight.y * pageProj.y - topLeft.y * pageProj.y,
   };
-  SDL_RenderRect(app->rendererData.renderer, &rect);
+  // SDL_RenderRect(app->rendererData.renderer, &rect);
 
   Vec2 bbSize = bottomRight - topLeft;
   Vec2 bbSizePx = bbSize * pageProj;
@@ -278,16 +254,16 @@ GLRenderState saveRenderState()
 
 void restoreRenderState(GLRenderState state)
 {
-  glBindFramebuffer(GL_FRAMEBUFFER, state.fbo);
-  glBindVertexArray(state.vao);
-  glBindBuffer(GL_ARRAY_BUFFER, state.vbo);
-  glBindRenderbuffer(GL_RENDERBUFFER, state.rbo);
-  glViewport(state.viewport[0], state.viewport[1], state.viewport[2], state.viewport[3]);
+  // glBindFramebuffer(GL_FRAMEBUFFER, state.fbo);
+  // glBindVertexArray(state.vao);
+  // glBindBuffer(GL_ARRAY_BUFFER, state.vbo);
+  // glBindRenderbuffer(GL_RENDERBUFFER, state.rbo);
+  // glViewport(state.viewport[0], state.viewport[1], state.viewport[2], state.viewport[3]);
 }
 
 void RenderPage(App* app, Document& document, Page& page)
 {
-  auto renderer = app->rendererData.renderer;
+  // auto renderer = app->rendererData.renderer;
   int pageWidthPx = document.pageWidthPercentOfWindow / 100.0 * app->mainViewportBB.width;
   int pageHeightPx = pageWidthPx * 297 / 210;
   int gridSpacing = 5;
@@ -309,7 +285,7 @@ void RenderPage(App* app, Document& document, Page& page)
 
   // RenderShapesOnPage(app, document, page);
 
-  SDL_SetRenderTarget(renderer, NULL);
+  // SDL_SetRenderTarget(renderer, NULL);
 }
 
 void RenderDocuments(App* app)
@@ -373,81 +349,84 @@ void RenderDocuments(App* app)
 
 void RenderMainViewport(App* app)
 {
-  if (!app->mainViewportSoftwareTexture || app->mainViewportSoftwareTexture->w != app->mainViewportBB.width
-      || app->mainViewportSoftwareTexture->h != app->mainViewportBB.height) {
-    auto size = app->mainViewportBB;
-    if (app->mainViewportSoftwareTexture) {
-      SDL_DestroyTexture(app->mainViewportSoftwareTexture);
-    }
-    int w = tsk_max(size.width, 1.f);
-    int h = tsk_max(size.height, 1.f);
-    app->mainViewportSoftwareTexture
-        = SDL_CreateTexture(app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
-    if (!app->mainViewportSoftwareTexture) {
-      panic("Failed to create SDL texture for viewport: {} {}", w, h);
-    }
+  // if (!app->mainViewportSoftwareTexture || app->mainViewportSoftwareTexture->w != app->mainViewportBB.width
+  //     || app->mainViewportSoftwareTexture->h != app->mainViewportBB.height) {
+  //   auto size = app->mainViewportBB;
+  //   if (app->mainViewportSoftwareTexture) {
+  //     SDL_DestroyTexture(app->mainViewportSoftwareTexture);
+  //   }
+  //   int w = tsk_max(size.width, 1.f);
+  //   int h = tsk_max(size.height, 1.f);
+  //   // app->mainViewportSoftwareTexture
+  //   // = SDL_CreateTexture(app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
+  //   // if (!app->mainViewportSoftwareTexture) {
+  //   //   panic("Failed to create SDL texture for viewport: {} {}", w, h);
+  //   // }
 
-    app->recreateGlTexture = true;
-  }
+  //   app->recreateGlTexture = true;
+  // }
 
-  if (app->recreateGlTexture) {
-    app->recreateGlTexture = false;
-    glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h,
-        0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  // if (app->recreateGlTexture) {
+  //   app->recreateGlTexture = false;
+  //   glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
+  //   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->mainViewportSoftwareTexture->w,
+  //   app->mainViewportSoftwareTexture->h,
+  //       0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+  //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glRenderbufferStorage(
-        GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, app->mainViewportRBO);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-      SDL_Log("Framebuffer not complete!");
-      return;
-    }
-  }
+  //   glRenderbufferStorage(
+  //       GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, app->mainViewportSoftwareTexture->w,
+  //       app->mainViewportSoftwareTexture->h);
+  //   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, app->mainViewportRBO);
+  //   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+  //     SDL_Log("Framebuffer not complete!");
+  //     return;
+  //   }
+  // }
 
-  GLRenderState renderState = saveRenderState();
-  auto renderer = app->rendererData.renderer;
-  glUseProgram(app->lineshapeShaderprogram);
+  // GLRenderState renderState = saveRenderState();
+  // auto renderer = app->rendererData.renderer;
+  // glUseProgram(app->lineshapeShaderprogram);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, app->mainViewportFBO);
-  glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
-  glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
+  // glBindFramebuffer(GL_FRAMEBUFFER, app->mainViewportFBO);
+  // glBindTexture(GL_TEXTURE_2D, app->mainViewportTEX);
+  // glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
 
-  glBindVertexArray(app->mainViewportVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
-  glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, app->mainViewportTEX, 0);
+  // glBindVertexArray(app->mainViewportVAO);
+  // glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+  // glBindRenderbuffer(GL_RENDERBUFFER, app->mainViewportRBO);
+  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, app->mainViewportTEX, 0);
 
-  float vertices[] = { -0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f };
+  // float vertices[] = { -0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f };
 
-  glBindVertexArray(app->mainViewportVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
+  // glBindVertexArray(app->mainViewportVAO);
+  // glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+  // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+  // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+  // glEnableVertexAttribArray(0);
 
-  glViewport(0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h);
-  glClearColor(0, 0, 0, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  // glViewport(0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h);
+  // glClearColor(0, 0, 0, 0.f);
+  // glClear(GL_COLOR_BUFFER_BIT);
+  // glDrawArrays(GL_TRIANGLES, 0, 3);
 
-  unsigned char* buf = app->frameArena.allocate<unsigned char>(
-      app->mainViewportSoftwareTexture->w * app->mainViewportSoftwareTexture->h * 4);
-  glReadPixels(
-      0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+  // unsigned char* buf = app->frameArena.allocate<unsigned char>(
+  //     app->mainViewportSoftwareTexture->w * app->mainViewportSoftwareTexture->h * 4);
+  // glReadPixels(
+  //     0, 0, app->mainViewportSoftwareTexture->w, app->mainViewportSoftwareTexture->h, GL_RGBA, GL_UNSIGNED_BYTE,
+  //     buf);
 
-  void* pixels;
-  int pitch;
-  SDL_LockTexture(app->mainViewportSoftwareTexture, NULL, &pixels, &pitch);
-  memcpy(pixels, buf, pitch * app->mainViewportSoftwareTexture->h);
-  SDL_UnlockTexture(app->mainViewportSoftwareTexture);
-  SDL_RenderTexture(renderer, app->mainViewportSoftwareTexture, NULL, NULL);
+  // void* pixels;
+  // int pitch;
+  // SDL_LockTexture(app->mainViewportSoftwareTexture, NULL, &pixels, &pitch);
+  // memcpy(pixels, buf, pitch * app->mainViewportSoftwareTexture->h);
+  // SDL_UnlockTexture(app->mainViewportSoftwareTexture);
+  // SDL_RenderTexture(renderer, app->mainViewportSoftwareTexture, NULL, NULL);
 
-  RenderDocuments(app);
-  SDL_SetRenderTarget(renderer, NULL);
-  restoreRenderState(renderState);
+  // RenderDocuments(app);
+  // SDL_SetRenderTarget(renderer, NULL);
+  // restoreRenderState(renderState);
 }
 
 static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextElementConfig* config, void* _app)
@@ -473,198 +452,6 @@ static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextEl
 void HandleClayErrors(Clay_ErrorData errorData)
 {
   print("{}", errorData.errorText.chars);
-}
-
-extern "C" __declspec(dllexport) void ResyncApp(App* app)
-{
-  app->clayArena.clearAndReinit();
-
-  uint64_t totalMemorySize = Clay_MinMemorySize();
-  char* memory = app->clayArena.allocate<char>(totalMemorySize);
-  Clay_Arena clayMemory = Clay_Arena { .capacity = totalMemorySize, .memory = memory };
-
-  int width, height;
-  SDL_GetWindowSize(app->window, &width, &height);
-
-  Clay_Initialize(clayMemory, Clay_Dimensions { (float)width, (float)height }, Clay_ErrorHandler { HandleClayErrors });
-  Clay_SetMeasureTextFunction(SDL_MeasureText, app);
-
-  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-    SDL_Log("Couldn't load GLAD");
-  }
-
-  // We seem to have to create a texture once, it seems to initialize some internal stuff, which
-  // is required to make the shader work. Without creating a texture, the shader does not work. (??? :/)
-  SDL_DestroyTexture(
-      SDL_CreateTexture(app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 1, 1));
-
-  GLRenderState renderState = saveRenderState();
-  GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSrc);
-  GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
-  app->lineshapeShaderprogram = glCreateProgram();
-  glAttachShader(app->lineshapeShaderprogram, vertexShader);
-  glAttachShader(app->lineshapeShaderprogram, fragmentShader);
-  glLinkProgram(app->lineshapeShaderprogram);
-  GLint linkStatus;
-  glGetProgramiv(app->lineshapeShaderprogram, GL_LINK_STATUS, &linkStatus);
-  if (linkStatus != GL_TRUE) {
-    print("Failed to build shaders");
-  }
-
-  glGenVertexArrays(1, &app->mainViewportVAO);
-  glGenBuffers(1, &app->mainViewportVBO);
-  glGenFramebuffers(1, &app->mainViewportFBO);
-  glGenTextures(1, &app->mainViewportTEX);
-  glGenRenderbuffers(1, &app->mainViewportRBO);
-  restoreRenderState(renderState);
-
-  app->recreateGlTexture = true;
-}
-
-extern "C" __declspec(dllexport) void InitApp(App* app)
-{
-  COLORS.push(app->persistentApplicationArena, { "white"_s, Color(255, 255, 255, 255) });
-  COLORS.push(app->persistentApplicationArena, { "black"_s, Color(0, 0, 0, 255) });
-  COLORS.push(app->persistentApplicationArena, { "red"_s, Color(255, 0, 0, 255) });
-  COLORS.push(app->persistentApplicationArena, { "green"_s, Color(0, 255, 0, 255) });
-  COLORS.push(app->persistentApplicationArena, { "blue"_s, Color(0, 0, 255, 255) });
-  COLORS.push(app->persistentApplicationArena, { "yellow"_s, Color(255, 255, 0, 255) });
-  COLORS.push(app->persistentApplicationArena, { "magenta"_s, Color(255, 0, 255, 255) });
-  COLORS.push(app->persistentApplicationArena, { "cyan"_s, Color(0, 255, 255, 255) });
-  COLORS.push(app->persistentApplicationArena, { "transparent"_s, Color(255, 255, 255, 255) });
-  FONT_SIZES.push(app->persistentApplicationArena, { "xs"_s, 12 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "sm"_s, 14 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "base"_s, 16 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "lg"_s, 18 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "xl"_s, 20 });
-  FONT_SIZES.push(app->persistentApplicationArena, { "2xl"_s, 24 });
-
-  addDocument(app);
-  addPageToDocument(app, app->documents.back());
-  addPageToDocument(app, app->documents.back());
-  addPageToDocument(app, app->documents.back());
-
-  app->documents.back().position = Vec2(300, 100);
-  app->documents.back().pageWidthPercentOfWindow = 70;
-}
-
-extern "C" __declspec(dllexport) void DestroyApp(App* app)
-{
-  for (auto& document : app->documents) {
-    unloadDocument(app, document);
-  }
-
-  if (app->mainViewportSoftwareTexture) {
-    SDL_DestroyTexture(app->mainViewportSoftwareTexture);
-  }
-
-  glDeleteTextures(1, &app->mainViewportTEX);
-  glDeleteFramebuffers(1, &app->mainViewportFBO);
-  glDeleteRenderbuffers(1, &app->mainViewportRBO);
-  glDeleteVertexArrays(1, &app->mainViewportVAO);
-  glDeleteBuffers(1, &app->mainViewportVBO);
-
-  glDeleteProgram(app->lineshapeShaderprogram);
-  app->lineshapeShaderprogram = 0;
-}
-
-extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event* event)
-{
-  switch (event->type) {
-  case SDL_EVENT_QUIT:
-    return SDL_APP_SUCCESS;
-    break;
-
-  case SDL_EVENT_WINDOW_RESIZED:
-    Clay_SetLayoutDimensions(Clay_Dimensions { (float)event->window.data1, (float)event->window.data2 });
-    break;
-
-  case SDL_EVENT_MOUSE_MOTION:
-    Clay_SetPointerState(Clay_Vector2 { event->motion.x, event->motion.y }, event->motion.state & SDL_BUTTON_LMASK);
-    break;
-
-  case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    Clay_SetPointerState(Clay_Vector2 { event->button.x, event->button.y }, event->button.button == SDL_BUTTON_LEFT);
-    break;
-
-  case SDL_EVENT_MOUSE_WHEEL:
-    Clay_UpdateScrollContainers(true, Clay_Vector2 { event->wheel.x, event->wheel.y }, 0.01f);
-    break;
-
-  case SDL_EVENT_FINGER_DOWN:
-    processFingerDownEvent(app, event->tfinger);
-    break;
-
-  case SDL_EVENT_FINGER_MOTION:
-    processFingerMotionEvent(app, event->tfinger);
-    break;
-
-  case SDL_EVENT_FINGER_UP:
-    processFingerUpEvent(app, event->tfinger);
-    break;
-
-  case SDL_EVENT_FINGER_CANCELED:
-    processFingerCancelledEvent(app, event->tfinger);
-    break;
-
-  case SDL_EVENT_PEN_AXIS:
-    processPenAxisEvent(app, event->paxis);
-    break;
-
-  case SDL_EVENT_PEN_DOWN:
-    processPenDownEvent(app, event->ptouch);
-    break;
-
-  case SDL_EVENT_PEN_UP:
-    processPenUpEvent(app, event->ptouch);
-    break;
-
-  case SDL_EVENT_PEN_MOTION:
-    processPenMotionEvent(app, event->pmotion);
-    break;
-
-  case SDL_EVENT_PEN_BUTTON_DOWN:
-    processPenButtonDownEvent(app, event->pbutton);
-    break;
-
-  case SDL_EVENT_PEN_BUTTON_UP:
-    processPenButtonUpEvent(app, event->pbutton);
-    break;
-
-  default:
-    break;
-  }
-  return SDL_APP_CONTINUE;
-}
-
-extern "C" __declspec(dllexport) void DrawUI(App* app)
-{
-  RenderMainViewport(app);
-
-  const auto STRING_CACHE_SIZE = 1;
-  UICache uiCache = {};
-  app->uiCache = &uiCache;
-
-  Clay_BeginLayout();
-
-  CLAY({
-      .layout = {
-          .sizing = { .width = CLAY_SIZING_GROW(0),
-              .height = CLAY_SIZING_GROW(0) },
-          .layoutDirection = CLAY_TOP_TO_BOTTOM,
-      },
-  })
-  {
-    ui(app);
-  }
-
-  double seconds = 0.016;
-  struct timespec t = { 0 };
-  t.tv_nsec = seconds * 1000000000.0;
-  nanosleep(&t, NULL);
-
-  Clay_RenderCommandArray renderCommands = Clay_EndLayout();
-  SDL_Clay_RenderClayCommands(&app->rendererData, &renderCommands);
 }
 
 // void ApplicationRenderer::DrawLineWorkspace(const glm::vec2& point1,

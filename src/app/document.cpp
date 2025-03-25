@@ -1,9 +1,7 @@
 
-#include "../GL/glad.h"
 #include "../shared/app.h"
 #include "documentrenderer.cpp"
 #include <SDL3/SDL_events.h>
-#include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_pen.h>
 #include <SDL3/SDL_video.h>
 
@@ -35,7 +33,7 @@ void addPageToDocument(App* app, Document& document)
     .shapes = {},
   };
 
-  document.pages.push(document.arena, page);
+  document.pages.push(app->persistentApplicationArena, page);
 }
 
 double perpendicularDistance(Vec2 p, Vec2 p1, Vec2 p2)

@@ -1,6 +1,7 @@
 #ifndef APP_H
 #define APP_H
 
+#include "../GL/glad.h"
 #include "../app/clay/clay_renderer.h"
 #include "clay.h"
 #include "std.h"
@@ -8,8 +9,6 @@
 #include "vector.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
-#include <SDL3/SDL_gpu.h>
-#include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -56,11 +55,10 @@ struct ClayVideoDemo_Arena {
 struct UICache;
 
 struct App;
-typedef void (*DrawUI_t)(App* app);
 typedef SDL_AppResult (*EventHandler_t)(App* app, SDL_Event* event);
-typedef void (*InitApp_t)(App* app);
-typedef void (*ResyncApp_t)(App* app);
-typedef void (*DestroyApp_t)(App* app);
+typedef void (*LoadApp_t)(App* app, bool firstLoad);
+typedef void (*RenderApp_t)(App* app);
+typedef void (*UnloadApp_t)(App* app);
 
 struct App {
   // Actual application data
@@ -79,15 +77,14 @@ struct App {
   Optional<float> prevPinchDistance;
 
   // Hotreloading and UI stuff
-  Clay_SDL3RendererData rendererData;
+  RendererData rendererData;
   uint64_t lastHotreloadUpdate = 0;
   bool compileError = false;
   void* appLibraryHandle = 0;
-  DrawUI_t DrawUI = 0;
   EventHandler_t EventHandler = 0;
-  InitApp_t InitApp = 0;
-  ResyncApp_t ResyncApp = 0;
-  DestroyApp_t DestroyApp = 0;
+  LoadApp_t LoadApp = 0;
+  RenderApp_t RenderApp = 0;
+  UnloadApp_t UnloadApp = 0;
   UICache* uiCache;
   Clay_Context* clayContext;
   List<Pair<String, time_t>> fileModificationDates;

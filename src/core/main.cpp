@@ -1,4 +1,3 @@
-#include <SDL3/SDL_video.h>
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "../GL/glad.h"
 #include "../shared/app.h"
@@ -8,228 +7,32 @@
 #include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_video.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <stdio.h>
+
+#include "hotreload.cpp"
 
 const Vec2 DEFAULT_WINDOW_SIZE = Vec2(1920, 1080);
-const uint64_t HOTRELOAD_UPDATE_RATE = 100;
-
-bool compileApp(App* app)
-{
-  printf("Application code changed, recompiling...\n");
-  auto result = system("cmake --build build --target app");
-  if (result != 0) {
-    printf("Failed to build app!\n");
-    app->compileError = true;
-    return false;
-  }
-
-  printf("Done, reloaded app!\n");
-  app->compileError = false;
-  return true;
-}
-
-void closeAppLib(App* app)
-{
-  if (app->appLibraryHandle) {
-    app->DrawUI = 0;
-    app->EventHandler = 0;
-    app->InitApp = 0;
-    app->DestroyApp = 0;
-    UnloadLibrary(app->appLibraryHandle);
-    app->appLibraryHandle = 0;
-  }
-}
-
-bool loadAppLib(App* app)
-{
-  closeAppLib(app);
-
-#ifdef TSK_WINDOWS
-  String libraryPath = "build/Debug/app.dll"_s;
-#else
-  String libraryPath = "build/libapp.so"_s;
-#endif
-
-  if (auto result = LoadLibrary(app->frameArena, libraryPath)) {
-    app->appLibraryHandle = result.unwrap();
-  } else {
-    print("Error loading library: {}", result.unwrap_error());
-    return false;
-  }
-
-  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "DrawUI"_s)) {
-    app->DrawUI = (DrawUI_t)result.unwrap();
-  } else {
-    print("Failed to load func: {}", result.unwrap_error());
-  }
-
-  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "EventHandler"_s)) {
-    app->EventHandler = (EventHandler_t)result.unwrap();
-  } else {
-    print("Failed to load func: {}", result.unwrap_error());
-  }
-
-  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "ResyncApp"_s)) {
-    app->ResyncApp = (ResyncApp_t)result.unwrap();
-  } else {
-    print("Failed to load func: {}", result.unwrap_error());
-  }
-
-  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "InitApp"_s)) {
-    app->InitApp = (InitApp_t)result.unwrap();
-  } else {
-    print("Failed to load func: {}", result.unwrap_error());
-  }
-
-  if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, "DestroyApp"_s)) {
-    app->DestroyApp = (DestroyApp_t)result.unwrap();
-  } else {
-    print("Failed to load func: {}", result.unwrap_error());
-  }
-
-  return true;
-}
-
-static SDL_AppResult UpdateHotreload(App* app)
-{
-  auto now = SDL_GetTicks();
-  auto elapsed = now - app->lastHotreloadUpdate;
-  if (elapsed > HOTRELOAD_UPDATE_RATE) {
-    app->lastHotreloadUpdate = now;
-
-    bool reloadApp = false;
-    if (auto cwd = GetCurrentWorkingDirectory(app->frameArena)) {
-      auto result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/app", cwd.value_or(""_s)));
-      for (auto file : result.value_or({})) {
-        if (IsRegularFile(app->frameArena, file).value_or(false)) {
-          auto moddate = GetFileModificationDate(file).value_or(0);
-
-          bool found = false;
-          for (auto& [filename, timestamp] : app->fileModificationDates) {
-            if (filename == file) {
-              found = true;
-              if (timestamp != moddate) {
-                timestamp = moddate;
-                reloadApp = true;
-              }
-              break;
-            }
-          }
-          if (!found) {
-            app->fileModificationDates.push(
-                app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
-          }
-        }
-      }
-    }
-
-    bool reloadCore = false;
-    if (auto cwd = GetCurrentWorkingDirectory(app->frameArena)) {
-      auto result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/core", cwd.value_or(""_s)));
-      for (auto file : result.value_or({})) {
-        if (IsRegularFile(app->frameArena, file).value_or(false)) {
-          auto moddate = GetFileModificationDate(file).value_or(0);
-
-          bool found = false;
-          for (auto& [filename, timestamp] : app->fileModificationDates) {
-            if (filename == file) {
-              found = true;
-              if (timestamp != moddate) {
-                timestamp = moddate;
-                reloadCore = true;
-              }
-              break;
-            }
-          }
-          if (!found) {
-            app->fileModificationDates.push(
-                app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
-          }
-        }
-      }
-      result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/shared", cwd.value_or(""_s)));
-      for (auto file : result.value_or({})) {
-        if (IsRegularFile(app->frameArena, file).value_or(false)) {
-          auto moddate = GetFileModificationDate(file).value_or(0);
-
-          bool found = false;
-          for (auto& [filename, timestamp] : app->fileModificationDates) {
-            if (filename == file) {
-              found = true;
-              if (timestamp != moddate) {
-                timestamp = moddate;
-                reloadCore = true;
-              }
-              break;
-            }
-          }
-          if (!found) {
-            app->fileModificationDates.push(
-                app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
-          }
-        }
-      }
-      result = ListDirectory(app->frameArena, format(app->frameArena, "{}/src/shared/platform", cwd.value_or(""_s)));
-      for (auto file : result.value_or({})) {
-        if (IsRegularFile(app->frameArena, file).value_or(false)) {
-          auto moddate = GetFileModificationDate(file).value_or(0);
-
-          bool found = false;
-          for (auto& [filename, timestamp] : app->fileModificationDates) {
-            if (filename == file) {
-              found = true;
-              if (timestamp != moddate) {
-                timestamp = moddate;
-                reloadCore = true;
-              }
-              break;
-            }
-          }
-          if (!found) {
-            app->fileModificationDates.push(
-                app->persistentApplicationArena, { String::clone(app->persistentApplicationArena, file), moddate });
-          }
-        }
-      }
-    }
-
-    if (reloadCore) {
-      printf("Core code changed, application must be restarted. Closing...\n");
-      return SDL_APP_SUCCESS;
-    }
-
-    if (reloadApp) {
-      if (compileApp(app)) {
-        loadAppLib(app);
-        if (app->ResyncApp) {
-          app->ResyncApp(app);
-        }
-      }
-    }
-  }
-  return SDL_APP_CONTINUE;
-}
 
 static SDL_AppResult AppLoop(App* app)
 {
   app->frameArena.clearAndReinit();
-  auto* renderer = app->rendererData.renderer;
   if (auto result = UpdateHotreload(app); result != SDL_APP_CONTINUE) {
     return result;
   }
 
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-  SDL_RenderClear(renderer);
+  glClearColor(0, 0, 0, 255);
+  glClear(GL_COLOR_BUFFER_BIT);
 
-  if (!app->compileError && app->DrawUI) {
-    app->DrawUI(app);
+  if (!app->compileError && app->RenderApp) {
+    app->RenderApp(app);
   } else {
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer);
+    glClearColor(255, 0, 0, 255);
+    glClear(GL_COLOR_BUFFER_BIT);
   }
 
-  SDL_RenderPresent(renderer);
+  SDL_GL_SwapWindow(app->window);
+
   return SDL_APP_CONTINUE;
 }
 
@@ -243,24 +46,32 @@ static SDL_AppResult InitApp(App* app)
     return SDL_APP_FAILURE;
   }
 
-  if (!SDL_CreateWindowAndRenderer("examples/pen/drawing-lines", (int)DEFAULT_WINDOW_SIZE.x, (int)DEFAULT_WINDOW_SIZE.y,
-          SDL_WINDOW_OPENGL, &app->window, &app->rendererData.renderer)) {
-    SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+  app->window = SDL_CreateWindow("examples/pen/drawing-lines", (int)DEFAULT_WINDOW_SIZE.x, (int)DEFAULT_WINDOW_SIZE.y,
+      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  if (!app->window) {
+    SDL_Log("Couldn't create window: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
-  SDL_SetWindowResizable(app->window, true);
 
   app->glContext = SDL_GL_CreateContext(app->window);
+  if (!app->glContext) {
+    SDL_Log("Couldn't create OpenGL context");
+    return SDL_APP_FAILURE;
+  }
+
+  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+    SDL_Log("Couldn't load GLAD");
+  }
 
   if (!TTF_Init()) {
     return SDL_APP_FAILURE;
   }
 
-  app->rendererData.textEngine = TTF_CreateRendererTextEngine(app->rendererData.renderer);
-  if (!app->rendererData.textEngine) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to create text engine from renderer: %s", SDL_GetError());
-    return SDL_APP_FAILURE;
-  }
+  // app->rendererData.textEngine = TTF_CreateRendererTextEngine(app->rendererData.renderer);
+  // if (!app->rendererData.textEngine) {
+  //   SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to create text engine from renderer: %s", SDL_GetError());
+  //   return SDL_APP_FAILURE;
+  // }
 
   StackArena<1024> arena;
   List<int> sizes;
@@ -281,25 +92,19 @@ static SDL_AppResult InitApp(App* app)
     app->rendererData.fonts[app->rendererData.numberOfFonts++] = { font, size };
   }
 
-  int w, h;
-  SDL_GetRenderOutputSize(app->rendererData.renderer, &w, &h);
-  SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-  SDL_RenderClear(app->rendererData.renderer);
-  SDL_SetRenderTarget(app->rendererData.renderer, NULL);
-  SDL_SetRenderDrawBlendMode(app->rendererData.renderer, SDL_BLENDMODE_BLEND);
-
   compileApp(app);
   if (app->compileError) {
-    return SDL_APP_CONTINUE;
+    return SDL_APP_FAILURE;
   }
 
-  loadAppLib(app);
-
-  if (app->InitApp) {
-    app->InitApp(app);
+  if (!loadAppLib(app)) {
+    return SDL_APP_FAILURE;
   }
-  if (app->ResyncApp) {
-    app->ResyncApp(app);
+
+  if (app->LoadApp) {
+    app->LoadApp(app, true);
+  } else {
+    return SDL_APP_FAILURE;
   }
 
   return SDL_APP_CONTINUE;
@@ -307,21 +112,17 @@ static SDL_AppResult InitApp(App* app)
 
 static void DestroyApp(App* app)
 {
-  if (app->DestroyApp) {
-    app->DestroyApp(app);
+  if (app->UnloadApp) {
+    app->UnloadApp(app);
   }
 
   for (size_t i = 0; i < app->rendererData.numberOfFonts; i++) {
     TTF_CloseFont(app->rendererData.fonts[i].font);
   }
 
-  if (app->rendererData.textEngine) {
-    TTF_DestroyRendererTextEngine(app->rendererData.textEngine);
-  }
-
-  if (app->rendererData.renderer) {
-    SDL_DestroyRenderer(app->rendererData.renderer);
-  }
+  // if (app->rendererData.textEngine) {
+  //   TTF_DestroyRendererTextEngine(app->rendererData.textEngine);
+  // }
 
   SDL_GL_DestroyContext(app->glContext);
 

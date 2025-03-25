@@ -17,13 +17,12 @@ typedef struct {
 } FontData;
 
 typedef struct {
-  SDL_Renderer* renderer;
   TTF_TextEngine* textEngine;
   FontData* fonts;
   size_t numberOfFonts;
-} Clay_SDL3RendererData;
+} RendererData;
 
-void SDL_Clay_RenderClayCommands(Clay_SDL3RendererData* rendererData, Clay_RenderCommandArray* rcommands);
+void SDL_Clay_RenderClayCommands(RendererData* rendererData, Clay_RenderCommandArray* rcommands);
 
 #ifdef __cplusplus
 }

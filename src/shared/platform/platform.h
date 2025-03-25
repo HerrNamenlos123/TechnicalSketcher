@@ -4,6 +4,7 @@
 
 #include "../std.h"
 #include <errno.h>
+#include <time.h>
 
 enum struct SystemError {
   PermissionDenied = EACCES,
