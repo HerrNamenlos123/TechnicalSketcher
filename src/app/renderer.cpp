@@ -32,8 +32,17 @@ struct PrimitiveLine {
   size_t zindex = 0;
 };
 
+struct RenderLineShape {
+  LineShape line;
+  Vec2 from;
+  Vec2 to;
+  Color lineColor;
+  size_t zindex = 0;
+};
+
 struct Renderer {
   Arena& arena;
+  App* app;
   List<PrimitiveRectangle> rectangles;
   List<PrimitiveLine> lines;
   size_t nextZIndex;
@@ -245,10 +254,10 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
   }
 }
 
-void RenderShapesOnPage(App* app, Document& document, Page& page)
+void RenderShapesOnPage(Renderer& renderer, Document& document, Page& page)
 {
   // auto renderer = app->rendererData.renderer;
-  int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
+  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
 
@@ -292,27 +301,19 @@ void RenderShapesOnPage(App* app, Document& document, Page& page)
     }
   }
 
-  constructLineshapeOutline(app, document, shape);
-
-  SDL_FRect rect {
-    .x = topLeft.x * pageProj.x,
-    .y = topLeft.y * pageProj.y,
-    .w = bottomRight.x * pageProj.x - topLeft.x * pageProj.x,
-    .h = bottomRight.y * pageProj.y - topLeft.y * pageProj.y,
-  };
-  // SDL_RenderRect(app->rendererData.renderer, &rect);
+  RenderRectOutline(renderer, topLeft * pageProj, (bottomRight - topLeft) * pageProj, "#000");
 
   Vec2 bbSize = bottomRight - topLeft;
   Vec2 bbSizePx = bbSize * pageProj;
 }
 
-void RenderDocuments(App* app, Renderer& renderer)
+void RenderDocuments(Renderer& renderer)
 {
-  if (app->mainViewportBB.width == 0 || app->mainViewportBB.height == 0) {
+  if (renderer.app->mainViewportBB.width == 0 || renderer.app->mainViewportBB.height == 0) {
     return;
   }
-  auto& document = app->documents[app->selectedDocument];
-  int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
+  auto& document = renderer.app->documents[renderer.app->selectedDocument];
+  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
@@ -347,7 +348,7 @@ void RenderDocuments(App* app, Renderer& renderer)
 
     Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
     Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
-    auto bb = app->mainViewportBB;
+    auto bb = renderer.app->mainViewportBB;
     if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
       auto pos = Vec2(pageXOffset, pageYOffset);
       RenderRect(renderer, pos, Vec2(pageWidthPx, pageHeightPx), "#FFF"_s);
@@ -360,18 +361,20 @@ void RenderDocuments(App* app, Renderer& renderer)
         float y_px = y_mm / 297.0 * pageHeightPx;
         RenderLine(renderer, pos + Vec2(0, y_px), pos + Vec2(pageWidthPx, y_px), PAGE_GRID_COLOR);
       }
+
+      RenderShapesOnPage(renderer, document, page);
     }
 
-    pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100.f;
+    pageYOffset += pageHeightPx + pageHeightPx * renderer.app->pageGapPercentOfHeight / 100.f;
   }
 }
 
 void RenderMainViewport(App* app)
 {
-  Renderer renderer = { .arena = app->frameArena };
+  Renderer renderer = { .arena = app->frameArena, .app = app };
   renderer.nextZIndex = 1;
 
-  RenderDocuments(app, renderer);
+  RenderDocuments(renderer);
 
   // Lines
   float* lineVertices = app->frameArena.allocate<float>(renderer.lines.length * 14);

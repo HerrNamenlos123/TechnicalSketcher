@@ -5,7 +5,7 @@
 #include <GL/glext.h>
 #include <SDL3/SDL_opengl.h>
 
-const char* vertexShaderSrc = R"(
+const char* mainVertexShaderSrc = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -20,7 +20,32 @@ void main() {
   vertexColor = aColor;
 })";
 
-const char* fragmentShaderSrc = R"(
+const char* mainFragmentShaderSrc = R"(
+#version 330 core
+
+out vec4 FragColor;
+in vec4 vertexColor;
+
+void main() {
+    FragColor = vertexColor;
+})";
+
+const char* lineshapeVertexShader = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+
+uniform mat4 pixelProjection;
+
+out vec4 vertexColor;
+
+void main() {
+  vec4 pos = vec4(aPos, 1.0);
+  gl_Position = pixelProjection * pos;
+  vertexColor = aColor;
+})";
+
+const char* lineshapeFragmentShader = R"(
 #version 330 core
 
 out vec4 FragColor;
@@ -51,13 +76,13 @@ GLuint CompileShader(GLenum type, const char* src)
   return shader;
 }
 
-GLuint CreateShaderProgram()
+GLuint CreateShaderProgram(const char* vs, const char* fs)
 {
-  GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexShaderSrc);
+  GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vs);
   if (!vertexShader) {
     return 0;
   }
-  GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
+  GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fs);
   if (!fragmentShader) {
     glDeleteShader(vertexShader);
     return 0;

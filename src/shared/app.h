@@ -101,6 +101,7 @@ struct App {
   bool recreateGlTexture;
   SDL_GLContext glContext;
   GLuint mainShader;
+  GLuint lineshapeShader;
   GLuint mainViewportVAO;
   GLuint mainViewportFBO;
   GLuint mainViewportVBO;

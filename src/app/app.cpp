@@ -50,7 +50,8 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
     SDL_Log("Couldn't load GLAD");
   }
   glViewport(0, 0, width, height);
-  app->mainShader = CreateShaderProgram();
+  app->mainShader = CreateShaderProgram(mainVertexShaderSrc, mainFragmentShaderSrc);
+  app->lineshapeShader = CreateShaderProgram(lineshapeVertexShader, lineshapeFragmentShader);
   glUseProgram(app->mainShader);
   setPixelProjection(app, width, height);
   glEnable(GL_DEPTH_TEST);
