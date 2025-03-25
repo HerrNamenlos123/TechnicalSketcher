@@ -33,7 +33,6 @@
 
 # Visual Studio stuff
 .vs
-.vscode
 *.sln
 
 # Python files
@@ -46,5 +45,3 @@ build/
 !premake5/**
 !resource/**
 .cache
-
-!.vscode/launch.json

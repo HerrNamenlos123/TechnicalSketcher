@@ -1,5 +1,8 @@
 #!/bin/sh
 set -e
 
-cmake . -B build
+if [ ! -d "build" ]; then
+  cmake . -B build
+fi
+
 cmake --build build --target run
