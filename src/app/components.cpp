@@ -7,6 +7,12 @@
 List<Pair<String, Color>> COLORS;
 List<Pair<String, int>> FONT_SIZES;
 
+struct ImageData {
+  GLuint texture;
+  float width;
+  float height;
+};
+
 List<String> split(Arena& arena, String s, String delimiter)
 {
   size_t pos_start = 0, pos_end, delim_len = delimiter.length;
@@ -57,7 +63,7 @@ Optional<Color> parseBgClass(String cls)
   return {};
 }
 
-template <typename TFunc> void div(App* app, String classString, TFunc&& cb, Optional<SDL_Texture*> image = {})
+template <typename TFunc> void div(App* app, String classString, TFunc&& cb, Optional<ImageData> image = {})
 {
   List<String> classes = split(app->frameArena, classString, " "_s);
   Clay_SizingAxis width = {};
@@ -145,8 +151,10 @@ template <typename TFunc> void div(App* app, String classString, TFunc&& cb, Opt
   }
 
   Clay_ImageElementConfig imageConfig = {};
-  if (image && *image) {
-    imageConfig = { .imageData = *image, .sourceDimensions = { (float)image.value()->w, (float)image.value()->h } };
+  if (image) {
+    GLuint* texture = app->frameArena.allocate<GLuint>();
+    *texture = image->texture;
+    imageConfig = { .imageData = texture, .sourceDimensions = { (float)image->width, (float)image->height } };
   }
 
   CLAY({

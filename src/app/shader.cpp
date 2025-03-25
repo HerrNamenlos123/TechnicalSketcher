@@ -7,17 +7,27 @@
 
 const char* vertexShaderSrc = R"(
 #version 330 core
-layout (location = 0) in vec2 aPos;
-uniform mat4 projection;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+
+uniform mat4 pixelProjection;
+
+out vec4 vertexColor;
+
 void main() {
-    gl_Position = vec4(aPos, 0.0, 1.0);
+  vec4 pos = vec4(aPos, 1.0);
+  gl_Position = pixelProjection * pos;
+  vertexColor = aColor;
 })";
 
 const char* fragmentShaderSrc = R"(
 #version 330 core
+
 out vec4 FragColor;
+in vec4 vertexColor;
+
 void main() {
-    FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    FragColor = vertexColor;
 })";
 
 GLuint CompileShader(GLenum type, const char* src)
@@ -74,4 +84,14 @@ GLuint CreateShaderProgram()
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
   return program;
+}
+
+void setUniformMat4(GLuint shader, const char* name, Mat4 matrix)
+{
+  GLuint matrixLocation = glGetUniformLocation(shader, name);
+  if (matrixLocation == -1) {
+    print("{}Uniform not found: {}{}", RED, name, RESET);
+    return;
+  }
+  glUniformMatrix4fv(matrixLocation, 1, GL_TRUE, matrix.data.data());
 }

@@ -158,6 +158,13 @@ template <size_t MaxSize = 8192, typename... Args> void print(const char* fmt, A
   __format_output_stdout("\n"_s);
 }
 
+template <size_t MaxSize = 8192, typename... Args> void print_nnl(const char* fmt, Args&&... args)
+{
+  StackArena<MaxSize> arena;
+  String result = format(arena, fmt, args...);
+  __format_output_stdout(result);
+}
+
 template <size_t MaxSize = 8192, typename... Args> void print_stderr(const char* fmt, Args&&... args)
 {
   StackArena<MaxSize> arena;

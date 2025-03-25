@@ -18,13 +18,80 @@ const auto PAGE_OUTLINE_COLOR = Color("#888");
 const auto APP_BACKGROUND_COLOR = Color("#DDD");
 const auto PAGE_GRID_COLOR = Color("#A8C9E3");
 
-struct GLRenderState {
-  GLint vbo;
-  GLint vao;
-  GLint fbo;
-  GLint rbo;
-  GLint viewport[4];
+struct PrimitiveRectangle {
+  Vec2 pos;
+  Vec2 size;
+  Color fillColor;
+  size_t zindex = 0;
 };
+
+struct PrimitiveLine {
+  Vec2 from;
+  Vec2 to;
+  Color lineColor;
+  size_t zindex = 0;
+};
+
+struct Renderer {
+  Arena& arena;
+  List<PrimitiveRectangle> rectangles;
+  List<PrimitiveLine> lines;
+  size_t nextZIndex;
+};
+
+void RenderRect(Renderer& renderer, Vec2 pos, Vec2 size, Color color)
+{
+  renderer.rectangles.push(renderer.arena,
+      PrimitiveRectangle {
+          .pos = pos,
+          .size = size,
+          .fillColor = color,
+          .zindex = renderer.nextZIndex++,
+      });
+}
+
+void RenderLine(Renderer& renderer, Vec2 from, Vec2 to, Color color)
+{
+  renderer.lines.push(renderer.arena,
+      PrimitiveLine {
+          .from = from,
+          .to = to,
+          .lineColor = color,
+          .zindex = renderer.nextZIndex++,
+      });
+}
+
+void RenderRectOutline(Renderer& renderer, Vec2 pos, Vec2 size, Color color)
+{
+  renderer.lines.push(renderer.arena,
+      PrimitiveLine {
+          .from = pos,
+          .to = pos + Vec2(size.x, 0),
+          .lineColor = color,
+          .zindex = renderer.nextZIndex++,
+      });
+  renderer.lines.push(renderer.arena,
+      PrimitiveLine {
+          .from = pos + Vec2(size.x, 0),
+          .to = pos + Vec2(size.x, size.y),
+          .lineColor = color,
+          .zindex = renderer.nextZIndex++,
+      });
+  renderer.lines.push(renderer.arena,
+      PrimitiveLine {
+          .from = pos + Vec2(size.x, size.y),
+          .to = pos + Vec2(0, size.y),
+          .lineColor = color,
+          .zindex = renderer.nextZIndex++,
+      });
+  renderer.lines.push(renderer.arena,
+      PrimitiveLine {
+          .from = pos + Vec2(0, size.y),
+          .to = pos,
+          .lineColor = color,
+          .zindex = renderer.nextZIndex++,
+      });
+}
 
 double clamp(double v, double a, double b)
 {
@@ -239,56 +306,7 @@ void RenderShapesOnPage(App* app, Document& document, Page& page)
   Vec2 bbSizePx = bbSize * pageProj;
 }
 
-GLRenderState saveRenderState()
-{
-  GLRenderState state;
-
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &state.fbo);
-  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &state.vao);
-  glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &state.vbo);
-  glGetIntegerv(GL_RENDERBUFFER_BINDING, &state.rbo);
-  glGetIntegerv(GL_VIEWPORT, state.viewport);
-
-  return state;
-}
-
-void restoreRenderState(GLRenderState state)
-{
-  // glBindFramebuffer(GL_FRAMEBUFFER, state.fbo);
-  // glBindVertexArray(state.vao);
-  // glBindBuffer(GL_ARRAY_BUFFER, state.vbo);
-  // glBindRenderbuffer(GL_RENDERBUFFER, state.rbo);
-  // glViewport(state.viewport[0], state.viewport[1], state.viewport[2], state.viewport[3]);
-}
-
-void RenderPage(App* app, Document& document, Page& page)
-{
-  // auto renderer = app->rendererData.renderer;
-  int pageWidthPx = document.pageWidthPercentOfWindow / 100.0 * app->mainViewportBB.width;
-  int pageHeightPx = pageWidthPx * 297 / 210;
-  int gridSpacing = 5;
-
-  // SDL_SetRenderTarget(renderer, app->pageRenderTarget);
-  // SDL_SetRenderDrawColor(
-  //     renderer, document.paperColor.r, document.paperColor.g, document.paperColor.b, document.paperColor.a);
-  // SDL_RenderFillRect(renderer, NULL);
-
-  // SDL_SetRenderDrawColor(renderer, PAGE_GRID_COLOR.r, PAGE_GRID_COLOR.g, PAGE_GRID_COLOR.b, PAGE_GRID_COLOR.a);
-  // for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
-  //   float x_px = x_mm / 210.0 * pageWidthPx;
-  //   SDL_RenderLine(renderer, x_px, 0, x_px, pageHeightPx);
-  // }
-  // for (int y_mm = 0; y_mm < 297; y_mm += gridSpacing) {
-  //   float y_px = y_mm / 297.0 * pageHeightPx;
-  //   SDL_RenderLine(renderer, 0, y_px, pageWidthPx, y_px);
-  // }
-
-  // RenderShapesOnPage(app, document, page);
-
-  // SDL_SetRenderTarget(renderer, NULL);
-}
-
-void RenderDocuments(App* app)
+void RenderDocuments(App* app, Renderer& renderer)
 {
   if (app->mainViewportBB.width == 0 || app->mainViewportBB.height == 0) {
     return;
@@ -298,6 +316,7 @@ void RenderDocuments(App* app)
   int pageHeightPx = pageWidthPx * 297 / 210;
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
+  int gridSpacing = 5;
   for (auto& page : document.pages) {
     // if (!app->pageRenderTarget || app->pageRenderTarget->w != pageWidthPx || app->pageRenderTarget->h !=
     // pageHeightPx) {
@@ -330,25 +349,132 @@ void RenderDocuments(App* app)
     Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
     auto bb = app->mainViewportBB;
     if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
-      // RenderPage(app, document, page);
-
-      // auto renderer = app->rendererData.renderer;
-      // SDL_SetRenderTarget(renderer, app->mainViewportRenderTexture);
-      // SDL_FRect destRect = { pageXOffset, pageYOffset, app->pageRenderTarget->w, app->pageRenderTarget->h };
-      // SDL_RenderTexture(renderer, app->pageRenderTarget, NULL, &destRect);
-      // SDL_SetRenderDrawColor(
-      //     renderer, PAGE_OUTLINE_COLOR.r, PAGE_OUTLINE_COLOR.g, PAGE_OUTLINE_COLOR.b, PAGE_OUTLINE_COLOR.a);
-      // SDL_FRect outlineRect = { pageXOffset, pageYOffset, app->pageRenderTarget->w, app->pageRenderTarget->h };
-      // SDL_RenderRect(renderer, &outlineRect);
-      // SDL_SetRenderTarget(renderer, NULL);
+      auto pos = Vec2(pageXOffset, pageYOffset);
+      RenderRect(renderer, pos, Vec2(pageWidthPx, pageHeightPx), "#FFF"_s);
+      RenderRectOutline(renderer, pos, Vec2(pageWidthPx, pageHeightPx), PAGE_OUTLINE_COLOR);
+      for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
+        float x_px = x_mm / 210.0 * pageWidthPx;
+        RenderLine(renderer, pos + Vec2(x_px, 0), pos + Vec2(x_px, pageHeightPx), PAGE_GRID_COLOR);
+      }
+      for (int y_mm = 0; y_mm < 297; y_mm += gridSpacing) {
+        float y_px = y_mm / 297.0 * pageHeightPx;
+        RenderLine(renderer, pos + Vec2(0, y_px), pos + Vec2(pageWidthPx, y_px), PAGE_GRID_COLOR);
+      }
     }
 
-    pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100;
+    pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100.f;
   }
 }
 
 void RenderMainViewport(App* app)
 {
+  Renderer renderer = { .arena = app->frameArena };
+  renderer.nextZIndex = 1;
+
+  RenderDocuments(app, renderer);
+
+  // Lines
+  float* lineVertices = app->frameArena.allocate<float>(renderer.lines.length * 14);
+  GLuint* lineIndices = app->frameArena.allocate<GLuint>(renderer.lines.length * 2);
+  size_t vertexIndex = 0;
+  size_t indexIndex = 0;
+  size_t i = 0;
+  for (auto& line : renderer.lines) {
+    lineVertices[vertexIndex++] = line.from.x;
+    lineVertices[vertexIndex++] = line.from.y;
+    lineVertices[vertexIndex++] = 1 - (float)line.zindex / renderer.nextZIndex;
+    lineVertices[vertexIndex++] = line.lineColor.r / 255.f;
+    lineVertices[vertexIndex++] = line.lineColor.g / 255.f;
+    lineVertices[vertexIndex++] = line.lineColor.b / 255.f;
+    lineVertices[vertexIndex++] = line.lineColor.a / 255.f;
+    lineVertices[vertexIndex++] = line.to.x;
+    lineVertices[vertexIndex++] = line.to.y;
+    lineVertices[vertexIndex++] = 1 - (float)line.zindex / renderer.nextZIndex;
+    lineVertices[vertexIndex++] = line.lineColor.r / 255.f;
+    lineVertices[vertexIndex++] = line.lineColor.g / 255.f;
+    lineVertices[vertexIndex++] = line.lineColor.b / 255.f;
+    lineVertices[vertexIndex++] = line.lineColor.a / 255.f;
+
+    lineIndices[indexIndex++] = i * 2;
+    lineIndices[indexIndex++] = i * 2 + 1;
+    i++;
+  }
+
+  glBindVertexArray(app->mainViewportVAO);
+
+  glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+  glBufferData(GL_ARRAY_BUFFER, renderer.lines.length * 14 * sizeof(float), lineVertices, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->mainViewportIBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, renderer.lines.length * 2 * sizeof(GLuint), lineIndices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+  glLineWidth(1.f);
+  glDrawElements(GL_LINES, renderer.lines.length * 2, GL_UNSIGNED_INT, (void*)0);
+
+  // Rectangles
+  float* rectVertices = app->frameArena.allocate<float>(renderer.rectangles.length * 28);
+  GLuint* rectIndices = app->frameArena.allocate<GLuint>(renderer.rectangles.length * 6);
+  vertexIndex = 0;
+  indexIndex = 0;
+  i = 0;
+  for (auto& rect : renderer.rectangles) {
+    rectVertices[vertexIndex++] = rect.pos.x;
+    rectVertices[vertexIndex++] = rect.pos.y;
+    rectVertices[vertexIndex++] = 1 - (float)rect.zindex / renderer.nextZIndex;
+    rectVertices[vertexIndex++] = rect.fillColor.r / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.g / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.b / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.a / 255.f;
+    rectVertices[vertexIndex++] = rect.pos.x + rect.size.x;
+    rectVertices[vertexIndex++] = rect.pos.y;
+    rectVertices[vertexIndex++] = 1 - (float)rect.zindex / renderer.nextZIndex;
+    rectVertices[vertexIndex++] = rect.fillColor.r / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.g / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.b / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.a / 255.f;
+    rectVertices[vertexIndex++] = rect.pos.x + rect.size.x;
+    rectVertices[vertexIndex++] = rect.pos.y + rect.size.y;
+    rectVertices[vertexIndex++] = 1 - (float)rect.zindex / renderer.nextZIndex;
+    rectVertices[vertexIndex++] = rect.fillColor.r / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.g / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.b / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.a / 255.f;
+    rectVertices[vertexIndex++] = rect.pos.x;
+    rectVertices[vertexIndex++] = rect.pos.y + rect.size.y;
+    rectVertices[vertexIndex++] = 1 - (float)rect.zindex / renderer.nextZIndex;
+    rectVertices[vertexIndex++] = rect.fillColor.r / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.g / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.b / 255.f;
+    rectVertices[vertexIndex++] = rect.fillColor.a / 255.f;
+
+    rectIndices[indexIndex++] = i * 4 + 0;
+    rectIndices[indexIndex++] = i * 4 + 1;
+    rectIndices[indexIndex++] = i * 4 + 2;
+    rectIndices[indexIndex++] = i * 4 + 2;
+    rectIndices[indexIndex++] = i * 4 + 3;
+    rectIndices[indexIndex++] = i * 4 + 0;
+    i++;
+  }
+
+  glBindVertexArray(app->mainViewportVAO);
+
+  glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+  glBufferData(GL_ARRAY_BUFFER, renderer.rectangles.length * 28 * sizeof(float), rectVertices, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->mainViewportIBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, renderer.rectangles.length * 6 * sizeof(GLuint), rectIndices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  glDrawElements(GL_TRIANGLES, renderer.rectangles.length * 6, GL_UNSIGNED_INT, (void*)0);
+
   // if (!app->mainViewportSoftwareTexture || app->mainViewportSoftwareTexture->w != app->mainViewportBB.width
   //     || app->mainViewportSoftwareTexture->h != app->mainViewportBB.height) {
   //   auto size = app->mainViewportBB;

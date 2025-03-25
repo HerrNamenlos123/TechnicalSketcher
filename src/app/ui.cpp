@@ -10,20 +10,24 @@ void ui(App* app)
   uint64_t delta = now - oldTime;
   oldTime = now;
 
-  double alpha = 0.01;
+  double alpha = 0.1;
   static double fps = 0;
   double newFPS = 1000000000.0 / delta;
   fps = fps * (1 - alpha) + newFPS * alpha;
+  print("FPS: {}", fps);
 
-  // div(app, "w-full bg-white h-full col"_s, [&](App* app) {
-  //   div(app, "bg-[#333] w-full h-[50px]"_s, [&](App* app) { });
-  //   div(app, "w-full h-full"_s, [&](App* app) {
-  //     div(app, "h-full bg-[#333] w-[200px] text-white"_s,
-  //         [&](App* app) { text(app, ""_s, format(app->frameArena, "FPS: {}", fps)); });
-  //     div(app, "id-editor-viewport h-full w-full"_s,
-  //         [](App* app) { div(app, "h-full w-full"_s, [](App* app) { }, app->mainViewportSoftwareTexture); });
-  //   });
-  // });
+  div(app, "w-full bg-white h-full col"_s, [&](App* app) {
+    div(app, "bg-[#333] w-full h-[50px]"_s, [&](App* app) { });
+    div(app, "w-full h-full"_s, [&](App* app) {
+      div(app, "h-full bg-[#333] w-[200px] text-white"_s,
+          [&](App* app) { text(app, ""_s, format(app->frameArena, "FPS: {}", fps)); });
+      div(app, "id-editor-viewport h-full w-full"_s, [](App* app) {
+        div(
+            app, "h-full w-full"_s, [](App* app) { },
+            ImageData { app->mainViewportTEX, app->mainViewportBB.width, app->mainViewportBB.height });
+      });
+    });
+  });
   Clay_ElementData viewportSize = Clay_GetElementData(CLAY_ID("editor-viewport"));
   app->mainViewportBB = viewportSize.boundingBox;
 }

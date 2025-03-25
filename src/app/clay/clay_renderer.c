@@ -1,5 +1,6 @@
 
 #include "clay_renderer.h"
+#include "../../GL/glad.h"
 #include "../../shared/clay.h"
 #include <SDL3/SDL.h>
 #include <stdio.h>
@@ -204,9 +205,9 @@ void SDL_Clay_RenderClayCommands(RendererData* rendererData, Clay_RenderCommandA
       }
       TTF_Text* text = TTF_CreateText(
           rendererData->textEngine, font.font, config->stringContents.chars, config->stringContents.length);
-      TTF_SetTextColor(text, config->textColor.r, config->textColor.g, config->textColor.b, config->textColor.a);
-      TTF_DrawRendererText(text, rect.x, rect.y);
-      TTF_DestroyText(text);
+      // TTF_SetTextColor(text, config->textColor.r, config->textColor.g, config->textColor.b, config->textColor.a);
+      // TTF_DrawRendererText(text, rect.x, rect.y);
+      // TTF_DestroyText(text);
     } break;
     case CLAY_RENDER_COMMAND_TYPE_BORDER: {
       Clay_BorderRenderData* config = &rcmd->renderData.border;
@@ -291,8 +292,51 @@ void SDL_Clay_RenderClayCommands(RendererData* rendererData, Clay_RenderCommandA
       break;
     }
     case CLAY_RENDER_COMMAND_TYPE_IMAGE: {
-      SDL_Texture* texture = (SDL_Texture*)rcmd->renderData.image.imageData;
+      GLuint* texture = (GLuint*)rcmd->renderData.image.imageData;
       const SDL_FRect dest = { rect.x, rect.y, rect.w, rect.h };
+      Clay_BoundingBox bb = rcmd->boundingBox;
+      float xMin = bb.x;
+      float yMin = bb.y;
+      float xMax = bb.x + bb.width;
+      float yMax = bb.y + bb.height;
+
+      float quadVertices[] = {
+        // Positions    // TexCoords
+        xMin, yMin, 0.0f, 0.0f, // Bottom-left
+        xMax, yMin, 1.0f, 0.0f, // Bottom-right
+        xMax, yMax, 1.0f, 1.0f, // Top-right
+
+        xMin, yMin, 0.0f, 0.0f, // Bottom-left
+        xMax, yMax, 1.0f, 1.0f, // Top-right
+        xMin, yMax, 0.0f, 1.0f // Top-left
+      };
+
+      // GLint program;
+      // glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+      // glUseProgram(0);
+      // glEnable(GL_TEXTURE_2D);
+      // glBindTexture(GL_TEXTURE_2D, *texture);
+
+      // glBegin(GL_TRIANGLES);
+      // // First triangle
+      // glTexCoord2f(0.0f, 0.0f);
+      // glVertex2f(xMin, yMin);
+      // glTexCoord2f(1.0f, 0.0f);
+      // glVertex2f(xMax, yMin);
+      // glTexCoord2f(1.0f, 1.0f);
+      // glVertex2f(xMax, yMax);
+
+      // // Second triangle
+      // glTexCoord2f(0.0f, 0.0f);
+      // glVertex2f(xMin, yMin);
+      // glTexCoord2f(1.0f, 1.0f);
+      // glVertex2f(xMax, yMax);
+      // glTexCoord2f(0.0f, 1.0f);
+      // glVertex2f(xMin, yMax);
+      // glEnd();
+
+      // glDisable(GL_TEXTURE_2D);
+      // glUseProgram(program);
 
       // if (!SDL_RenderTexture(rendererData->renderer, texture, NULL, &dest)) {
       //   fprintf(stderr, "[clay_renderer.c] Failed to render SDL texture: %s\n", SDL_GetError());

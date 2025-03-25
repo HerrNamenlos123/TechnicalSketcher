@@ -62,14 +62,14 @@ typedef void (*UnloadApp_t)(App* app);
 
 struct App {
   // Actual application data
-  List<Document> documents = {};
-  size_t selectedDocument = 0;
+  List<Document> documents;
+  size_t selectedDocument;
   Tool tool;
-  float currentPenPressure = 0;
-  int currentlyDrawingOnPage = 0;
+  float currentPenPressure;
+  int currentlyDrawingOnPage;
 
   // Constants
-  const float pageGapPercentOfHeight = 3;
+  float pageGapPercentOfHeight;
 
   // Device input
   List<SDL_TouchFingerEvent> touchFingers;
@@ -78,21 +78,19 @@ struct App {
 
   // Hotreloading and UI stuff
   RendererData rendererData;
-  uint64_t lastHotreloadUpdate = 0;
-  bool compileError = false;
-  void* appLibraryHandle = 0;
-  EventHandler_t EventHandler = 0;
-  LoadApp_t LoadApp = 0;
-  RenderApp_t RenderApp = 0;
-  UnloadApp_t UnloadApp = 0;
+  uint64_t lastHotreloadUpdate;
+  bool compileError;
+  void* appLibraryHandle;
+  EventHandler_t EventHandler;
+  LoadApp_t LoadApp;
+  RenderApp_t RenderApp;
+  UnloadApp_t UnloadApp;
   UICache* uiCache;
   Clay_Context* clayContext;
   List<Pair<String, time_t>> fileModificationDates;
   SDL_Window* window;
+  Vec2 windowSize;
   Clay_BoundingBox mainViewportBB;
-
-  GLuint mainViewportRenderTexture;
-  SDL_Texture* mainViewportSoftwareTexture;
 
   // Memory stuff
   Arena persistentApplicationArena;
@@ -102,10 +100,11 @@ struct App {
   // OpenGL
   bool recreateGlTexture;
   SDL_GLContext glContext;
-  GLuint lineshapeShaderprogram;
+  GLuint mainShader;
   GLuint mainViewportVAO;
   GLuint mainViewportFBO;
   GLuint mainViewportVBO;
+  GLuint mainViewportIBO;
   GLuint mainViewportRBO;
   GLuint mainViewportTEX;
 };

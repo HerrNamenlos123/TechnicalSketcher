@@ -3,6 +3,15 @@
 
 #include "shader.cpp"
 
+void setPixelProjection(App* app, float windowWidth, float windowHeight)
+{
+  Mat4 pixelProjection = Mat4::Identity();
+  pixelProjection.applyScaling(1, -1, 1);
+  pixelProjection.applyTranslation(-1, -1, 0);
+  pixelProjection.applyScaling(2 / windowWidth, 2 / windowHeight, 1);
+  setUniformMat4(app->mainShader, "pixelProjection", pixelProjection);
+}
+
 extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
 {
   app->clayArena.clearAndReinit();
@@ -10,6 +19,7 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
 
   int width, height;
   SDL_GetWindowSize(app->window, &width, &height);
+  app->windowSize = Vec2(width, height);
 
   uint64_t totalMemorySize = Clay_MinMemorySize();
   char* memory = app->clayArena.allocate<char>(totalMemorySize);
@@ -39,22 +49,16 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
     SDL_Log("Couldn't load GLAD");
   }
-  app->lineshapeShaderprogram = CreateShaderProgram();
-
-  float vertices[] = { // Positions       // Colors
-    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f
-  };
+  glViewport(0, 0, width, height);
+  app->mainShader = CreateShaderProgram();
+  glUseProgram(app->mainShader);
+  setPixelProjection(app, width, height);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
 
   glGenVertexArrays(1, &app->mainViewportVAO);
   glGenBuffers(1, &app->mainViewportVBO);
-  glBindVertexArray(app->mainViewportVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
+  glGenBuffers(1, &app->mainViewportIBO);
 
   addDocument(app);
   addPageToDocument(app, app->documents.back());
@@ -63,6 +67,7 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
 
   app->documents.back().position = Vec2(300, 100);
   app->documents.back().pageWidthPercentOfWindow = 70;
+  app->pageGapPercentOfHeight = 2.f;
 }
 
 extern "C" __declspec(dllexport) void UnloadApp(App* app)
@@ -71,16 +76,20 @@ extern "C" __declspec(dllexport) void UnloadApp(App* app)
     unloadDocument(app, document);
   }
 
-  if (app->mainViewportSoftwareTexture) {
-    SDL_DestroyTexture(app->mainViewportSoftwareTexture);
-  }
-
   glDeleteVertexArrays(1, &app->mainViewportVAO);
   app->mainViewportVAO = 0;
   glDeleteBuffers(1, &app->mainViewportVBO);
   app->mainViewportVBO = 0;
-  glDeleteProgram(app->lineshapeShaderprogram);
-  app->lineshapeShaderprogram = 0;
+  glDeleteBuffers(1, &app->mainViewportIBO);
+  app->mainViewportIBO = 0;
+  glDeleteRenderbuffers(1, &app->mainViewportRBO);
+  app->mainViewportRBO = 0;
+  glDeleteFramebuffers(1, &app->mainViewportFBO);
+  app->mainViewportFBO = 0;
+  glDeleteTextures(1, &app->mainViewportTEX);
+  app->mainViewportTEX = 0;
+  glDeleteProgram(app->mainShader);
+  app->mainShader = 0;
 }
 
 extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event* event)
@@ -92,6 +101,9 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
 
   case SDL_EVENT_WINDOW_RESIZED:
     Clay_SetLayoutDimensions(Clay_Dimensions { (float)event->window.data1, (float)event->window.data2 });
+    setPixelProjection(app, event->window.data1, event->window.data2);
+    app->windowSize.x = event->window.data1;
+    app->windowSize.y = event->window.data2;
     break;
 
   case SDL_EVENT_MOUSE_MOTION:
@@ -154,8 +166,6 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
 
 extern "C" __declspec(dllexport) void RenderApp(App* app)
 {
-  RenderMainViewport(app);
-
   const auto STRING_CACHE_SIZE = 1;
   UICache uiCache = {};
   app->uiCache = &uiCache;
@@ -174,10 +184,18 @@ extern "C" __declspec(dllexport) void RenderApp(App* app)
   }
 
   Clay_RenderCommandArray renderCommands = Clay_EndLayout();
+
+  glViewport(0, 0, app->windowSize.x, app->windowSize.y);
+
   SDL_Clay_RenderClayCommands(&app->rendererData, &renderCommands);
 
-  glClear(GL_COLOR_BUFFER_BIT);
-  glUseProgram(app->lineshapeShaderprogram);
-  glBindVertexArray(app->mainViewportVAO);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  glViewport(app->mainViewportBB.x, app->mainViewportBB.y, app->mainViewportBB.width, app->mainViewportBB.height);
+  glEnable(GL_SCISSOR_TEST);
+  glScissor(app->mainViewportBB.x, 0, app->mainViewportBB.width, app->mainViewportBB.height);
+  glClearColor(APP_BACKGROUND_COLOR.r / 255.f, APP_BACKGROUND_COLOR.g / 255.f, APP_BACKGROUND_COLOR.b / 255.f,
+      APP_BACKGROUND_COLOR.a / 255.f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glDisable(GL_SCISSOR_TEST);
+
+  RenderMainViewport(app);
 }
