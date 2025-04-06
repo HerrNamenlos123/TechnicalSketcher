@@ -522,12 +522,52 @@ template <typename T> struct is_same<T, T> {
 template <typename T, typename U>
 inline constexpr bool is_same_v = is_same<typename remove_cv_ref<T>::type, typename remove_cv_ref<U>::type>::value;
 
-template <typename T> size_t format_value(T value, String formatArg, char* buffer, size_t remainingBufferSize)
-{
-  if constexpr (is_same_v<T, int>) {
+struct false_type {
+  static constexpr bool value = false;
+};
+struct true_type {
+  static constexpr bool value = true;
+};
+
+template <typename T>
+concept no_formatter = requires(T t) { T::value; };
+template <typename T> struct formatter : false_type { };
+
+template <> struct formatter<int> {
+  static size_t format(const int& value, String formatArg, char* buffer, size_t remainingBufferSize)
+  {
     __format_vsnprintf(buffer, remainingBufferSize, "%d", value);
     return __format_strlen(buffer);
-  } else if constexpr (is_same_v<T, bool>) {
+  }
+};
+
+template <> struct formatter<float> {
+  static size_t format(const float& value, String formatArg, char* buffer, size_t remainingBufferSize)
+  {
+    __format_vsnprintf(buffer, remainingBufferSize, "%f", value);
+    return __format_strlen(buffer);
+  }
+};
+
+template <> struct formatter<double> {
+  static size_t format(const double& value, String formatArg, char* buffer, size_t remainingBufferSize)
+  {
+    __format_vsnprintf(buffer, remainingBufferSize, "%lf", value);
+    return __format_strlen(buffer);
+  }
+};
+
+template <> struct formatter<unsigned long> {
+  static size_t format(const unsigned long& value, String formatArg, char* buffer, size_t remainingBufferSize)
+  {
+    __format_vsnprintf(buffer, remainingBufferSize, "%lu", value);
+    return __format_strlen(buffer);
+  }
+};
+
+template <> struct formatter<bool> {
+  static size_t format(const bool& value, String formatArg, char* buffer, size_t remainingBufferSize)
+  {
     if (value) {
       __format_vsnprintf(buffer, remainingBufferSize, "true");
       return __format_strlen(buffer);
@@ -535,31 +575,53 @@ template <typename T> size_t format_value(T value, String formatArg, char* buffe
       __format_vsnprintf(buffer, remainingBufferSize, "false");
       return __format_strlen(buffer);
     }
-  } else if constexpr (is_same_v<T, double>) {
-    __format_vsnprintf(buffer, remainingBufferSize, "%lf", value);
-    return __format_strlen(buffer);
-  } else if constexpr (is_same_v<T, unsigned long>) {
-    __format_vsnprintf(buffer, remainingBufferSize, "%lu", value);
-    return __format_strlen(buffer);
-  } else if constexpr (is_same_v<T, float>) {
-    __format_vsnprintf(buffer, remainingBufferSize, "%f", value);
-    return __format_strlen(buffer);
-  } else if constexpr (is_same_v<T, String>) {
+  }
+};
+
+template <> struct formatter<String> {
+  static size_t format(const String& value, String formatArg, char* buffer, size_t remainingBufferSize)
+  {
     for (size_t i = 0; i < value.length; i++) {
       if (i < remainingBufferSize) {
         buffer[i] = value.data[i];
       }
     }
     return value.length;
-  } else if constexpr (is_same_v<T, const char*>) {
+  }
+};
+
+template <> struct formatter<const char*> {
+  static size_t format(const char* const& value, String formatArg, char* buffer, size_t remainingBufferSize)
+  {
     __format_vsnprintf(buffer, remainingBufferSize, "%s", value);
     return __format_strlen(buffer);
-  } else if constexpr (is_same_v<T, char*>) {
+  }
+};
+
+template <> struct formatter<char*> {
+  static size_t format(char* value, String formatArg, char* buffer, size_t remainingBufferSize)
+  {
     __format_vsnprintf(buffer, remainingBufferSize, "%s", value);
     return __format_strlen(buffer);
+  }
+};
+
+template <size_t LENGTH> struct formatter<char[LENGTH]> {
+  static size_t format(const char value[LENGTH], String formatArg, char* buffer, size_t remainingBufferSize)
+  {
+    __format_vsnprintf(buffer, remainingBufferSize, "%s", value);
+    return __format_strlen(buffer);
+  }
+};
+
+template <typename T> size_t format_value(const T& value, String formatArg, char* buffer, size_t remainingBufferSize)
+{
+  using formatter_t = formatter<typename remove_cv_ref<T>::type>;
+  if constexpr (no_formatter<formatter_t>) {
+    static_assert(!no_formatter<formatter_t>, "No formatter is defined for this datatype");
+    return 0;
   } else {
-    static_assert(!is_same_v<bool, bool>, "No formatter available for this type");
-    return -1;
+    return formatter_t::format(value, formatArg, buffer, remainingBufferSize);
   }
 }
 
