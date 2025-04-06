@@ -12,19 +12,6 @@
 #error "Unsupported platform/Platform not set by build system"
 #endif
 
-#include "format.cpp"
-#include "std.cpp"
-
-void panicStr(const char* str)
-{
-  panic("{}", str);
-}
-
-void panicSizeT(const char* str, size_t value)
-{
-  panic(str, value);
-}
-
 Result<int64_t, ParseError> strToInt(String string)
 {
   char* endptr;

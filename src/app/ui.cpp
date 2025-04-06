@@ -3,6 +3,8 @@
 #include "components.cpp"
 #include <SDL3/SDL_timer.h>
 
+using ts::print;
+
 void ui(App* app)
 {
   static uint64_t oldTime = SDL_GetTicksNS();

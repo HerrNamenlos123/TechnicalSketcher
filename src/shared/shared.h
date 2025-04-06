@@ -2,20 +2,18 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+#include "TinyStd.hpp"
 #include "clay.h"
-#include "format.h"
-#include "std.h"
-
 
 #include "platform/platform.h"
 
+using namespace ts::literals;
+
 struct Color;
-enum struct ParseError {
-  NonDigitsRemaining
-};
-[[nodiscard]] Result<int64_t, ParseError> strToInt(String string);
+enum struct ParseError { NonDigitsRemaining };
+[[nodiscard]] ts::Result<int64_t, ParseError> strToInt(ts::String string);
 [[nodiscard]] uint8_t hexToDigit(char letter);
-[[nodiscard]] Color hexToColor(String hex);
+[[nodiscard]] Color hexToColor(ts::String hex);
 
 struct Color {
   float r = 0;

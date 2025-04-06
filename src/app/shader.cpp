@@ -1,6 +1,5 @@
 
 #include "../GL/glad.h"
-#include "../shared/format.h"
 #include "colors.h"
 #include <GL/glext.h>
 #include <SDL3/SDL_opengl.h>

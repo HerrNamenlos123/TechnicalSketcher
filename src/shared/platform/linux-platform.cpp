@@ -11,7 +11,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "../format.h"
 #include "platform.h"
 
 #if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !_GNU_SOURCE

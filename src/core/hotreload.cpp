@@ -1,6 +1,8 @@
 
 #include "../shared/app.h"
 
+using ts::print;
+
 const uint64_t HOTRELOAD_UPDATE_RATE = 100;
 
 bool compileApp(App* app)

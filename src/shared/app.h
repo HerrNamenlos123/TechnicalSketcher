@@ -3,8 +3,8 @@
 
 #include "../GL/glad.h"
 #include "../app/clay/clay_renderer.h"
+#include "TinyStd.hpp"
 #include "clay.h"
-#include "std.h"
 #include "stdlib.h"
 #include "vector.h"
 #include <SDL3/SDL.h>
@@ -15,6 +15,9 @@
 #include <stdint.h>
 
 #include "shared.h"
+
+using ts::Optional;
+using ts::Pair;
 
 enum class Tool {
   Select,

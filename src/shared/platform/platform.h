@@ -2,9 +2,15 @@
 #ifndef TSK_PLATFORM_H
 #define TSK_PLATFORM_H
 
-#include "../std.h"
+#include "../TinyStd.hpp"
 #include <errno.h>
 #include <time.h>
+
+using ts::Arena;
+using ts::List;
+using ts::Result;
+using ts::StackArena;
+using ts::String;
 
 enum struct SystemError {
   PermissionDenied = EACCES,
@@ -25,7 +31,7 @@ enum struct SystemError {
 
 [[nodiscard]] extern Result<String, SystemError> GetCurrentWorkingDirectory(Arena& arena);
 
-[[nodiscard]] extern Result<bool, SystemError> IsRegularFile(Arena& arena, String path);
+[[nodiscard]] extern Result<bool, SystemError> IsRegularFile(ts::Arena& arena, String path);
 
 [[nodiscard]] extern String PlatformFSErrorToString(Arena& arena, SystemError);
 

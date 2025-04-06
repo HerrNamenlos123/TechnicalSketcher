@@ -33,7 +33,7 @@ set(SDL_COMPILER_FLAGS ${SDL3_CFLAGS})
 set(SDL_LINKER_FLAGS ${SDL3_LDFLAGS})
 
 # Shared Library
-add_library(shared OBJECT src/shared/shared.cpp src/GL/glad.c)
+add_library(shared OBJECT src/shared/shared.cpp src/shared/TinyStd_impl.cpp src/GL/glad.c)
 target_compile_options(shared PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS})
 target_link_options(shared PRIVATE ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 

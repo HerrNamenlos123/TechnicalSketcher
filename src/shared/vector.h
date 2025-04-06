@@ -2,10 +2,11 @@
 #ifndef VEC_H
 #define VEC_H
 
-#include "format.h"
-#include "std.h"
+#include "TinyStd.hpp"
 #include <math.h>
 #include <stdint.h>
+
+using ts::Array;
 
 template <typename T> class _Vec2 {
   public:
@@ -174,9 +175,9 @@ class Mat4 {
   {
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
-        ::print_nnl("{} ", data[i * 4 + j]);
+        ts::print_nnl("{} ", data[i * 4 + j]);
       }
-      ::print("");
+      ts::print("");
     }
   }
 };
