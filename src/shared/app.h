@@ -1,12 +1,13 @@
 #ifndef APP_H
 #define APP_H
 
+#define TINYSTD_USE_CLAY
 #include "../GL/glad.h"
 #include "../app/clay/clay_renderer.h"
 #include "TinyStd.hpp"
 #include "clay.h"
+#include "math.h"
 #include "stdlib.h"
-#include "vector.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_surface.h>
@@ -16,8 +17,12 @@
 
 #include "shared.h"
 
+using ts::Color;
+using ts::Mat4;
 using ts::Optional;
 using ts::Pair;
+using ts::Vec2;
+using namespace ts::literals;
 
 enum class Tool {
   Select,

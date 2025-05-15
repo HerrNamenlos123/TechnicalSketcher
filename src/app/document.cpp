@@ -1,6 +1,7 @@
 
 #include "../shared/app.h"
 #include "documentrenderer.cpp"
+#include "math.h"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_pen.h>
 #include <SDL3/SDL_video.h>
