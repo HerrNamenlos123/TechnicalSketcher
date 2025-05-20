@@ -102,17 +102,6 @@ void RenderRectOutline(Renderer& renderer, Vec2 pos, Vec2 size, Color color)
       });
 }
 
-double clamp(double v, double a, double b)
-{
-  if (v < a) {
-    return a;
-  } else if (v > b) {
-    return b;
-  } else {
-    return v;
-  }
-}
-
 Vec2 CatmullRomSection(float t, const Vec2& p0, const Vec2& p1, const Vec2& p2, const Vec2& p3)
 {
   float t2 = t * t;

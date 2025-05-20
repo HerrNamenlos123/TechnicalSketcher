@@ -34,9 +34,9 @@ void closeAppLib(App* app)
 
 #define LOAD_FUNC(funcname)                                                                                            \
   if (auto result = LoadLibraryFunc(app->frameArena, app->appLibraryHandle, #funcname##_s)) {                          \
-    app->funcname = (funcname##_t)result.unwrap();                                                                     \
+    app->funcname = (funcname##_t) * result;                                                                           \
   } else {                                                                                                             \
-    print("Failed to load func: {}", result.unwrap_error());                                                           \
+    print("Failed to load func: {}", result.error());                                                                  \
     return false;                                                                                                      \
   }
 
@@ -51,9 +51,9 @@ bool loadAppLib(App* app)
 #endif
 
   if (auto result = LoadLibrary(app->frameArena, libraryPath)) {
-    app->appLibraryHandle = result.unwrap();
+    app->appLibraryHandle = *result;
   } else {
-    print("Error loading library: {}", result.unwrap_error());
+    print("Error loading library: {}", result.error());
     return false;
   }
 

@@ -88,14 +88,14 @@ template <typename TFunc> void div(App* app, String classString, TFunc&& cb, Opt
       auto unit = cmd.substr(3, cmd.length - 4);
       if (unit.endsWith("px"_s)) {
         if (auto value = strToInt(unit.substr(0, unit.length - 2))) {
-          width = CLAY_SIZING_FIXED((float)value.unwrap());
+          width = CLAY_SIZING_FIXED((float)*value);
         }
       }
     } else if (cmd.startsWith("h-["_s)) {
       auto unit = cmd.substr(3, cmd.length - 4);
       if (unit.endsWith("px"_s)) {
         if (auto value = strToInt(unit.substr(0, unit.length - 2))) {
-          height = CLAY_SIZING_FIXED((float)value.unwrap());
+          height = CLAY_SIZING_FIXED((float)*value);
         }
       }
     } else if (cmd.startsWith("id-"_s)) {
@@ -105,7 +105,7 @@ template <typename TFunc> void div(App* app, String classString, TFunc&& cb, Opt
       auto unit = cmd.substr(3, cmd.length - 4);
       if (unit.endsWith("px"_s)) {
         if (auto value = strToInt(unit.substr(0, unit.length - 2))) {
-          padding = CLAY_PADDING_ALL((uint16_t)value.unwrap());
+          padding = CLAY_PADDING_ALL((uint16_t)*value);
         }
       }
     } else if (cmd == "col"_s) {
@@ -204,7 +204,7 @@ void text(App* app, String classString, String content)
       if (unit.endsWith("px"_s)) {
         try {
           auto value = strToInt(unit.substr(0, unit.length - 2));
-          padding = CLAY_PADDING_ALL((uint16_t)value.unwrap());
+          padding = CLAY_PADDING_ALL((uint16_t)*value);
         } catch (...) {
         }
       }
