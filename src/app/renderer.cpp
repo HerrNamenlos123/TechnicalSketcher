@@ -157,10 +157,11 @@ void DrawLine(App* app, Vec2 from, Vec2 to, Color color)
   // SDL_RenderLine(app->rendererData.renderer, from.x, from.y, to.x, to.y);
 }
 
-void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
+void constructLineshapeOutline(Renderer& renderer, Document& document, LineShape& shape)
 {
+  auto& app = renderer.app;
   // auto& renderer = app->rendererData.renderer;
-  int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
+  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
 
@@ -212,9 +213,10 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
     Vec2 perp = Vec2(-dirToNextPoint.y, dirToNextPoint.x);
 
     // SDL_SetRenderDrawColor(app->rendererData.renderer, 0, 255, 0, 255);
-    // Vec2 left = pos + perp * thickness / 2;
-    // Vec2 right = pos - perp * thickness / 2;
-    // SDL_RenderLine(app->rendererData.renderer, posPx.x, posPx.y, posPx.x + perp.x * 15, posPx.y + perp.y * 15);
+    Vec2 left = pos + perp * thickness / 2;
+    Vec2 right = pos - perp * thickness / 2;
+    RenderLine(renderer, posPx + document.position, posPx + perp * 15 + document.position, "#00FF00");
+    // RenderLine(renderer, posPx + document.position, posPx + perp * 15 + document.position, "#00FF00");
     // SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 0, 255);
 
     // rect.x = left.x * pageProj.x;
@@ -222,24 +224,28 @@ void constructLineshapeOutline(App* app, Document& document, LineShape& shape)
     // rect.w = 2;
     // rect.h = 2;
     // SDL_RenderFillRect(app->rendererData.renderer, &rect);
-    // leftOutline.push(app->frameArena, left);
+    leftOutline.push(app->frameArena, left);
 
     // rect.x = right.x * pageProj.x;
     // rect.y = right.y * pageProj.y;
     // SDL_RenderFillRect(app->rendererData.renderer, &rect);
-    // rightOutline.push(app->frameArena, right);
+    rightOutline.push(app->frameArena, right);
 
     // SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 255, 255);
   }
 
   List<Vec2> spline = MakeSplinePoints(app->frameArena, leftOutline, 0.1);
-  for (size_t i = 0; i < spline.length - 1; i++) {
-    DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
+  for (int i = 0; i < (int)spline.length - 1; i++) {
+    // DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
+    RenderLine(
+        renderer, spline[i] * pageProj + document.position, spline[i + 1] * pageProj + document.position, "#0000FF");
   }
 
   spline = MakeSplinePoints(app->frameArena, rightOutline, 0.1);
-  for (size_t i = 0; i < spline.length - 1; i++) {
-    DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
+  for (int i = 0; i < (int)spline.length - 1; i++) {
+    // DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
+    RenderLine(
+        renderer, spline[i] * pageProj + document.position, spline[i + 1] * pageProj + document.position, "#0000FF");
   }
 }
 
@@ -262,11 +268,13 @@ void RenderShapesOnPage(Renderer& renderer, Document& document, Page& page)
   // page.shapes.push(document.arena, shape);
 
   // for (auto& shape : page.shapes) {
-  //   SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
-  //   // constructLineshapeOutline(app, document, shape);
+  //   // SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
+  //   constructLineshapeOutline(renderer.app, document, shape);
   // }
   shape = document.currentLine;
+  constructLineshapeOutline(renderer, document, shape);
   // SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
+  return;
 
   if (shape.points.length == 0) {
     return;
@@ -295,6 +303,34 @@ void RenderShapesOnPage(Renderer& renderer, Document& document, Page& page)
 
   Vec2 bbSize = bottomRight - topLeft;
   Vec2 bbSizePx = bbSize * pageProj;
+
+  struct SSBOLine {
+    InterpolationPoint* points;
+    uint32_t numberOfPoints;
+  };
+  SSBOLine* lines;
+
+  size_t numOfLines = 0;
+  lines = renderer.app->frameArena.allocate<SSBOLine>(page.shapes.length);
+  for (auto& shape : page.shapes) {
+    SSBOLine line;
+    line.numberOfPoints = shape.points.length;
+    line.points = renderer.app->frameArena.allocate<InterpolationPoint>(shape.points.length);
+    size_t numOfPoints = 0;
+    for (auto& point : shape.points) {
+      line.points[numOfPoints++] = point;
+    }
+    lines[numOfLines++] = line;
+  }
+
+  // glUseProgram(renderer.app->lineshapeShader);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderer.app->mainViewportSSBO);
+  void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+  memcpy(ptr, lines, numOfLines * sizeof(SSBOLine));
+  glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderer.app->mainViewportSSBO);
+
+  // glUseProgram(renderer.app->mainShader);
 }
 
 void RenderDocuments(Renderer& renderer)
@@ -310,33 +346,6 @@ void RenderDocuments(Renderer& renderer)
   int gridSpacing = 5;
 
   for (auto& page : document.pages) {
-    // if (!app->pageRenderTarget || app->pageRenderTarget->w != pageWidthPx || app->pageRenderTarget->h !=
-    // pageHeightPx) {
-    //   print("");
-    //   if (app->pageRenderTarget) {
-    //     SDL_DestroyTexture(app->pageRenderTarget);
-    //     print("Delete texture");
-    //   }
-    //   app->pageRenderTarget = SDL_CreateTexture(
-    //       app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, pageWidthPx, pageHeightPx);
-    //   print("Create texture {} {}", pageWidthPx, pageHeightPx);
-    //   if (!app->pageRenderTarget) {
-    //     panic("Failed to create SDL texture for page");
-    //   }
-    // }
-    // if (!app->pageSoftwareTexture || app->pageSoftwareTexture->w != pageWidthPx
-    //     || app->pageSoftwareTexture->h != pageHeightPx) {
-    //   if (app->pageSoftwareTexture) {
-    //     SDL_DestroyTexture(app->pageSoftwareTexture);
-    //   }
-    //   // app->pageSoftwareTexture = SDL_CreateTexture(
-    //   //     app->rendererData.renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, pageWidthPx,
-    //   //     pageHeightPx);
-    //   // if (!app->pageSoftwareTexture) {
-    //   //   panic("Failed to create SDL software texture for page");
-    //   // }
-    // }
-
     Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
     Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
     auto bb = renderer.app->mainViewportBB;
@@ -352,8 +361,6 @@ void RenderDocuments(Renderer& renderer)
         float y_px = y_mm / 297.0 * pageHeightPx;
         RenderLine(renderer, pos + Vec2(0, y_px), pos + Vec2(pageWidthPx, y_px), PAGE_GRID_COLOR);
       }
-
-      RenderShapesOnPage(renderer, document, page);
     }
 
     pageYOffset += pageHeightPx + pageHeightPx * renderer.app->pageGapPercentOfHeight / 100.f;
@@ -366,6 +373,12 @@ void RenderMainViewport(App* app)
   renderer.nextZIndex = 1;
 
   RenderDocuments(renderer);
+
+  // Now draw the line shapes
+  auto& doc = app->documents[app->selectedDocument];
+  for (auto page : doc.pages) {
+    RenderShapesOnPage(renderer, doc, page);
+  }
 
   // Lines
   float* lineVertices = app->frameArena.allocate<float>(renderer.lines.length * 14);

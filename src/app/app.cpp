@@ -2,6 +2,7 @@
 #include "renderer.cpp"
 
 #include "shader.cpp"
+#include <SDL3/SDL_pen.h>
 
 void setPixelProjection(App* app, float w, float h)
 {
@@ -61,6 +62,7 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   glGenVertexArrays(1, &app->mainViewportVAO);
   glGenBuffers(1, &app->mainViewportVBO);
   glGenBuffers(1, &app->mainViewportIBO);
+  glGenBuffers(1, &app->mainViewportSSBO);
 
   addDocument(app);
   addPageToDocument(app, app->documents.back());
@@ -70,6 +72,7 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   app->documents.back().position = Vec2(300, 100);
   app->documents.back().pageWidthPercentOfWindow = 70;
   app->pageGapPercentOfHeight = 2.f;
+  app->currentlyDrawingOnPage = -1;
 }
 
 extern "C" __declspec(dllexport) void UnloadApp(App* app)
@@ -80,6 +83,8 @@ extern "C" __declspec(dllexport) void UnloadApp(App* app)
 
   glDeleteVertexArrays(1, &app->mainViewportVAO);
   app->mainViewportVAO = 0;
+  glDeleteBuffers(1, &app->mainViewportSSBO);
+  app->mainViewportSSBO = 0;
   glDeleteBuffers(1, &app->mainViewportVBO);
   app->mainViewportVBO = 0;
   glDeleteBuffers(1, &app->mainViewportIBO);
@@ -110,10 +115,26 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
 
   case SDL_EVENT_MOUSE_MOTION:
     Clay_SetPointerState(Clay_Vector2 { event->motion.x, event->motion.y }, event->motion.state & SDL_BUTTON_LMASK);
+    event->pmotion.x = event->motion.x;
+    event->pmotion.y = event->motion.y;
+    event->pmotion.pen_state = SDL_PEN_INPUT_DOWN;
+    event->paxis.axis = SDL_PEN_AXIS_PRESSURE;
+    event->paxis.value = 0.5;
+    processPenAxisEvent(app, event->paxis);
+    processPenMotionEvent(app, event->pmotion);
     break;
 
   case SDL_EVENT_MOUSE_BUTTON_DOWN:
     Clay_SetPointerState(Clay_Vector2 { event->button.x, event->button.y }, event->button.button == SDL_BUTTON_LEFT);
+    event->ptouch.x = event->button.x;
+    event->ptouch.y = event->button.y;
+    processPenDownEvent(app, event->ptouch);
+    break;
+
+  case SDL_EVENT_MOUSE_BUTTON_UP:
+    event->ptouch.x = event->button.x;
+    event->ptouch.y = event->button.y;
+    processPenUpEvent(app, event->ptouch);
     break;
 
   case SDL_EVENT_MOUSE_WHEEL:

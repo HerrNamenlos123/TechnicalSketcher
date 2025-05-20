@@ -117,6 +117,7 @@ struct App {
   GLuint mainViewportIBO;
   GLuint mainViewportRBO;
   GLuint mainViewportTEX;
+  GLuint mainViewportSSBO;
 };
 
 #endif // APP_H

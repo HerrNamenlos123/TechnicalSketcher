@@ -248,6 +248,10 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
 
+  if (app->currentlyDrawingOnPage == -1) {
+    return;
+  }
+
   int pageIndex = 0;
   if (event.pen_state & SDL_PEN_INPUT_DOWN) {
     for (auto& page : document.pages) {
