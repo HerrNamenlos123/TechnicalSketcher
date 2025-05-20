@@ -3,12 +3,13 @@
 
 #include "shader.cpp"
 
-void setPixelProjection(App* app, float windowWidth, float windowHeight)
+void setPixelProjection(App* app, float w, float h)
 {
   Mat4 pixelProjection = Mat4::Identity();
   pixelProjection.applyScaling(1, -1, 1);
   pixelProjection.applyTranslation(-1, -1, 0);
-  pixelProjection.applyScaling(2 / windowWidth, 2 / windowHeight, 1);
+  pixelProjection.applyScaling(2, 2, 1);
+  pixelProjection.applyScaling(1 / w, 1 / h, 1);
   setUniformMat4(app->mainShader, "pixelProjection", pixelProjection);
 }
 
@@ -190,7 +191,10 @@ extern "C" __declspec(dllexport) void RenderApp(App* app)
 
   SDL_Clay_RenderClayCommands(&app->rendererData, &renderCommands);
 
-  glViewport(app->mainViewportBB.x, app->mainViewportBB.y, app->mainViewportBB.width, app->mainViewportBB.height);
+  setPixelProjection(app, app->mainViewportBB.width, app->mainViewportBB.height);
+
+  glViewport(app->mainViewportBB.x, app->windowSize.y - app->mainViewportBB.y - app->mainViewportBB.height,
+      app->mainViewportBB.width, app->mainViewportBB.height);
   glEnable(GL_SCISSOR_TEST);
   glScissor(app->mainViewportBB.x, 0, app->mainViewportBB.width, app->mainViewportBB.height);
   glClearColor(APP_BACKGROUND_COLOR.r / 255.f, APP_BACKGROUND_COLOR.g / 255.f, APP_BACKGROUND_COLOR.b / 255.f,

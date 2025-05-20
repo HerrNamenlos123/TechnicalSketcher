@@ -256,6 +256,8 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
       Vec2 pageBottomRightPx = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
       Vec2 penPosOnPagePx = penPosition - pageTopLeftPx;
       Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);
+      // print("Event: {}", pageTopLeftPx.x);
+      // print("Page: {}", penPosition.x - pageTopLeftPx.x);
 
       if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
         InterpolationPoint point;

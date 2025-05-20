@@ -288,9 +288,10 @@ void RenderShapesOnPage(Renderer& renderer, Document& document, Page& page)
     if (p.pos.y + p.thickness / 2.f > bottomRight.y) {
       bottomRight.y = p.pos.y + p.thickness / 2.f;
     }
+    RenderRect(renderer, p.pos * pageProj + document.position, Vec2(1, 1), "#F00");
   }
 
-  RenderRectOutline(renderer, topLeft * pageProj, (bottomRight - topLeft) * pageProj, "#000");
+  RenderRectOutline(renderer, topLeft * pageProj + document.position, (bottomRight - topLeft) * pageProj, "#000");
 
   Vec2 bbSize = bottomRight - topLeft;
   Vec2 bbSizePx = bbSize * pageProj;
@@ -307,6 +308,7 @@ void RenderDocuments(Renderer& renderer)
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
   int gridSpacing = 5;
+
   for (auto& page : document.pages) {
     // if (!app->pageRenderTarget || app->pageRenderTarget->w != pageWidthPx || app->pageRenderTarget->h !=
     // pageHeightPx) {

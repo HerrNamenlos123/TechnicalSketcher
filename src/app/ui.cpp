@@ -3,8 +3,6 @@
 #include "components.cpp"
 #include <SDL3/SDL_timer.h>
 
-using ts::print;
-
 void ui(App* app)
 {
   static uint64_t oldTime = SDL_GetTicksNS();
@@ -16,7 +14,7 @@ void ui(App* app)
   static double fps = 0;
   double newFPS = 1000000000.0 / delta;
   fps = fps * (1 - alpha) + newFPS * alpha;
-  print("FPS: {}", fps);
+  // print("FPS: {}", fps);
 
   div(app, "w-full bg-white h-full col"_s, [&](App* app) {
     div(app, "bg-[#333] w-full h-[50px]"_s, [&](App* app) { });
@@ -32,4 +30,5 @@ void ui(App* app)
   });
   Clay_ElementData viewportSize = Clay_GetElementData(CLAY_ID("editor-viewport"));
   app->mainViewportBB = viewportSize.boundingBox;
+  // print("{} {}", app->mainViewportBB.width, app->mainViewportBB.height);
 }

@@ -21,6 +21,7 @@ using ts::Color;
 using ts::Mat4;
 using ts::Optional;
 using ts::Pair;
+using ts::print;
 using ts::Vec2;
 using namespace ts::literals;
 
