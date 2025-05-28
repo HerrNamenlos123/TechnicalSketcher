@@ -15,6 +15,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <stdint.h>
 
+#include "gl.hpp"
 #include "shared.h"
 
 using ts::Color;
@@ -23,6 +24,9 @@ using ts::Optional;
 using ts::Pair;
 using ts::print;
 using ts::Vec2;
+using ts::Vec2f;
+using ts::Vec3;
+using ts::Vec3f;
 using namespace ts::literals;
 
 enum class Tool {
@@ -30,10 +34,12 @@ enum class Tool {
   Pen,
 };
 
+struct resvg_options;
+
 // All units are always in mm
 struct InterpolationPoint {
   Vec2 pos;
-  float thickness;
+  float pressure;
 };
 
 struct LineShape {
@@ -44,6 +50,7 @@ struct LineShape {
 
 struct Page {
   List<LineShape> shapes;
+  gl::Texture renderTexture;
 };
 
 struct Document {
@@ -117,7 +124,9 @@ struct App {
   GLuint mainViewportIBO;
   GLuint mainViewportRBO;
   GLuint mainViewportTEX;
-  GLuint mainViewportSSBO;
+
+  // SVG
+  resvg_options* svgOpts;
 };
 
 #endif // APP_H

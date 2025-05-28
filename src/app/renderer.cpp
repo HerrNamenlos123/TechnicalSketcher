@@ -1,4 +1,11 @@
 
+#include "earcut.hpp"
+#include <clipper2/clipper.h>
+
+#include "../shared/gl.hpp"
+#include "resvg.h"
+#include <cairo/cairo.h>
+
 #include "../shared/app.h"
 #include "../shared/clay.h"
 #include "clay/clay_renderer.h"
@@ -11,9 +18,11 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_surface.h>
-#include <SDL3_ttf/SDL_ttf.h>
-#include <ctime>
+#include <time.h>
 #include <unistd.h>
+
+#include <array>
+#include <vector>
 
 const auto PAGE_OUTLINE_COLOR = Color("#888");
 const auto APP_BACKGROUND_COLOR = Color("#DDD");
@@ -33,6 +42,13 @@ struct PrimitiveLine {
   size_t zindex = 0;
 };
 
+struct PrimitivePolygon {
+  List<Vec2> vertices;
+  List<size_t> indices;
+  Color color;
+  size_t zIndex = 0;
+};
+
 struct RenderLineShape {
   LineShape line;
   Vec2 from;
@@ -46,8 +62,20 @@ struct Renderer {
   App* app;
   List<PrimitiveRectangle> rectangles;
   List<PrimitiveLine> lines;
+  List<PrimitivePolygon> polygons;
   size_t nextZIndex;
 };
+
+void RenderPolygon(Renderer& renderer, List<Vec2> vertices, List<size_t> indices, Color color)
+{
+  renderer.polygons.push(renderer.arena,
+      PrimitivePolygon {
+          .vertices = vertices,
+          .indices = indices,
+          .color = color,
+          .zIndex = renderer.nextZIndex++,
+      });
+}
 
 void RenderRect(Renderer& renderer, Vec2 pos, Vec2 size, Color color)
 {
@@ -158,133 +186,358 @@ void DrawLine(App* app, Vec2 from, Vec2 to, Color color)
   // SDL_RenderLine(app->rendererData.renderer, from.x, from.y, to.x, to.y);
 }
 
-void constructLineshapeOutline(Renderer& renderer, Document& document, LineShape& shape)
+String getPath(Arena& arena, List<InterpolationPoint> points)
 {
-  auto& app = renderer.app;
-  // auto& renderer = app->rendererData.renderer;
-  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
-  int pageHeightPx = pageWidthPx * 297 / 210;
-  auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
-
-  if (shape.points.length <= 1) {
-    return;
-  }
-
-  auto outline = getStroke(app->frameArena, shape.points,
+  auto outline = getStroke(arena, points,
       {
-          .size = 15,
-          .smoothing = 0.3,
+          .size = 10,
+          .thinning = 0,
+          .smoothing = 1,
+          .streamline = 1,
           .easing =
               [](double t) {
                 t--;
                 return t * t * t + 1;
               },
           .simulatePressure = false,
-          .start = { .easing =
-                         [](double t) {
-                           t--;
-                           return t * t * t + 1;
-                         } },
-          .end = { .easing =
+          .start = { .cap = true,
+              .easing =
+                  [](double t) {
+                    t--;
+                    return t * t * t + 1;
+                  },
+              },
+          .end = { .cap = true,.easing =
                        [](double t) {
                          t--;
                          return t * t * t + 1;
                        } },
       });
-
-  print("{} {}", shape.points.length, outline.length);
-  for (auto p : outline) {
-    RenderRect(renderer, document.position + p * pageProj, Vec2(2, 2), "#FF0000");
-  }
-
-  return;
-
-  List<float> thicknessProfile;
-  List<Vec2> centerPoints;
-  for (auto& point : shape.points) {
-    if (centerPoints.length > 0) {
-      auto alpha = 0.5;
-      Vec2 lastPoint = centerPoints.back();
-      Vec2 newPoint
-          = Vec2(lastPoint.x * (1 - alpha) + point.pos.x * alpha, lastPoint.y * (1 - alpha) + point.pos.y * alpha);
-      centerPoints.push(app->frameArena, newPoint);
-    } else {
-      centerPoints.push(app->frameArena, point.pos);
+  ts::StringBuffer result;
+  result.append(arena, "M");
+  bool first = true;
+  for (auto& p : outline) {
+    if (!first) {
+      result.append(arena, "L");
     }
-    thicknessProfile.push(app->frameArena, point.thickness);
+    result.append(arena, format(arena, "{} {}", p.x, p.y));
+    first = false;
   }
-  centerPoints = rdp(app->frameArena, centerPoints, 0.2);
+  return result.str();
+};
 
-  List<Vec2> centerSplines = MakeSplinePoints(app->frameArena, centerPoints, 0.1);
-  for (size_t i = 0; i < centerSplines.length - 1; i++) {
-    DrawLine(app, centerSplines[i] * pageProj, centerSplines[i + 1] * pageProj, "#F00");
-    DrawPoint(app, centerSplines[i] * pageProj, "#0F0");
-  }
+// void constructLineshapeOutline(Renderer& renderer, Document& document, LineShape& shape)
+// {
+//   auto& app = renderer.app;
+//   // auto& renderer = app->rendererData.renderer;
+//   int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
+//   int pageHeightPx = pageWidthPx * 297 / 210;
+//   auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
 
-  List<Vec2> leftOutline;
-  List<Vec2> rightOutline;
-  for (size_t i = 0; i < centerSplines.length - 1; i++) {
-    auto& pos = centerSplines[i];
-    float lengthProgress = (float)i / (centerSplines.length - 1);
-    float thickness
-        = thicknessProfile[(size_t)clamp(floor(lengthProgress * thicknessProfile.length), 0, thicknessProfile.length)];
-    Vec2 nextPos = centerSplines[i + 1];
+//   if (shape.points.length <= 1) {
+//     return;
+//   }
 
-    Vec2 posPx = pos * pageProj;
-    Vec2 nextPosPx = nextPos * pageProj;
+//   String svgPath = getPath(app->frameArena, shape.points);
 
-    SDL_FRect rect;
-    rect.x = posPx.x;
-    rect.y = posPx.y;
-    rect.w = 2;
-    rect.h = 2;
+//   ts::StringBuffer svg;
+//   svg.append(app->frameArena,
+//       "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"800\" viewBox=\"0 0 800 800\">");
+//   svg.append(app->frameArena, "<path d=\"");
+//   svg.append(app->frameArena, svgPath);
+//   svg.append(app->frameArena, "\" fill=\"black\" /></svg>");
 
-    Vec2 dirToNextPoint = (nextPos - pos).normalize();
-    Vec2 perp = Vec2(-dirToNextPoint.y, dirToNextPoint.x);
+//   auto outline = getStroke(app->frameArena, shape.points,
+//       {
+//           .size = 5,
+//           .thinning = 0,
+//           .smoothing = 1,
+//           .streamline = 0,
+//           .easing =
+//               [](double t) {
+//                 t--;
+//                 return t * t * t + 1;
+//               },
+//           .simulatePressure = false,
+//           .start = { .cap = true,
+//               .easing =
+//                   [](double t) {
+//                     t--;
+//                     return t * t * t + 1;
+//                   },
+//               },
+//           .end = { .cap = true,.easing =
+//                        [](double t) {
+//                          t--;
+//                          return t * t * t + 1;
+//                        } },
+//       });
 
-    // SDL_SetRenderDrawColor(app->rendererData.renderer, 0, 255, 0, 255);
-    Vec2 left = pos + perp * thickness / 2;
-    Vec2 right = pos - perp * thickness / 2;
-    RenderLine(renderer, posPx + document.position, posPx + perp * 15 + document.position, "#00FF00");
-    // RenderLine(renderer, posPx + document.position, posPx + perp * 15 + document.position, "#00FF00");
-    // SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 0, 255);
+//   Clipper2Lib::PathD inputPolygon;
+//   inputPolygon.reserve(outline.length);
+//   for (auto& p : outline) {
+//     inputPolygon.emplace_back(p.x, p.y);
+//   }
+//   // inputPolygon.clear();
+//   // inputPolygon.push_back({ 0, 0 });
+//   // inputPolygon.push_back({ 100, 0 });
+//   // inputPolygon.push_back({ 100, 100 });
+//   // inputPolygon.push_back({ 50, 100 });
+//   // inputPolygon.push_back({ 50, -100 });
+//   // inputPolygon.push_back({ 60, -100 });
+//   // inputPolygon.push_back({ 60, 90 });
+//   // inputPolygon.push_back({ 90, 90 });
+//   // inputPolygon.push_back({ 90, 10 });
+//   // inputPolygon.push_back({ 0, 10 });
+//   // inputPolygon.push_back({ 0, 0 });
+//   Clipper2Lib::PathsD inputPolygons;
+//   inputPolygons.push_back(inputPolygon);
+//   // Clipper2Lib::PathsD simplifiedPolygons = Clipper2Lib::SimplifyPath(inputPolygon, 0);
+//   Clipper2Lib::PathD _simplifiedPolygon = Clipper2Lib::SimplifyPath(inputPolygon, 0);
+//   Clipper2Lib::PathsD simplifiedPolygons;
+//   simplifiedPolygons.clear();
+//   // simplifiedPolygons.push_back(inputPolygon);
+//   simplifiedPolygons.push_back(_simplifiedPolygon);
 
-    // rect.x = left.x * pageProj.x;
-    // rect.y = left.y * pageProj.y;
-    // rect.w = 2;
-    // rect.h = 2;
-    // SDL_RenderFillRect(app->rendererData.renderer, &rect);
-    leftOutline.push(app->frameArena, left);
+//   using Coord = double;
+//   using N = uint32_t;
+//   using Point = std::array<Coord, 2>;
 
-    // rect.x = right.x * pageProj.x;
-    // rect.y = right.y * pageProj.y;
-    // SDL_RenderFillRect(app->rendererData.renderer, &rect);
-    rightOutline.push(app->frameArena, right);
+//   for (auto& simplifiedPolygon : simplifiedPolygons) {
+//     std::vector<std::vector<Point>> polygon = { {} };
+//     polygon[0].reserve(simplifiedPolygon.size());
+//     for (auto& p : simplifiedPolygon) {
+//       polygon[0].push_back(Point({ p.x, p.y }));
+//     }
+//     auto indices = mapbox::earcut<N>(polygon);
 
-    // SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 255, 255);
-  }
+//     List<Vec2> listVertices;
+//     for (auto& p : simplifiedPolygon) {
+//       listVertices.push(app->frameArena, document.position + Vec2(p.x, p.y) * pageProj);
+//     }
 
-  List<Vec2> spline = MakeSplinePoints(app->frameArena, leftOutline, 0.1);
-  for (int i = 0; i < (int)spline.length - 1; i++) {
-    // DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
-    RenderLine(
-        renderer, spline[i] * pageProj + document.position, spline[i + 1] * pageProj + document.position, "#0000FF");
-  }
+//     List<size_t> listIndices;
+//     for (auto& index : indices) {
+//       listIndices.push(app->frameArena, index);
+//     }
 
-  spline = MakeSplinePoints(app->frameArena, rightOutline, 0.1);
-  for (int i = 0; i < (int)spline.length - 1; i++) {
-    // DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
-    RenderLine(
-        renderer, spline[i] * pageProj + document.position, spline[i + 1] * pageProj + document.position, "#0000FF");
-  }
-}
+//     RenderPolygon(renderer, listVertices, listIndices, "#F00");
+//     for (size_t i = 0; i < outline.length - 1; i++) {
+//       RenderLine(
+//           renderer, document.position + outline[i] * pageProj, document.position + outline[i + 1] * pageProj,
+//           "#00F");
+//     }
 
-void RenderShapesOnPage(Renderer& renderer, Document& document, Page& page)
+//     // Initialize resvg's library logging system
+//     resvg_init_log();
+
+//     resvg_options* opt = resvg_options_create();
+//     resvg_options_load_system_fonts(opt);
+
+//     // Optionally, you can add some CSS to control the SVG rendering.
+//     resvg_options_set_stylesheet(opt, "svg { fill: white; }");
+
+//     resvg_render_tree* tree;
+//     // Construct a tree from the svg file and pass in some options
+//     // int err = resvg_parse_tree_from_file("test.svg", opt, &tree);
+//     int err = resvg_parse_tree_from_data(svg.data, svg.length, opt, &tree);
+//     resvg_options_destroy(opt);
+//     if (err != RESVG_OK) {
+//       printf("Error id: %i\n", err);
+//       abort();
+//     }
+
+//     resvg_size size = resvg_get_image_size(tree);
+//     int width = (int)size.width;
+//     int height = (int)size.height;
+
+//     // Using the dimension info, allocate enough pixels to account for the entire image
+//     cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+
+//     /* resvg doesn't support stride, so cairo_surface_t should have no padding */
+//     assert(cairo_image_surface_get_stride(surface) == (int)size.width * 4);
+
+//     unsigned char* surface_data = cairo_image_surface_get_data(surface);
+
+//     cairo_t* cr = cairo_create(surface);
+//     cairo_set_source_rgba(cr, 0, 0, 0, 0);
+//     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+//     cairo_paint(cr);
+//     cairo_destroy(cr);
+
+//     resvg_render(tree, resvg_transform_identity(), width, height, (char*)surface_data);
+
+//     // /* RGBA -> BGRA */
+//     // for (int i = 0; i < width * height * 4; i += 4) {
+//     //   unsigned char r = surface_data[i + 0];
+//     //   surface_data[i + 0] = surface_data[i + 2];
+//     //   surface_data[i + 2] = r;
+//     // }
+
+//     // Render
+//     gl::setUniform(app->mainShader, "uUseTexture", 1.f);
+
+//     // unsigned char test_data[width * height * 4];
+//     // for (int i = 0; i < width * height; i++) {
+//     //   test_data[i * 4 + 0] = 255; // R
+//     //   test_data[i * 4 + 1] = 0; // G
+//     //   test_data[i * 4 + 2] = 0; // B
+//     //   test_data[i * 4 + 3] = 128; // A
+//     // }
+
+//     // Upload to OpenGL texture
+//     glEnable(GL_BLEND);
+//     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//     GLuint tex;
+//     glGenTextures(1, &tex);
+//     glBindTexture(GL_TEXTURE_2D, tex);
+//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, surface_data);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+//     gl::Vertex quadVertices[4] = {
+//       {
+//           .pos = { 100, 100, 0 },
+//           .color = Color("#0000"),
+//           .uv = { 0, 0 },
+//       },
+//       {
+//           .pos = { 400, 100, 0 },
+//           .color = Color("#0000"),
+//           .uv = { 1, 0 },
+//       },
+//       {
+//           .pos = { 400, 400, 0 },
+//           .color = Color("#0000"),
+//           .uv = { 1, 1 },
+//       },
+//       {
+//           .pos = { 100, 400, 0 },
+//           .color = Color("#0000"),
+//           .uv = { 0, 1 },
+//       },
+//     };
+//     GLuint quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
+
+//     glBindVertexArray(app->mainViewportVAO);
+//     gl::uploadVertexBufferData(app->mainViewportVBO, quadVertices, 4, gl::DrawType::Dynamic);
+//     gl::uploadIndexBufferData(app->mainViewportIBO, quadIndices, 6, gl::DrawType::Dynamic);
+//     gl::setupBuffers();
+
+//     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+
+//     gl::setUniform(app->mainShader, "uUseTexture", 0.f);
+
+//     glDeleteTextures(1, &tex);
+
+//     // Save image
+//     // cairo_surface_write_to_png(surface, "out.png");
+//     // Vertex
+//     // Render
+
+//     // De-initialize the allocated memory
+//     cairo_surface_destroy(surface);
+//     resvg_tree_destroy(tree);
+
+//     // print("{} {}", shape.points.length, outline.length);
+//     // for (auto p : outline) {
+//     //   RenderRect(renderer, document.position + p * pageProj, Vec2(2, 2), "#00F");
+//     // }
+//   }
+
+//   return;
+
+//   List<float> thicknessProfile;
+//   List<Vec2> centerPoints;
+//   for (auto& point : shape.points) {
+//     if (centerPoints.length > 0) {
+//       auto alpha = 0.5;
+//       Vec2 lastPoint = centerPoints.back();
+//       Vec2 newPoint
+//           = Vec2(lastPoint.x * (1 - alpha) + point.pos.x * alpha, lastPoint.y * (1 - alpha) + point.pos.y * alpha);
+//       centerPoints.push(app->frameArena, newPoint);
+//     } else {
+//       centerPoints.push(app->frameArena, point.pos);
+//     }
+//     thicknessProfile.push(app->frameArena, point.pressure);
+//   }
+//   centerPoints = rdp(app->frameArena, centerPoints, 0.2);
+
+//   List<Vec2> centerSplines = MakeSplinePoints(app->frameArena, centerPoints, 0.1);
+//   for (size_t i = 0; i < centerSplines.length - 1; i++) {
+//     DrawLine(app, centerSplines[i] * pageProj, centerSplines[i + 1] * pageProj, "#F00");
+//     DrawPoint(app, centerSplines[i] * pageProj, "#0F0");
+//   }
+
+//   List<Vec2> leftOutline;
+//   List<Vec2> rightOutline;
+//   for (size_t i = 0; i < centerSplines.length - 1; i++) {
+//     auto& pos = centerSplines[i];
+//     float lengthProgress = (float)i / (centerSplines.length - 1);
+//     float thickness
+//         = thicknessProfile[(size_t)clamp(floor(lengthProgress * thicknessProfile.length), 0,
+//         thicknessProfile.length)];
+//     Vec2 nextPos = centerSplines[i + 1];
+
+//     Vec2 posPx = pos * pageProj;
+//     Vec2 nextPosPx = nextPos * pageProj;
+
+//     SDL_FRect rect;
+//     rect.x = posPx.x;
+//     rect.y = posPx.y;
+//     rect.w = 2;
+//     rect.h = 2;
+
+//     Vec2 dirToNextPoint = (nextPos - pos).normalize();
+//     Vec2 perp = Vec2(-dirToNextPoint.y, dirToNextPoint.x);
+
+//     // SDL_SetRenderDrawColor(app->rendererData.renderer, 0, 255, 0, 255);
+//     Vec2 left = pos + perp * thickness / 2;
+//     Vec2 right = pos - perp * thickness / 2;
+//     RenderLine(renderer, posPx + document.position, posPx + perp * 15 + document.position, "#00FF00");
+//     // RenderLine(renderer, posPx + document.position, posPx + perp * 15 + document.position, "#00FF00");
+//     // SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 0, 255);
+
+//     // rect.x = left.x * pageProj.x;
+//     // rect.y = left.y * pageProj.y;
+//     // rect.w = 2;
+//     // rect.h = 2;
+//     // SDL_RenderFillRect(app->rendererData.renderer, &rect);
+//     leftOutline.push(app->frameArena, left);
+
+//     // rect.x = right.x * pageProj.x;
+//     // rect.y = right.y * pageProj.y;
+//     // SDL_RenderFillRect(app->rendererData.renderer, &rect);
+//     rightOutline.push(app->frameArena, right);
+
+//     // SDL_SetRenderDrawColor(app->rendererData.renderer, 255, 0, 255, 255);
+//   }
+
+// List<Vec2> spline = MakeSplinePoints(app->frameArena, leftOutline, 0.1);
+// for (int i = 0; i < (int)spline.length - 1; i++) {
+//   // DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
+//   RenderLine(
+//       renderer, spline[i] * pageProj + document.position, spline[i + 1] * pageProj + document.position, "#0000FF");
+// }
+
+// spline = MakeSplinePoints(app->frameArena, rightOutline, 0.1);
+// for (int i = 0; i < (int)spline.length - 1; i++) {
+//   // DrawLine(app, spline[i] * pageProj, spline[i + 1] * pageProj, "#0000FF");
+//   RenderLine(
+//       renderer, spline[i] * pageProj + document.position, spline[i + 1] * pageProj + document.position, "#0000FF");
+// }
+// }
+
+void RenderPage(Renderer& renderer, Document& document, Page& page)
 {
   // auto renderer = app->rendererData.renderer;
   int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
+
+  if (pageWidthPx == 0 || pageHeightPx == 0) {
+    return;
+  }
 
   while (page.shapes.length > 0) {
     page.shapes.pop();
@@ -302,8 +555,80 @@ void RenderShapesOnPage(Renderer& renderer, Document& document, Page& page)
   //   constructLineshapeOutline(renderer.app, document, shape);
   // }
   shape = document.currentLine;
-  constructLineshapeOutline(renderer, document, shape);
+  // constructLineshapeOutline(renderer, document, shape);
   // SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
+  // return;
+
+  String svgPath = getPath(renderer.app->frameArena, shape.points);
+
+  ts::StringBuffer svg;
+  svg.append(renderer.app->frameArena,
+      format(renderer.app->frameArena,
+          "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{}\" height=\"{}\" viewBox=\"0 0 2100 2970\">",
+          pageWidthPx, pageHeightPx));
+  svg.append(renderer.app->frameArena, "<path d=\"");
+  svg.append(renderer.app->frameArena, svgPath);
+  svg.append(renderer.app->frameArena, "\" fill=\"black\" /></svg>");
+
+  resvg_render_tree* tree;
+  int err = resvg_parse_tree_from_data(svg.data, svg.length, renderer.app->svgOpts, &tree);
+  if (err != RESVG_OK) {
+    ts::print_stderr("Error while parsing SVG: {}", err);
+    return;
+  }
+
+  cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pageWidthPx, pageHeightPx);
+  assert(cairo_image_surface_get_stride(surface) == (int)pageWidthPx * 4);
+
+  unsigned char* surface_data = cairo_image_surface_get_data(surface);
+  cairo_t* cr = cairo_create(surface);
+  cairo_set_source_rgba(cr, 0, 0, 0, 0);
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_paint(cr);
+  cairo_destroy(cr);
+
+  resvg_render(tree, resvg_transform_identity(), pageWidthPx, pageHeightPx, (char*)surface_data);
+
+  gl::setUniform(renderer.app->mainShader, "uUseTexture", 1.f);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  page.renderTexture.uploadData({ pageWidthPx, pageHeightPx }, gl::Format::BGRA, surface_data);
+
+  gl::Vertex quadVertices[4] = {
+    {
+        .pos = { document.position.x, document.position.y, 0 },
+        .color = Color("#0000"),
+        .uv = { 0, 0 },
+    },
+    {
+        .pos = { document.position.x + pageWidthPx, document.position.y, 0 },
+        .color = Color("#0000"),
+        .uv = { 1, 0 },
+    },
+    {
+        .pos = { document.position.x + pageWidthPx, document.position.y + pageHeightPx, 0 },
+        .color = Color("#0000"),
+        .uv = { 1, 1 },
+    },
+    {
+        .pos = { document.position.x, document.position.y + pageHeightPx, 0 },
+        .color = Color("#0000"),
+        .uv = { 0, 1 },
+    },
+  };
+  GLuint quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
+
+  glBindVertexArray(renderer.app->mainViewportVAO);
+  gl::uploadVertexBufferData(renderer.app->mainViewportVBO, quadVertices, 4, gl::DrawType::Dynamic);
+  gl::uploadIndexBufferData(renderer.app->mainViewportIBO, quadIndices, 6, gl::DrawType::Dynamic);
+  gl::setupBuffers();
+
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+
+  gl::setUniform(renderer.app->mainShader, "uUseTexture", 0.f);
+
+  cairo_surface_destroy(surface);
+  resvg_tree_destroy(tree);
   return;
 
   if (shape.points.length == 0) {
@@ -314,17 +639,17 @@ void RenderShapesOnPage(Renderer& renderer, Document& document, Page& page)
   Vec2 bottomRight = shape.points[0].pos;
 
   for (auto& p : shape.points) {
-    if (p.pos.x - p.thickness / 2.f < topLeft.x) {
-      topLeft.x = p.pos.x - p.thickness / 2.f;
+    if (p.pos.x - p.pressure / 2.f < topLeft.x) {
+      topLeft.x = p.pos.x - p.pressure / 2.f;
     }
-    if (p.pos.x + p.thickness / 2.f > bottomRight.x) {
-      bottomRight.x = p.pos.x + p.thickness / 2.f;
+    if (p.pos.x + p.pressure / 2.f > bottomRight.x) {
+      bottomRight.x = p.pos.x + p.pressure / 2.f;
     }
-    if (p.pos.y - p.thickness / 2.f < topLeft.y) {
-      topLeft.y = p.pos.y - p.thickness / 2.f;
+    if (p.pos.y - p.pressure / 2.f < topLeft.y) {
+      topLeft.y = p.pos.y - p.pressure / 2.f;
     }
-    if (p.pos.y + p.thickness / 2.f > bottomRight.y) {
-      bottomRight.y = p.pos.y + p.thickness / 2.f;
+    if (p.pos.y + p.pressure / 2.f > bottomRight.y) {
+      bottomRight.y = p.pos.y + p.pressure / 2.f;
     }
     RenderRect(renderer, p.pos * pageProj + document.position, Vec2(1, 1), "#F00");
   }
@@ -333,34 +658,6 @@ void RenderShapesOnPage(Renderer& renderer, Document& document, Page& page)
 
   Vec2 bbSize = bottomRight - topLeft;
   Vec2 bbSizePx = bbSize * pageProj;
-
-  struct SSBOLine {
-    InterpolationPoint* points;
-    uint32_t numberOfPoints;
-  };
-  SSBOLine* lines;
-
-  size_t numOfLines = 0;
-  lines = renderer.app->frameArena.allocate<SSBOLine>(page.shapes.length);
-  for (auto& shape : page.shapes) {
-    SSBOLine line;
-    line.numberOfPoints = shape.points.length;
-    line.points = renderer.app->frameArena.allocate<InterpolationPoint>(shape.points.length);
-    size_t numOfPoints = 0;
-    for (auto& point : shape.points) {
-      line.points[numOfPoints++] = point;
-    }
-    lines[numOfLines++] = line;
-  }
-
-  // glUseProgram(renderer.app->lineshapeShader);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderer.app->mainViewportSSBO);
-  void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-  memcpy(ptr, lines, numOfLines * sizeof(SSBOLine));
-  glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderer.app->mainViewportSSBO);
-
-  // glUseProgram(renderer.app->mainShader);
 }
 
 void RenderDocuments(Renderer& renderer)
@@ -406,31 +703,22 @@ void RenderMainViewport(App* app)
 
   // Now draw the line shapes
   auto& doc = app->documents[app->selectedDocument];
-  for (auto page : doc.pages) {
-    RenderShapesOnPage(renderer, doc, page);
-  }
 
   // Lines
-  float* lineVertices = app->frameArena.allocate<float>(renderer.lines.length * 14);
+  gl::Vertex* lineVertices = app->frameArena.allocate<gl::Vertex>(renderer.lines.length * 2);
   GLuint* lineIndices = app->frameArena.allocate<GLuint>(renderer.lines.length * 2);
   size_t vertexIndex = 0;
   size_t indexIndex = 0;
   size_t i = 0;
   for (auto& line : renderer.lines) {
-    lineVertices[vertexIndex++] = line.from.x;
-    lineVertices[vertexIndex++] = line.from.y;
-    lineVertices[vertexIndex++] = 1 - (float)line.zindex / renderer.nextZIndex;
-    lineVertices[vertexIndex++] = line.lineColor.r / 255.f;
-    lineVertices[vertexIndex++] = line.lineColor.g / 255.f;
-    lineVertices[vertexIndex++] = line.lineColor.b / 255.f;
-    lineVertices[vertexIndex++] = line.lineColor.a / 255.f;
-    lineVertices[vertexIndex++] = line.to.x;
-    lineVertices[vertexIndex++] = line.to.y;
-    lineVertices[vertexIndex++] = 1 - (float)line.zindex / renderer.nextZIndex;
-    lineVertices[vertexIndex++] = line.lineColor.r / 255.f;
-    lineVertices[vertexIndex++] = line.lineColor.g / 255.f;
-    lineVertices[vertexIndex++] = line.lineColor.b / 255.f;
-    lineVertices[vertexIndex++] = line.lineColor.a / 255.f;
+    lineVertices[vertexIndex++] = {
+      .pos = Vec3f(line.from.x, line.from.y, 1 - (float)line.zindex / renderer.nextZIndex),
+      .color = line.lineColor / 255,
+    };
+    lineVertices[vertexIndex++] = {
+      .pos = Vec3f(line.to.x, line.to.y, 1 - (float)line.zindex / renderer.nextZIndex),
+      .color = line.lineColor / 255,
+    };
 
     lineIndices[indexIndex++] = i * 2;
     lineIndices[indexIndex++] = i * 2 + 1;
@@ -440,53 +728,41 @@ void RenderMainViewport(App* app)
   glBindVertexArray(app->mainViewportVAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
-  glBufferData(GL_ARRAY_BUFFER, renderer.lines.length * 14 * sizeof(float), lineVertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, renderer.lines.length * 2 * sizeof(gl::Vertex), lineVertices, GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->mainViewportIBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, renderer.lines.length * 2 * sizeof(GLuint), lineIndices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(gl::Vertex), (void*)0);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(gl::Vertex), (void*)(sizeof(Vec3f)));
   glEnableVertexAttribArray(1);
   glLineWidth(1.f);
   glDrawElements(GL_LINES, renderer.lines.length * 2, GL_UNSIGNED_INT, (void*)0);
 
   // Rectangles
-  float* rectVertices = app->frameArena.allocate<float>(renderer.rectangles.length * 28);
+  gl::Vertex* rectVertices = app->frameArena.allocate<gl::Vertex>(renderer.rectangles.length * 4);
   GLuint* rectIndices = app->frameArena.allocate<GLuint>(renderer.rectangles.length * 6);
   vertexIndex = 0;
   indexIndex = 0;
   i = 0;
   for (auto& rect : renderer.rectangles) {
-    rectVertices[vertexIndex++] = rect.pos.x;
-    rectVertices[vertexIndex++] = rect.pos.y;
-    rectVertices[vertexIndex++] = 1 - (float)rect.zindex / renderer.nextZIndex;
-    rectVertices[vertexIndex++] = rect.fillColor.r / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.g / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.b / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.a / 255.f;
-    rectVertices[vertexIndex++] = rect.pos.x + rect.size.x;
-    rectVertices[vertexIndex++] = rect.pos.y;
-    rectVertices[vertexIndex++] = 1 - (float)rect.zindex / renderer.nextZIndex;
-    rectVertices[vertexIndex++] = rect.fillColor.r / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.g / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.b / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.a / 255.f;
-    rectVertices[vertexIndex++] = rect.pos.x + rect.size.x;
-    rectVertices[vertexIndex++] = rect.pos.y + rect.size.y;
-    rectVertices[vertexIndex++] = 1 - (float)rect.zindex / renderer.nextZIndex;
-    rectVertices[vertexIndex++] = rect.fillColor.r / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.g / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.b / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.a / 255.f;
-    rectVertices[vertexIndex++] = rect.pos.x;
-    rectVertices[vertexIndex++] = rect.pos.y + rect.size.y;
-    rectVertices[vertexIndex++] = 1 - (float)rect.zindex / renderer.nextZIndex;
-    rectVertices[vertexIndex++] = rect.fillColor.r / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.g / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.b / 255.f;
-    rectVertices[vertexIndex++] = rect.fillColor.a / 255.f;
+    rectVertices[vertexIndex++] = {
+      .pos = Vec3f(rect.pos.x, rect.pos.y, 1 - (float)rect.zindex / renderer.nextZIndex),
+      .color = rect.fillColor / 255,
+    };
+    rectVertices[vertexIndex++] = {
+      .pos = Vec3f(rect.pos.x + rect.size.x, rect.pos.y, 1 - (float)rect.zindex / renderer.nextZIndex),
+      .color = rect.fillColor / 255,
+    };
+    rectVertices[vertexIndex++] = {
+      .pos = Vec3f(rect.pos.x + rect.size.x, rect.pos.y + rect.size.y, 1 - (float)rect.zindex / renderer.nextZIndex),
+      .color = rect.fillColor / 255,
+    };
+    rectVertices[vertexIndex++] = {
+      .pos = Vec3f(rect.pos.x, rect.pos.y + rect.size.y, 1 - (float)rect.zindex / renderer.nextZIndex),
+      .color = rect.fillColor / 255,
+    };
 
     rectIndices[indexIndex++] = i * 4 + 0;
     rectIndices[indexIndex++] = i * 4 + 1;
@@ -500,17 +776,67 @@ void RenderMainViewport(App* app)
   glBindVertexArray(app->mainViewportVAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
-  glBufferData(GL_ARRAY_BUFFER, renderer.rectangles.length * 28 * sizeof(float), rectVertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, renderer.rectangles.length * 4 * sizeof(gl::Vertex), rectVertices, GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->mainViewportIBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, renderer.rectangles.length * 6 * sizeof(GLuint), rectIndices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(gl::Vertex), (void*)0);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(gl::Vertex), (void*)(sizeof(Vec3f)));
   glEnableVertexAttribArray(1);
 
   glDrawElements(GL_TRIANGLES, renderer.rectangles.length * 6, GL_UNSIGNED_INT, (void*)0);
+
+  // Polygons
+  if (renderer.polygons.length > 0) {
+
+    size_t totalPolygonVertices = 0;
+    size_t totalPolygonIndices = 0;
+    for (auto polygon : renderer.polygons) {
+      totalPolygonVertices += polygon.vertices.length;
+      totalPolygonIndices += polygon.indices.length;
+    }
+
+    gl::Vertex* polygonVertices = app->frameArena.allocate<gl::Vertex>(totalPolygonVertices);
+    GLuint* polygonIndices = app->frameArena.allocate<GLuint>(totalPolygonIndices);
+    size_t numPolygonVertices = 0;
+    size_t numPolygonIndices = 0;
+    for (size_t i = 0; i < renderer.polygons.length; i++) {
+      auto& polygon = renderer.polygons[i];
+      for (size_t vertexNum = 0; vertexNum < polygon.vertices.length; vertexNum++) {
+        auto& vertex = polygon.vertices[vertexNum];
+        polygonVertices[numPolygonVertices + vertexNum] = (gl::Vertex) {
+          .pos = { vertex.x, vertex.y, 1 - (float)polygon.zIndex / renderer.nextZIndex },
+          .color = polygon.color / 255,
+        };
+      }
+      for (size_t indexNum = 0; indexNum < polygon.indices.length; indexNum++) {
+        polygonIndices[numPolygonIndices + indexNum] = polygon.indices[indexNum] + numPolygonVertices;
+      }
+      numPolygonVertices += polygon.vertices.length;
+      numPolygonIndices += polygon.indices.length;
+    }
+
+    glBindVertexArray(app->mainViewportVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
+    glBufferData(GL_ARRAY_BUFFER, totalPolygonVertices * sizeof(gl::Vertex), polygonVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->mainViewportIBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, totalPolygonIndices * sizeof(GLuint), polygonIndices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(gl::Vertex), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(gl::Vertex), (void*)(sizeof(Vec3f)));
+    glEnableVertexAttribArray(1);
+
+    glDrawElements(GL_TRIANGLES, totalPolygonIndices, GL_UNSIGNED_INT, (void*)0);
+  }
+
+  for (auto page : doc.pages) {
+    RenderPage(renderer, doc, page);
+  }
 
   // if (!app->mainViewportSoftwareTexture || app->mainViewportSoftwareTexture->w != app->mainViewportBB.width
   //     || app->mainViewportSoftwareTexture->h != app->mainViewportBB.height) {

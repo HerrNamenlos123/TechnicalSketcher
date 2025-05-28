@@ -8,15 +8,18 @@ const char* mainVertexShaderSrc = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
 
 uniform mat4 pixelProjection;
 
 out vec4 vertexColor;
+out vec2 texCoord;
 
 void main() {
   vec4 pos = vec4(aPos, 1.0);
   gl_Position = pixelProjection * pos;
   vertexColor = aColor;
+  texCoord = aTexCoord;
 })";
 
 const char* mainFragmentShaderSrc = R"(
@@ -24,9 +27,16 @@ const char* mainFragmentShaderSrc = R"(
 
 out vec4 FragColor;
 in vec4 vertexColor;
+in vec2 texCoord;
+
+uniform sampler2D uTexture;
+uniform bool uUseTexture;
 
 void main() {
-    FragColor = vertexColor;
+    if (uUseTexture)
+        FragColor = texture(uTexture, texCoord);
+    else
+        FragColor = vertexColor;
 })";
 
 const char* lineshapeVertexShader = R"(

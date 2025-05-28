@@ -1,5 +1,6 @@
 
 #include "../shared/app.h"
+#include "../shared/gl.hpp"
 #include "documentrenderer.cpp"
 #include "math.h"
 #include <SDL3/SDL_events.h>
@@ -24,6 +25,7 @@ void addDocument(App* app)
 void unloadDocument(App* app, Document& document)
 {
   for (auto& page : document.pages) {
+    page.renderTexture.free();
   }
   document.arena.free();
 }
@@ -265,8 +267,8 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
 
       if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
         InterpolationPoint point;
-        point.pos = penPosOnPage_mm;
-        point.thickness = app->currentPenPressure * 10;
+        point.pos = penPosOnPage_mm * 10;
+        point.pressure = app->currentPenPressure * 10;
         document.currentLine.points.push(document.arena, point);
       }
       pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100;

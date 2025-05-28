@@ -62,7 +62,6 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   glGenVertexArrays(1, &app->mainViewportVAO);
   glGenBuffers(1, &app->mainViewportVBO);
   glGenBuffers(1, &app->mainViewportIBO);
-  glGenBuffers(1, &app->mainViewportSSBO);
 
   addDocument(app);
   addPageToDocument(app, app->documents.back());
@@ -73,18 +72,23 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   app->documents.back().pageWidthPercentOfWindow = 70;
   app->pageGapPercentOfHeight = 2.f;
   app->currentlyDrawingOnPage = -1;
+
+  resvg_init_log();
+  app->svgOpts = resvg_options_create();
+  resvg_options_load_system_fonts(app->svgOpts);
+  resvg_options_set_stylesheet(app->svgOpts, "svg { fill: white; }");
 }
 
 extern "C" __declspec(dllexport) void UnloadApp(App* app)
 {
+  resvg_options_destroy(app->svgOpts);
+
   for (auto& document : app->documents) {
     unloadDocument(app, document);
   }
 
   glDeleteVertexArrays(1, &app->mainViewportVAO);
   app->mainViewportVAO = 0;
-  glDeleteBuffers(1, &app->mainViewportSSBO);
-  app->mainViewportSSBO = 0;
   glDeleteBuffers(1, &app->mainViewportVBO);
   app->mainViewportVBO = 0;
   glDeleteBuffers(1, &app->mainViewportIBO);

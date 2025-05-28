@@ -48,7 +48,7 @@ InterpolationPoint lrp(InterpolationPoint A, InterpolationPoint B, double t)
 {
   return {
     .pos = A.pos + (B.pos - A.pos) * t,
-    .thickness = A.thickness + (B.thickness - A.thickness) * (t / (B.pos - A.pos).length()),
+    .pressure = A.pressure + (B.pressure - A.pressure) * (t / (B.pos - A.pos).length()),
   };
 }
 
@@ -100,7 +100,7 @@ List<StrokePoint> getStrokePoints(Arena& arena, List<InterpolationPoint> points,
   // If there's only one point, add another point at a 1pt offset.
   // Don't mutate the input array!
   if (pts.length == 1) {
-    pts.push(arena, { .pos = pts[0].pos + Vec2(1, 1), .thickness = pts[0].thickness });
+    pts.push(arena, { .pos = pts[0].pos + Vec2(1, 1), .pressure = pts[0].pressure });
   }
 
   // The strokePoints array will hold the points for the stroke.
@@ -109,7 +109,7 @@ List<StrokePoint> getStrokePoints(Arena& arena, List<InterpolationPoint> points,
   strokePoints.push(arena,
       {
           .point = pts[0].pos,
-          .pressure = pts[0].thickness >= 0 ? pts[0].thickness : 0.25,
+          .pressure = pts[0].pressure >= 0 ? pts[0].pressure : 0.25,
           .distance = 0,
           .vector = Vec2(1, 1),
           .runningLength = 0,
@@ -160,7 +160,7 @@ List<StrokePoint> getStrokePoints(Arena& arena, List<InterpolationPoint> points,
       // The adjusted point
       .point = point,
       // The input pressure (or .5 if not specified)
-      .pressure = pts[i].thickness >= 0 ? pts[i].thickness : 0.5,
+      .pressure = pts[i].pressure >= 0 ? pts[i].pressure : 0.5,
       // The distance between the current point and the previous point
       .distance = distance,
       // The vector from the current point to the previous point
