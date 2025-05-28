@@ -47,8 +47,8 @@ Vec2 lrp(Vec2 A, Vec2 B, double t)
 InterpolationPoint lrp(InterpolationPoint A, InterpolationPoint B, double t)
 {
   return {
-    .pos = A.pos + (B.pos - A.pos) * t,
-    .pressure = A.pressure + (B.pressure - A.pressure) * (t / (B.pos - A.pos).length()),
+    .pos_mm_scaled = A.pos_mm_scaled + (B.pos_mm_scaled - A.pos_mm_scaled) * t,
+    .pressure = A.pressure + (B.pressure - A.pressure) * (t / (B.pos_mm_scaled - A.pos_mm_scaled).length()),
   };
 }
 
@@ -100,7 +100,7 @@ List<StrokePoint> getStrokePoints(Arena& arena, List<InterpolationPoint> points,
   // If there's only one point, add another point at a 1pt offset.
   // Don't mutate the input array!
   if (pts.length == 1) {
-    pts.push(arena, { .pos = pts[0].pos + Vec2(1, 1), .pressure = pts[0].pressure });
+    pts.push(arena, { .pos_mm_scaled = pts[0].pos_mm_scaled + Vec2(1, 1), .pressure = pts[0].pressure });
   }
 
   // The strokePoints array will hold the points for the stroke.
@@ -108,7 +108,7 @@ List<StrokePoint> getStrokePoints(Arena& arena, List<InterpolationPoint> points,
   List<StrokePoint> strokePoints;
   strokePoints.push(arena,
       {
-          .point = pts[0].pos,
+          .point = pts[0].pos_mm_scaled,
           .pressure = pts[0].pressure >= 0 ? pts[0].pressure : 0.25,
           .distance = 0,
           .vector = Vec2(1, 1),
@@ -131,11 +131,11 @@ List<StrokePoint> getStrokePoints(Arena& arena, List<InterpolationPoint> points,
   for (auto i = 1; i < pts.length; i++) {
     auto point = isComplete && i == max ? // If we're at the last point, and `options.last` is true,
                                           // then add the actual input point.
-        pts[i].pos
+        pts[i].pos_mm_scaled
                                         : // Otherwise, using the t calculated from the streamline
                                           // option, interpolate a new point between the previous
                                           // point the current point.
-        lrp(prev.point, pts[i].pos, t);
+        lrp(prev.point, pts[i].pos_mm_scaled, t);
 
     // If the new point is the same as the previous point, skip ahead.
     if (prev.point == point)

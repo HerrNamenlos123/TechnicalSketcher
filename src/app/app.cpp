@@ -72,6 +72,8 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   app->documents.back().pageWidthPercentOfWindow = 70;
   app->pageGapPercentOfHeight = 2.f;
   app->currentlyDrawingOnPage = -1;
+  app->perfectFreehandAccuracyScaling = 10;
+  app->penPressureScaling = 10;
 
   resvg_init_log();
   app->svgOpts = resvg_options_create();

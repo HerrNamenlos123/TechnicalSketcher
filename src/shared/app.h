@@ -38,7 +38,7 @@ struct resvg_options;
 
 // All units are always in mm
 struct InterpolationPoint {
-  Vec2 pos;
+  Vec2 pos_mm_scaled;
   float pressure;
 };
 
@@ -86,6 +86,8 @@ struct App {
 
   // Constants
   float pageGapPercentOfHeight;
+  float perfectFreehandAccuracyScaling;
+  float penPressureScaling;
 
   // Device input
   List<SDL_TouchFingerEvent> touchFingers;

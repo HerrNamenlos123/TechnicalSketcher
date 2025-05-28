@@ -267,8 +267,8 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
 
       if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
         InterpolationPoint point;
-        point.pos = penPosOnPage_mm * 10;
-        point.pressure = app->currentPenPressure * 10;
+        point.pos_mm_scaled = penPosOnPage_mm * app->perfectFreehandAccuracyScaling;
+        point.pressure = app->currentPenPressure * app->penPressureScaling;
         document.currentLine.points.push(document.arena, point);
       }
       pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100;
