@@ -2,6 +2,7 @@
 #ifndef GL_HPP
 #define GL_HPP
 
+#include <assert.h>
 #define TINYSTD_USE_CLAY
 #include "../GL/glad.h"
 #include "../shared/clay.h"
@@ -133,6 +134,15 @@ struct Framebuffer {
     return fb;
   }
 
+  ts::Vec2i getSize()
+  {
+    int width, height;
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    return ts::Vec2i(width, height);
+  }
+
   void clear(ts::Vec2i size)
   {
     bind();
@@ -146,10 +156,12 @@ struct Framebuffer {
 
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
+    unbind();
   }
 
   void bind() const
   {
+    assert(fbo != 0);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   }
 

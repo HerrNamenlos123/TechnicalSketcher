@@ -51,7 +51,9 @@ struct LineShape {
 
 struct Page {
   List<LineShape> shapes;
-  gl::Texture renderTexture;
+  gl::Texture tempRenderTexture;
+  gl::Framebuffer persistentFBO;
+  gl::Framebuffer previewFBO;
 };
 
 struct Document {
@@ -122,7 +124,6 @@ struct App {
   GLuint mainShader;
   GLuint lineshapeShader;
   GLuint mainViewportVAO;
-  gl::Framebuffer mainViewportFBO;
   GLuint mainViewportVBO;
   GLuint mainViewportIBO;
   GLuint mainViewportRBO;

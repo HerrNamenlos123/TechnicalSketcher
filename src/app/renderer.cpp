@@ -248,7 +248,7 @@ String getPath(App* app, Arena& arena, List<InterpolationPoint> points)
   return result.str();
 };
 
-void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, LineShape& shape)
+void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, LineShape& shape, gl::Framebuffer& fbo)
 {
   App* app = renderer.app;
   int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
@@ -288,7 +288,7 @@ void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, Li
   gl::setUniform(renderer.app->mainShader, "uUseTexture", 1.f);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  page.renderTexture.uploadData({ pageWidthPx, pageHeightPx }, gl::Format::BGRA, surface_data);
+  page.tempRenderTexture.uploadData({ pageWidthPx, pageHeightPx }, gl::Format::BGRA, surface_data);
 
   gl::Vertex quadVertices[4] = {
     {
@@ -314,7 +314,7 @@ void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, Li
   };
   GLuint quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
 
-  renderer.app->mainViewportFBO.bind();
+  fbo.bind();
   glBindVertexArray(renderer.app->mainViewportVAO);
   gl::uploadVertexBufferData(renderer.app->mainViewportVBO, quadVertices, 4, gl::DrawType::Dynamic);
   gl::uploadIndexBufferData(renderer.app->mainViewportIBO, quadIndices, 6, gl::DrawType::Dynamic);
@@ -323,10 +323,9 @@ void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, Li
   setPixelProjection(app, pageWidthPx, pageHeightPx);
   auto& bb = app->mainViewportBB;
   glViewport(0, 0, pageWidthPx, pageHeightPx);
-  renderer.app->mainViewportFBO.bind();
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  fbo.unbind();
   gl::setUniform(renderer.app->mainShader, "uUseTexture", 0.f);
 
   glViewport(app->mainViewportBB.x, app->windowSize.y - app->mainViewportBB.y - app->mainViewportBB.height,
@@ -337,7 +336,7 @@ void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, Li
   resvg_tree_destroy(tree);
 }
 
-void RenderFBOToPage(Renderer& renderer, Document& document, Page& page)
+void RenderFBOToPage(Renderer& renderer, Document& document, Page& page, gl::Framebuffer& fbo)
 {
   auto app = renderer.app;
   auto& bb = renderer.app->mainViewportBB;
@@ -384,8 +383,9 @@ void RenderFBOToPage(Renderer& renderer, Document& document, Page& page)
   gl::uploadIndexBufferData(renderer.app->mainViewportIBO, quadIndices, 6, gl::DrawType::Dynamic);
   gl::setupBuffers();
 
-  glBindTexture(GL_TEXTURE_2D, renderer.app->mainViewportFBO.tex);
+  glBindTexture(GL_TEXTURE_2D, fbo.tex);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+  glBindTexture(GL_TEXTURE_2D, 0);
 
   gl::setUniform(renderer.app->mainShader, "uUseTexture", 0.f);
 }
@@ -436,18 +436,39 @@ void RenderDocumentForeground(Renderer& renderer)
   int pageYOffset = document.position.y;
   int gridSpacing = 5;
 
+  glDisable(GL_DEPTH_TEST);
+
   for (auto& page : document.pages) {
     Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
     Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
     auto bb = renderer.app->mainViewportBB;
     if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
-      renderer.app->mainViewportFBO.clear({ pageWidthPx, pageHeightPx });
-      RenderShapeToPageFBO(renderer, document, page, document.currentLine);
-      RenderFBOToPage(renderer, document, page);
+      auto fboSize = page.persistentFBO.getSize();
+      if (fboSize.x != pageWidthPx || fboSize.y != pageHeightPx) {
+        page.persistentFBO.clear({ pageWidthPx, pageHeightPx });
+        for (auto& shape : page.shapes) {
+          shape.prerendered = false;
+        }
+      }
+
+      for (auto& shape : page.shapes) {
+        if (!shape.prerendered) {
+          RenderShapeToPageFBO(renderer, document, page, shape, page.persistentFBO);
+          shape.prerendered = true;
+        }
+      }
+
+      RenderFBOToPage(renderer, document, page, page.persistentFBO);
+
+      page.previewFBO.clear({ pageWidthPx, pageHeightPx });
+      RenderShapeToPageFBO(renderer, document, page, document.currentLine, page.previewFBO);
+      RenderFBOToPage(renderer, document, page, page.previewFBO);
     }
 
     pageYOffset += pageHeightPx + pageHeightPx * renderer.app->pageGapPercentOfHeight / 100.f;
   }
+
+  glEnable(GL_DEPTH_TEST);
 }
 
 void RenderMainViewport(App* app)

@@ -25,7 +25,8 @@ void addDocument(App* app)
 void unloadDocument(App* app, Document& document)
 {
   for (auto& page : document.pages) {
-    page.renderTexture.free();
+    page.tempRenderTexture.free();
+    page.persistentFBO.free();
   }
   document.arena.free();
 }
@@ -34,6 +35,8 @@ void addPageToDocument(App* app, Document& document)
 {
   Page page = Page {
     .shapes = {},
+    .persistentFBO = gl::Framebuffer::create(),
+    .previewFBO = gl::Framebuffer::create(),
   };
 
   document.pages.push(app->persistentApplicationArena, page);
@@ -230,6 +233,9 @@ void processPenDownEvent(App* appstate, SDL_PenTouchEvent event)
 void processPenUpEvent(App* app, SDL_PenTouchEvent event)
 {
   auto& document = app->documents[app->selectedDocument];
+  auto& page = document.pages[app->currentlyDrawingOnPage];
+  page.shapes.push(document.arena, document.currentLine);
+  document.currentLine = {};
   app->currentlyDrawingOnPage = -1;
 
   // List<InterpolationPoint> result1;

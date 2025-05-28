@@ -52,7 +52,6 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   glGenVertexArrays(1, &app->mainViewportVAO);
   glGenBuffers(1, &app->mainViewportVBO);
   glGenBuffers(1, &app->mainViewportIBO);
-  app->mainViewportFBO = gl::Framebuffer::create();
 
   addDocument(app);
   addPageToDocument(app, app->documents.back());
@@ -88,7 +87,6 @@ extern "C" __declspec(dllexport) void UnloadApp(App* app)
   app->mainViewportIBO = 0;
   glDeleteRenderbuffers(1, &app->mainViewportRBO);
   app->mainViewportRBO = 0;
-  app->mainViewportFBO.free();
   glDeleteTextures(1, &app->mainViewportTEX);
   app->mainViewportTEX = 0;
   glDeleteProgram(app->mainShader);
