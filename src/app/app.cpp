@@ -4,16 +4,6 @@
 #include "shader.cpp"
 #include <SDL3/SDL_pen.h>
 
-void setPixelProjection(App* app, float w, float h)
-{
-  Mat4 pixelProjection = Mat4::Identity();
-  pixelProjection.applyScaling(1, -1, 1);
-  pixelProjection.applyTranslation(-1, -1, 0);
-  pixelProjection.applyScaling(2, 2, 1);
-  pixelProjection.applyScaling(1 / w, 1 / h, 1);
-  setUniformMat4(app->mainShader, "pixelProjection", pixelProjection);
-}
-
 extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
 {
   app->clayArena.clearAndReinit();
@@ -62,6 +52,7 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   glGenVertexArrays(1, &app->mainViewportVAO);
   glGenBuffers(1, &app->mainViewportVBO);
   glGenBuffers(1, &app->mainViewportIBO);
+  app->mainViewportFBO = gl::Framebuffer::create();
 
   addDocument(app);
   addPageToDocument(app, app->documents.back());
@@ -97,8 +88,7 @@ extern "C" __declspec(dllexport) void UnloadApp(App* app)
   app->mainViewportIBO = 0;
   glDeleteRenderbuffers(1, &app->mainViewportRBO);
   app->mainViewportRBO = 0;
-  glDeleteFramebuffers(1, &app->mainViewportFBO);
-  app->mainViewportFBO = 0;
+  app->mainViewportFBO.free();
   glDeleteTextures(1, &app->mainViewportTEX);
   app->mainViewportTEX = 0;
   glDeleteProgram(app->mainShader);
@@ -145,6 +135,7 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
 
   case SDL_EVENT_MOUSE_WHEEL:
     Clay_UpdateScrollContainers(true, Clay_Vector2 { event->wheel.x, event->wheel.y }, 0.01f);
+    processMouseWheelEvent(app, event->wheel);
     break;
 
   case SDL_EVENT_FINGER_DOWN:

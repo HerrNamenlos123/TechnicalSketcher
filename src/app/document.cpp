@@ -142,6 +142,12 @@ void handleZoomPan(App* appstate)
   }
 }
 
+void processMouseWheelEvent(App* app, SDL_MouseWheelEvent event)
+{
+  float scrollSpeed = 50;
+  app->documents[app->selectedDocument].position.y += event.y * scrollSpeed;
+}
+
 void processFingerDownEvent(App* app, SDL_TouchFingerEvent event)
 {
   for (auto& finger : app->touchFingers) {
@@ -257,6 +263,11 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
   int pageIndex = 0;
   if (event.pen_state & SDL_PEN_INPUT_DOWN) {
     for (auto& page : document.pages) {
+
+      if (app->currentlyDrawingOnPage != pageIndex) {
+        continue;
+      }
+
       Vec2 penPosition = Vec2(event.x - app->mainViewportBB.x, event.y - app->mainViewportBB.y);
       Vec2 pageTopLeftPx = Vec2(pageXOffset, pageYOffset);
       Vec2 pageBottomRightPx = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
@@ -265,12 +276,12 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
       // print("Event: {}", pageTopLeftPx.x);
       // print("Page: {}", penPosition.x - pageTopLeftPx.x);
 
-      if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
-        InterpolationPoint point;
-        point.pos_mm_scaled = penPosOnPage_mm * app->perfectFreehandAccuracyScaling;
-        point.pressure = app->currentPenPressure * app->penPressureScaling;
-        document.currentLine.points.push(document.arena, point);
-      }
+      // if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
+      InterpolationPoint point;
+      point.pos_mm_scaled = penPosOnPage_mm * app->perfectFreehandAccuracyScaling;
+      point.pressure = app->currentPenPressure * app->penPressureScaling;
+      document.currentLine.points.push(document.arena, point);
+      // }
       pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100;
       pageIndex++;
     }

@@ -115,6 +115,62 @@ struct Texture {
   }
 };
 
+struct Framebuffer {
+  GLuint fbo;
+  GLuint tex;
+
+  static Framebuffer create()
+  {
+    Framebuffer fb;
+    glGenFramebuffers(1, &fb.fbo);
+    if (!fb.fbo) {
+      ts::panic("Creating GL Framebuffer failed");
+    }
+    glGenTextures(1, &fb.tex);
+    if (!fb.tex) {
+      ts::panic("Creating GL Framebuffer texture failed");
+    }
+    return fb;
+  }
+
+  void clear(ts::Vec2i size)
+  {
+    bind();
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+  }
+
+  void bind() const
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  }
+
+  void unbind() const
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  }
+
+  void free()
+  {
+    if (fbo) {
+      glDeleteFramebuffers(1, &fbo);
+    }
+    fbo = 0;
+    if (tex) {
+      glDeleteTextures(1, &tex);
+    }
+    tex = 0;
+  }
+};
+
 } // namespace gl
 
 #endif // GL_HPP

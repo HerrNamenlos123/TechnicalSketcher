@@ -9,6 +9,7 @@
 #include "../shared/app.h"
 #include "../shared/clay.h"
 #include "clay/clay_renderer.h"
+#include "colors.h"
 #include "document.cpp"
 #include "freehand.cpp"
 #include "ui.cpp"
@@ -65,6 +66,26 @@ struct Renderer {
   List<PrimitivePolygon> polygons;
   size_t nextZIndex;
 };
+
+void setUniformMat4(GLuint shader, const char* name, Mat4 matrix)
+{
+  GLuint matrixLocation = glGetUniformLocation(shader, name);
+  if (matrixLocation == -1) {
+    print("{}Uniform not found: {}{}", RED, name, RESET);
+    return;
+  }
+  glUniformMatrix4fv(matrixLocation, 1, GL_TRUE, matrix.data.data());
+}
+
+void setPixelProjection(App* app, float w, float h)
+{
+  Mat4 pixelProjection = Mat4::Identity();
+  pixelProjection.applyScaling(1, -1, 1);
+  pixelProjection.applyTranslation(-1, -1, 0);
+  pixelProjection.applyScaling(2, 2, 1);
+  pixelProjection.applyScaling(1 / w, 1 / h, 1);
+  setUniformMat4(app->mainShader, "pixelProjection", pixelProjection);
+}
 
 void RenderPolygon(Renderer& renderer, List<Vec2> vertices, List<size_t> indices, Color color)
 {
@@ -227,36 +248,11 @@ String getPath(App* app, Arena& arena, List<InterpolationPoint> points)
   return result.str();
 };
 
-void RenderPage(Renderer& renderer, Document& document, Page& page)
+void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, LineShape& shape)
 {
-  // auto renderer = app->rendererData.renderer;
+  App* app = renderer.app;
   int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
-  auto pageProj = Vec2(pageWidthPx / 210.0, pageHeightPx / 297.0);
-
-  if (pageWidthPx == 0 || pageHeightPx == 0) {
-    return;
-  }
-
-  while (page.shapes.length > 0) {
-    page.shapes.pop();
-  }
-  LineShape shape;
-  // shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(50, 80), .thickness = 5 });
-  // shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(80, 100), .thickness = 10 });
-  // shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(120, 90), .thickness = 5 });
-  // shape.points.push(document.arena, (InterpolationPoint) { .pos = Vec2(160, 120), .thickness = 8 });
-  // shape.color = Color("#FF0000");
-  // page.shapes.push(document.arena, shape);
-
-  // for (auto& shape : page.shapes) {
-  //   // SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
-  //   constructLineshapeOutline(renderer.app, document, shape);
-  // }
-  shape = document.currentLine;
-  // constructLineshapeOutline(renderer, document, shape);
-  // SDL_SetRenderDrawColor(renderer, shape.color.r, shape.color.g, shape.color.b, shape.color.a);
-  // return;
 
   String svgPath = getPath(renderer.app, renderer.app->frameArena, shape.points);
 
@@ -296,24 +292,89 @@ void RenderPage(Renderer& renderer, Document& document, Page& page)
 
   gl::Vertex quadVertices[4] = {
     {
-        .pos = { document.position.x, document.position.y, 0 },
+        .pos = { 0, 0, 0 },
         .color = Color("#0000"),
         .uv = { 0, 0 },
     },
     {
-        .pos = { document.position.x + pageWidthPx, document.position.y, 0 },
+        .pos = { pageWidthPx, 0, 0 },
         .color = Color("#0000"),
         .uv = { 1, 0 },
     },
     {
-        .pos = { document.position.x + pageWidthPx, document.position.y + pageHeightPx, 0 },
+        .pos = { pageWidthPx, pageHeightPx, 0 },
         .color = Color("#0000"),
         .uv = { 1, 1 },
     },
     {
-        .pos = { document.position.x, document.position.y + pageHeightPx, 0 },
+        .pos = { 0, pageHeightPx, 0 },
         .color = Color("#0000"),
         .uv = { 0, 1 },
+    },
+  };
+  GLuint quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
+
+  renderer.app->mainViewportFBO.bind();
+  glBindVertexArray(renderer.app->mainViewportVAO);
+  gl::uploadVertexBufferData(renderer.app->mainViewportVBO, quadVertices, 4, gl::DrawType::Dynamic);
+  gl::uploadIndexBufferData(renderer.app->mainViewportIBO, quadIndices, 6, gl::DrawType::Dynamic);
+  gl::setupBuffers();
+
+  setPixelProjection(app, pageWidthPx, pageHeightPx);
+  auto& bb = app->mainViewportBB;
+  glViewport(0, 0, pageWidthPx, pageHeightPx);
+  renderer.app->mainViewportFBO.bind();
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  gl::setUniform(renderer.app->mainShader, "uUseTexture", 0.f);
+
+  glViewport(app->mainViewportBB.x, app->windowSize.y - app->mainViewportBB.y - app->mainViewportBB.height,
+      app->mainViewportBB.width, app->mainViewportBB.height);
+  setPixelProjection(app, app->mainViewportBB.width, app->mainViewportBB.height);
+
+  cairo_surface_destroy(surface);
+  resvg_tree_destroy(tree);
+}
+
+void RenderFBOToPage(Renderer& renderer, Document& document, Page& page)
+{
+  auto app = renderer.app;
+  auto& bb = renderer.app->mainViewportBB;
+  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
+  int pageHeightPx = pageWidthPx * 297 / 210;
+
+  // glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer.app->mainViewportFBO.fbo);
+  // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  // glBlitFramebuffer(0, 0, pageWidthPx, pageHeightPx, bb.x + document.position.x,
+  //     renderer.app->windowSize.y - (bb.y + document.position.y + pageHeightPx),
+  //     bb.x + document.position.x + pageWidthPx, renderer.app->windowSize.y - (bb.y + document.position.y),
+  //     GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+  gl::setUniform(renderer.app->mainShader, "uUseTexture", 1.f);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  gl::Vertex quadVertices[4] = {
+    {
+        .pos = { document.position.x, document.position.y, 0 },
+        .color = Color("#0000"),
+        .uv = { 0, 1 },
+    },
+    {
+        .pos = { document.position.x + pageWidthPx, document.position.y, 0 },
+        .color = Color("#0000"),
+        .uv = { 1, 1 },
+    },
+    {
+        .pos = { document.position.x + pageWidthPx, document.position.y + pageHeightPx, 0 },
+        .color = Color("#0000"),
+        .uv = { 1, 0 },
+    },
+    {
+        .pos = { document.position.x, document.position.y + pageHeightPx, 0 },
+        .color = Color("#0000"),
+        .uv = { 0, 0 },
     },
   };
   GLuint quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
@@ -323,44 +384,13 @@ void RenderPage(Renderer& renderer, Document& document, Page& page)
   gl::uploadIndexBufferData(renderer.app->mainViewportIBO, quadIndices, 6, gl::DrawType::Dynamic);
   gl::setupBuffers();
 
+  glBindTexture(GL_TEXTURE_2D, renderer.app->mainViewportFBO.tex);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
   gl::setUniform(renderer.app->mainShader, "uUseTexture", 0.f);
-
-  cairo_surface_destroy(surface);
-  resvg_tree_destroy(tree);
-  return;
-
-  if (shape.points.length == 0) {
-    return;
-  }
-
-  Vec2 topLeft = shape.points[0].pos_mm_scaled;
-  Vec2 bottomRight = shape.points[0].pos_mm_scaled;
-
-  for (auto& p : shape.points) {
-    if (p.pos_mm_scaled.x - p.pressure / 2.f < topLeft.x) {
-      topLeft.x = p.pos_mm_scaled.x - p.pressure / 2.f;
-    }
-    if (p.pos_mm_scaled.x + p.pressure / 2.f > bottomRight.x) {
-      bottomRight.x = p.pos_mm_scaled.x + p.pressure / 2.f;
-    }
-    if (p.pos_mm_scaled.y - p.pressure / 2.f < topLeft.y) {
-      topLeft.y = p.pos_mm_scaled.y - p.pressure / 2.f;
-    }
-    if (p.pos_mm_scaled.y + p.pressure / 2.f > bottomRight.y) {
-      bottomRight.y = p.pos_mm_scaled.y + p.pressure / 2.f;
-    }
-    RenderRect(renderer, p.pos_mm_scaled * pageProj + document.position, Vec2(1, 1), "#F00");
-  }
-
-  RenderRectOutline(renderer, topLeft * pageProj + document.position, (bottomRight - topLeft) * pageProj, "#000");
-
-  Vec2 bbSize = bottomRight - topLeft;
-  Vec2 bbSizePx = bbSize * pageProj;
 }
 
-void RenderDocuments(Renderer& renderer)
+void RenderDocumentBackground(Renderer& renderer)
 {
   if (renderer.app->mainViewportBB.width == 0 || renderer.app->mainViewportBB.height == 0) {
     return;
@@ -394,12 +424,38 @@ void RenderDocuments(Renderer& renderer)
   }
 }
 
+void RenderDocumentForeground(Renderer& renderer)
+{
+  if (renderer.app->mainViewportBB.width == 0 || renderer.app->mainViewportBB.height == 0) {
+    return;
+  }
+  auto& document = renderer.app->documents[renderer.app->selectedDocument];
+  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
+  int pageHeightPx = pageWidthPx * 297 / 210;
+  int pageXOffset = document.position.x;
+  int pageYOffset = document.position.y;
+  int gridSpacing = 5;
+
+  for (auto& page : document.pages) {
+    Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
+    Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
+    auto bb = renderer.app->mainViewportBB;
+    if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
+      renderer.app->mainViewportFBO.clear({ pageWidthPx, pageHeightPx });
+      RenderShapeToPageFBO(renderer, document, page, document.currentLine);
+      RenderFBOToPage(renderer, document, page);
+    }
+
+    pageYOffset += pageHeightPx + pageHeightPx * renderer.app->pageGapPercentOfHeight / 100.f;
+  }
+}
+
 void RenderMainViewport(App* app)
 {
   Renderer renderer = { .arena = app->frameArena, .app = app };
   renderer.nextZIndex = 1;
 
-  RenderDocuments(renderer);
+  RenderDocumentBackground(renderer);
 
   // Now draw the line shapes
   auto& doc = app->documents[app->selectedDocument];
@@ -534,9 +590,7 @@ void RenderMainViewport(App* app)
     glDrawElements(GL_TRIANGLES, totalPolygonIndices, GL_UNSIGNED_INT, (void*)0);
   }
 
-  for (auto page : doc.pages) {
-    RenderPage(renderer, doc, page);
-  }
+  RenderDocumentForeground(renderer);
 
   // if (!app->mainViewportSoftwareTexture || app->mainViewportSoftwareTexture->w != app->mainViewportBB.width
   //     || app->mainViewportSoftwareTexture->h != app->mainViewportBB.height) {

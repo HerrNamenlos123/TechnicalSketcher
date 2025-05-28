@@ -119,13 +119,3 @@ GLuint CreateShaderProgram(const char* vs, const char* fs)
   glDeleteShader(fragmentShader);
   return program;
 }
-
-void setUniformMat4(GLuint shader, const char* name, Mat4 matrix)
-{
-  GLuint matrixLocation = glGetUniformLocation(shader, name);
-  if (matrixLocation == -1) {
-    print("{}Uniform not found: {}{}", RED, name, RESET);
-    return;
-  }
-  glUniformMatrix4fv(matrixLocation, 1, GL_TRUE, matrix.data.data());
-}

@@ -45,6 +45,7 @@ struct InterpolationPoint {
 struct LineShape {
   List<InterpolationPoint> points;
   Color color;
+  bool prerendered;
 };
 // using Shape = Variant<LineShape>;
 
@@ -121,7 +122,7 @@ struct App {
   GLuint mainShader;
   GLuint lineshapeShader;
   GLuint mainViewportVAO;
-  GLuint mainViewportFBO;
+  gl::Framebuffer mainViewportFBO;
   GLuint mainViewportVBO;
   GLuint mainViewportIBO;
   GLuint mainViewportRBO;
