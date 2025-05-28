@@ -1615,6 +1615,21 @@ template <typename T> struct List {
     return {};
   }
 
+  [[nodiscard]] List<T> reverse(Arena& arena)
+  {
+    List<T> result;
+
+    for (auto it = begin(); it != end(); ++it) {
+      auto* node = arena.allocate<ListElem<T>>();
+      node->data = *it;
+      node->nextElement = result.firstElement;
+      result.firstElement = node;
+      result.length++;
+    }
+
+    return result;
+  }
+
   struct Iterator {
     ListElem<T>* current;
     Iterator(ListElem<T>* node)
@@ -2109,9 +2124,24 @@ template <typename T> class _Vec2 {
     return *this;
   }
 
+  _Vec2 operator-()
+  {
+    return _Vec2(-this->x, -this->y);
+  }
+
   _Vec2 normalize()
   {
     return *this / this->length();
+  }
+
+  bool operator==(const _Vec2& v)
+  {
+    return this->x == v.x && this->y == v.y;
+  }
+
+  bool operator!=(const _Vec2& v)
+  {
+    return !((*this) == v);
   }
 };
 

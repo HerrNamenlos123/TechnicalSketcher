@@ -3,6 +3,7 @@
 #include "../shared/clay.h"
 #include "clay/clay_renderer.h"
 #include "document.cpp"
+#include "freehand.cpp"
 #include "ui.cpp"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
@@ -168,6 +169,35 @@ void constructLineshapeOutline(Renderer& renderer, Document& document, LineShape
   if (shape.points.length <= 1) {
     return;
   }
+
+  auto outline = getStroke(app->frameArena, shape.points,
+      {
+          .size = 15,
+          .smoothing = 0.3,
+          .easing =
+              [](double t) {
+                t--;
+                return t * t * t + 1;
+              },
+          .simulatePressure = false,
+          .start = { .easing =
+                         [](double t) {
+                           t--;
+                           return t * t * t + 1;
+                         } },
+          .end = { .easing =
+                       [](double t) {
+                         t--;
+                         return t * t * t + 1;
+                       } },
+      });
+
+  print("{} {}", shape.points.length, outline.length);
+  for (auto p : outline) {
+    RenderRect(renderer, document.position + p * pageProj, Vec2(2, 2), "#FF0000");
+  }
+
+  return;
 
   List<float> thicknessProfile;
   List<Vec2> centerPoints;

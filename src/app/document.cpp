@@ -209,7 +209,7 @@ void processPenDownEvent(App* appstate, SDL_PenTouchEvent event)
 
     if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
       appstate->currentlyDrawingOnPage = pageIndex;
-      document.currentLine = LineShape();
+      document.currentLine = {};
       document.currentLine.color = Color("#FF0000");
       return;
     }
