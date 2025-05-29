@@ -4,6 +4,8 @@
 #include "shader.cpp"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_pen.h>
+#include <SDL3/SDL_scancode.h>
+#include <SDL3/SDL_touch.h>
 
 extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
 {
@@ -138,26 +140,24 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
 
   case SDL_EVENT_MOUSE_MOTION:
     Clay_SetPointerState(Clay_Vector2 { event->motion.x, event->motion.y }, event->motion.state & SDL_BUTTON_LMASK);
-    // event->pmotion.x = event->motion.x;
-    // event->pmotion.y = event->motion.y;
-    // event->pmotion.pen_state = SDL_PEN_INPUT_DOWN;
-    // event->paxis.axis = SDL_PEN_AXIS_PRESSURE;
-    // event->paxis.value = 0.5;
-    // processPenAxisEvent(app, event->paxis);
-    // processPenMotionEvent(app, event->pmotion);
+    processMouseMotionEvent(app, event->motion);
     break;
 
   case SDL_EVENT_MOUSE_BUTTON_DOWN:
     Clay_SetPointerState(Clay_Vector2 { event->button.x, event->button.y }, event->button.button == SDL_BUTTON_LEFT);
-    event->ptouch.x = event->button.x;
-    event->ptouch.y = event->button.y;
-    processPenDownEvent(app, event->ptouch);
+    if (event->button.which != SDL_PEN_MOUSEID && event->button.which != SDL_TOUCH_MOUSEID) {
+      if (event->button.button == SDL_BUTTON_MIDDLE) {
+        app->inputs.mousewheel = true;
+      }
+    }
     break;
 
   case SDL_EVENT_MOUSE_BUTTON_UP:
-    event->ptouch.x = event->button.x;
-    event->ptouch.y = event->button.y;
-    processPenUpEvent(app, event->ptouch);
+    if (event->button.which != SDL_PEN_MOUSEID && event->button.which != SDL_TOUCH_MOUSEID) {
+      if (event->button.button == SDL_BUTTON_MIDDLE) {
+        app->inputs.mousewheel = false;
+      }
+    }
     break;
 
   case SDL_EVENT_MOUSE_WHEEL:
@@ -211,6 +211,21 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
     }
     if (event->key.scancode == SDL_SCANCODE_O && (event->key.mod & SDL_KMOD_LCTRL)) {
       openDocumentFromFile(app, "output.json");
+    }
+    if (event->key.scancode == SDL_SCANCODE_LCTRL || event->key.scancode == SDL_SCANCODE_RCTRL) {
+      app->inputs.ctrl = true;
+    }
+    if (event->key.scancode == SDL_SCANCODE_LSHIFT || event->key.scancode == SDL_SCANCODE_RSHIFT) {
+      app->inputs.shift = true;
+    }
+    break;
+
+  case SDL_EVENT_KEY_UP:
+    if (event->key.scancode == SDL_SCANCODE_LCTRL || event->key.scancode == SDL_SCANCODE_RCTRL) {
+      app->inputs.ctrl = false;
+    }
+    if (event->key.scancode == SDL_SCANCODE_LSHIFT || event->key.scancode == SDL_SCANCODE_RSHIFT) {
+      app->inputs.shift = false;
     }
     break;
 

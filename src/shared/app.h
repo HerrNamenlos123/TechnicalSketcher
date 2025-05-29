@@ -105,6 +105,12 @@ struct App {
   Optional<Vec2> prevAveragePos;
   Optional<float> prevPinchDistance;
 
+  struct {
+    bool ctrl;
+    bool shift;
+    bool mousewheel;
+  } inputs;
+
   // Hotreloading and UI stuff
   RendererData rendererData;
   uint64_t lastHotreloadUpdate;

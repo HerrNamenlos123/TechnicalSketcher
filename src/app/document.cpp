@@ -188,62 +188,73 @@ void openDocumentFromFile(App* app, String filepath)
   arena->free();
 }
 
-void handleZoomPan(App* appstate)
+void zoomInAtPoint(App* app, double amount, Vec2 point)
 {
-  auto& document = appstate->documents[appstate->selectedDocument];
+  auto& document = app->documents[app->selectedDocument];
+  document.pageWidthPercentOfWindow *= amount;
+
+  auto averageToOrigin = document.position - point;
+  auto scaledAverageToOrigin = averageToOrigin * amount;
+  auto newOrigin = point + scaledAverageToOrigin;
+  document.position = newOrigin;
+}
+
+void panDocument(App* app, Vec2 delta)
+{
+  app->documents[app->selectedDocument].position += delta;
+}
+
+void handleZoomPan(App* app)
+{
+  auto& document = app->documents[app->selectedDocument];
   int w, h;
-  SDL_GetWindowSize(appstate->window, &w, &h);
-  if (appstate->touchFingers.length == 1) {
-    auto finger = appstate->touchFingers[0];
-    auto dx_px = finger.dx * w;
-    auto dy_px = finger.dy * h;
-    appstate->documents[appstate->selectedDocument].position.x += dx_px;
-    appstate->documents[appstate->selectedDocument].position.y += dy_px;
-  } else if (appstate->touchFingers.length == 2) {
+  SDL_GetWindowSize(app->window, &w, &h);
+  if (app->touchFingers.length == 1) {
+    auto finger = app->touchFingers[0];
+    panDocument(app, { finger.dx * w, finger.dy * h });
+  } else if (app->touchFingers.length == 2) {
     Vec2 averagePosition = Vec2(0, 0);
-    for (auto& finger : appstate->touchFingers) {
-      auto x_px = finger.x * w - appstate->mainViewportBB.x;
-      auto y_px = finger.y * h - appstate->mainViewportBB.y;
-      averagePosition.x += x_px / appstate->touchFingers.length;
-      averagePosition.y += y_px / appstate->touchFingers.length;
+    for (auto& finger : app->touchFingers) {
+      auto x_px = finger.x * w - app->mainViewportBB.x;
+      auto y_px = finger.y * h - app->mainViewportBB.y;
+      averagePosition.x += x_px / app->touchFingers.length;
+      averagePosition.y += y_px / app->touchFingers.length;
     }
 
-    float pinchDistance = Vec2(appstate->touchFingers[1].x * w - appstate->touchFingers[0].x * w,
-        appstate->touchFingers[1].y * h - appstate->touchFingers[0].y * h)
+    float pinchDistance = Vec2(app->touchFingers[1].x * w - app->touchFingers[0].x * w,
+        app->touchFingers[1].y * h - app->touchFingers[0].y * h)
                               .length();
 
-    if (appstate->prevAveragePos) {
-      document.position.x += averagePosition.x - appstate->prevAveragePos->x;
-      document.position.y += averagePosition.y - appstate->prevAveragePos->y;
+    if (app->prevAveragePos) {
+      panDocument(app, averagePosition - *app->prevAveragePos);
     }
 
-    if (appstate->prevPinchDistance) {
-      auto ratio = pinchDistance / *appstate->prevPinchDistance;
-      document.pageWidthPercentOfWindow *= ratio;
-
-      auto averageToOrigin = document.position - averagePosition;
-      auto scaledAverageToOrigin = averageToOrigin * ratio;
-      auto newOrigin = averagePosition + scaledAverageToOrigin;
-      document.position = newOrigin;
+    if (app->prevPinchDistance) {
+      auto ratio = pinchDistance / *app->prevPinchDistance;
+      zoomInAtPoint(app, ratio, averagePosition);
     }
 
-    appstate->prevAveragePos = averagePosition;
-    appstate->prevPinchDistance = pinchDistance;
-  } else if (appstate->touchFingers.length == 0) {
-    appstate->prevAveragePos = {};
-    appstate->prevPinchDistance = {};
+    app->prevAveragePos = averagePosition;
+    app->prevPinchDistance = pinchDistance;
+  } else if (app->touchFingers.length == 0) {
+    app->prevAveragePos = {};
+    app->prevPinchDistance = {};
     return;
   }
 }
 
 void processMouseWheelEvent(App* app, SDL_MouseWheelEvent event)
 {
-  float scrollSpeed = 150;
+  float scrollSpeed = 100;
   float zoomSpeed = 0.1;
-  // app->documents[app->selectedDocument].position.y += event.y * scrollSpeed;
-  auto& document = app->documents[app->selectedDocument];
-  auto ratio = 1 + event.y * zoomSpeed;
-  document.pageWidthPercentOfWindow *= ratio;
+  if (app->inputs.ctrl) {
+    auto& document = app->documents[app->selectedDocument];
+    auto amount = 1 + event.y * zoomSpeed;
+    auto mouse = Vec2(event.mouse_x, event.mouse_y);
+    zoomInAtPoint(app, amount, mouse - Vec2(app->mainViewportBB.x, app->mainViewportBB.y));
+  } else {
+    app->documents[app->selectedDocument].position.y += event.y * scrollSpeed;
+  }
 }
 
 void processFingerDownEvent(App* app, SDL_TouchFingerEvent event)
@@ -351,6 +362,14 @@ void processPenUpEvent(App* app, SDL_PenTouchEvent event)
   // List<Vec2> result;
   // rdp(document.arena, document.currentLine.points, RAMER_DOUGLAS_PEUCKER_SMOOTHING, result);
   // document.currentLine.points = result;
+}
+
+void processMouseMotionEvent(App* app, SDL_MouseMotionEvent event)
+{
+  auto& document = app->documents[app->selectedDocument];
+  if (app->inputs.mousewheel) {
+    panDocument(app, { event.xrel, event.yrel });
+  }
 }
 
 void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
