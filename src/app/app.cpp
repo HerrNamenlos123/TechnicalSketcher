@@ -83,8 +83,6 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   addEmptyPageToDocument(app, app->documents.back());
   addEmptyPageToDocument(app, app->documents.back());
 
-  app->documents.back().position = Vec2(300, 100);
-  app->documents.back().pageWidthPercentOfWindow = 70;
   app->pageGapPercentOfHeight = 2.f;
   app->currentlyDrawingOnPage = -1;
   app->perfectFreehandAccuracyScaling = 10;
@@ -208,8 +206,11 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
     break;
 
   case SDL_EVENT_KEY_DOWN:
-    if (event->key.scancode == SDL_SCANCODE_SPACE) {
+    if (event->key.scancode == SDL_SCANCODE_S && (event->key.mod & SDL_KMOD_LCTRL)) {
       saveDocumentToFile(app, app->documents[app->selectedDocument], "output.json");
+    }
+    if (event->key.scancode == SDL_SCANCODE_O && (event->key.mod & SDL_KMOD_LCTRL)) {
+      openDocumentFromFile(app, "output.json");
     }
     break;
 

@@ -10,13 +10,15 @@
 #include "cJSON.h"
 
 const auto RAMER_DOUGLAS_PEUCKER_SMOOTHING = 0.2;
+const auto DOCUMENT_START_POSITION = Vec2(300, 100);
+const auto DOCUMENT_DEFAULT_PAGE_WIDTH = 70;
 
 void addDocument(App* app)
 {
   Document document = Document {
-    .pageWidthPercentOfWindow = 50,
+    .pageWidthPercentOfWindow = DOCUMENT_DEFAULT_PAGE_WIDTH,
     .pageScroll = 0,
-    .position = Vec2(),
+    .position = DOCUMENT_START_POSITION,
     .pages = {},
     .paperColor = Color(255, 255, 255, 255),
     .arena = Arena::create(),
@@ -43,7 +45,7 @@ void addEmptyPageToDocument(App* app, Document& document)
     .previewFBO = gl::Framebuffer::create(),
   };
 
-  document.pages.push(app->persistentApplicationArena, page);
+  document.pages.push(document.arena, page);
 }
 
 void saveDocumentToFile(App* app, Document& document, String filepath)
@@ -91,6 +93,97 @@ void saveDocumentToFile(App* app, Document& document, String filepath)
   }
   fprintf(f, "%s", jsonContent);
   fclose(f);
+
+  arena->free();
+}
+
+void openDocumentFromFile(App* app, String filepath)
+{
+  static Arena* arena;
+  Arena _arena = Arena::create();
+  arena = &_arena;
+  cJSON_Hooks hooks = {
+    .malloc_fn = [](size_t size) -> void* { return arena->allocate<char>(size); },
+    .free_fn = [](void* ptr) {},
+  };
+  cJSON_InitHooks(&hooks);
+
+  for (auto& doc : app->documents) {
+    unloadDocument(app, doc);
+  }
+  app->documents.clear();
+
+  auto file = ts::fs::read(*arena, filepath);
+  if (!file) {
+    ts::panic("File failed to read");
+  }
+
+  auto json = cJSON_Parse(file->c_str(*arena));
+
+  auto filetype = cJSON_GetStringValue(cJSON_GetObjectItem(json, "filetype"));
+  if (String::view(filetype) != "technicalsketcher") {
+    ts::panic("Unexpected file type");
+  }
+  auto fileversion = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "fileversion"));
+  if (fileversion != 1.0) {
+    ts::panic("Unexpected file version");
+  }
+
+  Document _document = Document {
+    .pageWidthPercentOfWindow = DOCUMENT_DEFAULT_PAGE_WIDTH,
+    .pageScroll = 0,
+    .position = DOCUMENT_START_POSITION,
+    .pages = {},
+    .paperColor = Color(cJSON_GetStringValue(cJSON_GetObjectItem(json, "papercolor"))),
+    .arena = Arena::create(),
+  };
+  app->documents.push(app->persistentApplicationArena, _document);
+  auto& document = app->documents.back();
+
+  auto pagesArray = cJSON_GetObjectItem(json, "pages");
+  auto numPages = cJSON_GetArraySize(pagesArray);
+
+  for (int i = 0; i < numPages; i++) {
+    auto pageJson = cJSON_GetArrayItem(pagesArray, i);
+
+    document.pages.push(document.arena,
+        Page {
+            .document = &document,
+            .pageNumId = i,
+            .shapes = {},
+            .persistentFBO = gl::Framebuffer::create(),
+            .previewFBO = gl::Framebuffer::create(),
+        });
+    Page& page = document.pages.back();
+
+    auto shapesArray = cJSON_GetObjectItem(pageJson, "shapes");
+    auto numShapes = cJSON_GetArraySize(shapesArray);
+
+    for (int i = 0; i < numShapes; i++) {
+      auto shapeJson = cJSON_GetArrayItem(shapesArray, i);
+      LineShape shape = LineShape {
+        .points = {},
+        .color = cJSON_GetStringValue(cJSON_GetObjectItem(shapeJson, "color")),
+        .prerendered = false,
+      };
+
+      auto pointsArray = cJSON_GetObjectItem(shapeJson, "points");
+      auto numPoints = cJSON_GetArraySize(pointsArray);
+
+      for (int i = 0; i < numPoints; i++) {
+        auto pointJson = cJSON_GetArrayItem(pointsArray, i);
+        shape.points.push(document.arena,
+            {
+                .pos_mm_scaled
+                = Vec2(cJSON_GetNumberValue(cJSON_GetObjectItem(pointJson, "x")) * app->perfectFreehandAccuracyScaling,
+                    cJSON_GetNumberValue(cJSON_GetObjectItem(pointJson, "y")) * app->perfectFreehandAccuracyScaling),
+                .pressure = cJSON_GetNumberValue(cJSON_GetObjectItem(pointJson, "pressure")),
+            });
+      }
+
+      page.shapes.push(document.arena, shape);
+    }
+  }
 
   arena->free();
 }
