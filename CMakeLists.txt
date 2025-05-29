@@ -49,7 +49,7 @@ target_compile_options(app PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS} ${SDL_
 target_link_options(app PRIVATE ${SDL_LINKER_FLAGS} ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 set_target_properties(app PROPERTIES OUTPUT_NAME "app" LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build")
 target_link_directories(app PRIVATE src)
-target_link_libraries(app PRIVATE Clipper2 resvg cairo)
+target_link_libraries(app PRIVATE resvg cairo)
 
 if (MSVC)
 target_compile_definitions(shared PUBLIC TSK_WINDOWS UNICODE)
