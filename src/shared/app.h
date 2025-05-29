@@ -36,24 +36,31 @@ enum class Tool {
 
 struct resvg_options;
 
-// All units are always in mm
-struct InterpolationPoint {
+struct SamplePoint {
   Vec2 pos_mm_scaled;
   float pressure;
 };
 
 struct LineShape {
-  List<InterpolationPoint> points;
+  List<SamplePoint> points;
   Color color;
   bool prerendered;
 };
-// using Shape = Variant<LineShape>;
+
+struct Document;
+struct App;
 
 struct Page {
+  Document* document;
+  size_t pageNumId;
   List<LineShape> shapes;
   gl::Texture tempRenderTexture;
   gl::Framebuffer persistentFBO;
   gl::Framebuffer previewFBO;
+
+  Vec2 getRenderSizePx(App* app);
+  Vec2 getTopLeftPx(App* app);
+  bool overlapsWithViewport(App* app);
 };
 
 struct Document {

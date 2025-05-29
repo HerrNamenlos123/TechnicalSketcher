@@ -207,7 +207,7 @@ void DrawLine(App* app, Vec2 from, Vec2 to, Color color)
   // SDL_RenderLine(app->rendererData.renderer, from.x, from.y, to.x, to.y);
 }
 
-String getPath(App* app, Arena& arena, List<InterpolationPoint> points)
+String getPath(App* app, Arena& arena, List<SamplePoint> points)
 {
   float penSize_mm = 1;
   auto outline = getStroke(arena, points,
@@ -396,31 +396,25 @@ void RenderDocumentBackground(Renderer& renderer)
     return;
   }
   auto& document = renderer.app->documents[renderer.app->selectedDocument];
-  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
-  int pageHeightPx = pageWidthPx * 297 / 210;
-  int pageXOffset = document.position.x;
-  int pageYOffset = document.position.y;
   int gridSpacing = 5;
 
   for (auto& page : document.pages) {
-    Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
-    Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
-    auto bb = renderer.app->mainViewportBB;
-    if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
-      auto pos = Vec2(pageXOffset, pageYOffset);
-      RenderRect(renderer, pos, Vec2(pageWidthPx, pageHeightPx), "#FFF"_s);
-      RenderRectOutline(renderer, pos, Vec2(pageWidthPx, pageHeightPx), PAGE_OUTLINE_COLOR);
-      for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
-        float x_px = x_mm / 210.0 * pageWidthPx;
-        RenderLine(renderer, pos + Vec2(x_px, 0), pos + Vec2(x_px, pageHeightPx), PAGE_GRID_COLOR);
-      }
-      for (int y_mm = 0; y_mm < 297; y_mm += gridSpacing) {
-        float y_px = y_mm / 297.0 * pageHeightPx;
-        RenderLine(renderer, pos + Vec2(0, y_px), pos + Vec2(pageWidthPx, y_px), PAGE_GRID_COLOR);
-      }
+    if (!page.overlapsWithViewport(renderer.app)) {
+      continue;
     }
 
-    pageYOffset += pageHeightPx + pageHeightPx * renderer.app->pageGapPercentOfHeight / 100.f;
+    auto pageSize = page.getRenderSizePx(renderer.app);
+    Vec2 topLeft = page.getTopLeftPx(renderer.app);
+    RenderRect(renderer, topLeft, pageSize, "#FFF"_s);
+    RenderRectOutline(renderer, topLeft, pageSize, PAGE_OUTLINE_COLOR);
+    for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
+      float x_px = x_mm / 210.0 * pageSize.x;
+      RenderLine(renderer, topLeft + Vec2(x_px, 0), topLeft + Vec2(x_px, pageSize.y), PAGE_GRID_COLOR);
+    }
+    for (int y_mm = 0; y_mm < 297; y_mm += gridSpacing) {
+      float y_px = y_mm / 297.0 * pageSize.y;
+      RenderLine(renderer, topLeft + Vec2(0, y_px), topLeft + Vec2(pageSize.x, y_px), PAGE_GRID_COLOR);
+    }
   }
 }
 
@@ -430,42 +424,36 @@ void RenderDocumentForeground(Renderer& renderer)
     return;
   }
   auto& document = renderer.app->documents[renderer.app->selectedDocument];
-  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
-  int pageHeightPx = pageWidthPx * 297 / 210;
-  int pageXOffset = document.position.x;
-  int pageYOffset = document.position.y;
   int gridSpacing = 5;
 
   glDisable(GL_DEPTH_TEST);
 
   for (auto& page : document.pages) {
-    Vec2 topLeft = Vec2(pageXOffset, pageYOffset);
-    Vec2 bottomRight = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
-    auto bb = renderer.app->mainViewportBB;
-    if (bottomRight.x > 0 && bottomRight.y > 0 && topLeft.x < bb.width && topLeft.y < bb.height) {
-      auto fboSize = page.persistentFBO.getSize();
-      if (fboSize.x != pageWidthPx || fboSize.y != pageHeightPx) {
-        page.persistentFBO.clear({ pageWidthPx, pageHeightPx });
-        for (auto& shape : page.shapes) {
-          shape.prerendered = false;
-        }
-      }
-
-      for (auto& shape : page.shapes) {
-        if (!shape.prerendered) {
-          RenderShapeToPageFBO(renderer, document, page, shape, page.persistentFBO);
-          shape.prerendered = true;
-        }
-      }
-
-      RenderFBOToPage(renderer, document, page, page.persistentFBO);
-
-      page.previewFBO.clear({ pageWidthPx, pageHeightPx });
-      RenderShapeToPageFBO(renderer, document, page, document.currentLine, page.previewFBO);
-      RenderFBOToPage(renderer, document, page, page.previewFBO);
+    if (!page.overlapsWithViewport(renderer.app)) {
+      continue;
     }
 
-    pageYOffset += pageHeightPx + pageHeightPx * renderer.app->pageGapPercentOfHeight / 100.f;
+    auto pageSize = page.getRenderSizePx(renderer.app);
+    auto fboSize = page.persistentFBO.getSize();
+    if (fboSize.x != pageSize.x || fboSize.y != pageSize.y) {
+      page.persistentFBO.clear({ pageSize.x, pageSize.y });
+      for (auto& shape : page.shapes) {
+        shape.prerendered = false;
+      }
+    }
+
+    for (auto& shape : page.shapes) {
+      if (!shape.prerendered) {
+        RenderShapeToPageFBO(renderer, document, page, shape, page.persistentFBO);
+        shape.prerendered = true;
+      }
+    }
+
+    RenderFBOToPage(renderer, document, page, page.persistentFBO);
+
+    page.previewFBO.clear({ pageSize.x, pageSize.y });
+    RenderShapeToPageFBO(renderer, document, page, document.currentLine, page.previewFBO);
+    RenderFBOToPage(renderer, document, page, page.previewFBO);
   }
 
   glEnable(GL_DEPTH_TEST);

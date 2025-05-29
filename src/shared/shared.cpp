@@ -11,3 +11,5 @@
 #else
 #error "Unsupported platform/Platform not set by build system"
 #endif
+
+#include "app.cpp"

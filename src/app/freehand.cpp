@@ -44,7 +44,7 @@ Vec2 lrp(Vec2 A, Vec2 B, double t)
 {
   return A + (B - A) * t;
 }
-InterpolationPoint lrp(InterpolationPoint A, InterpolationPoint B, double t)
+SamplePoint lrp(SamplePoint A, SamplePoint B, double t)
 {
   return {
     .pos_mm_scaled = A.pos_mm_scaled + (B.pos_mm_scaled - A.pos_mm_scaled) * t,
@@ -68,7 +68,7 @@ InterpolationPoint lrp(InterpolationPoint A, InterpolationPoint B, double t)
  * @param options.end Cap, taper and easing for the end of the line.
  * @param options.last Whether to handle the points as a completed stroke.
  */
-List<StrokePoint> getStrokePoints(Arena& arena, List<InterpolationPoint> points, StrokeOptions options)
+List<StrokePoint> getStrokePoints(Arena& arena, List<SamplePoint> points, StrokeOptions options)
 {
   bool isComplete = options.last;
 
@@ -80,7 +80,7 @@ List<StrokePoint> getStrokePoints(Arena& arena, List<InterpolationPoint> points,
   auto t = 0.15 + (1 - options.streamline) * 0.85;
 
   // Whatever the input is, make sure that the points are in number[][].
-  List<InterpolationPoint> pts;
+  List<SamplePoint> pts;
   for (auto p : points) {
     pts.push(arena, p);
   }
@@ -613,7 +613,7 @@ List<Vec2> getStrokeOutlinePoints(Arena& arena, List<StrokePoint> points, Stroke
   //   return leftPts.concat(endCap, rightPts.reverse(arena), startCap);
 }
 
-List<Vec2> getStroke(Arena& arena, List<InterpolationPoint> points, StrokeOptions options)
+List<Vec2> getStroke(Arena& arena, List<SamplePoint> points, StrokeOptions options)
 {
   return getStrokeOutlinePoints(arena, getStrokePoints(arena, points, options), options);
 }

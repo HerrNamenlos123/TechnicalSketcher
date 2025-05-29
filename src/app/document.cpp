@@ -34,6 +34,8 @@ void unloadDocument(App* app, Document& document)
 void addPageToDocument(App* app, Document& document)
 {
   Page page = Page {
+    .document = &document,
+    .pageNumId = document.pages.length,
     .shapes = {},
     .persistentFBO = gl::Framebuffer::create(),
     .previewFBO = gl::Framebuffer::create(),
@@ -147,7 +149,7 @@ void handleZoomPan(App* appstate)
 
 void processMouseWheelEvent(App* app, SDL_MouseWheelEvent event)
 {
-  float scrollSpeed = 50;
+  float scrollSpeed = 150;
   app->documents[app->selectedDocument].position.y += event.y * scrollSpeed;
 }
 
@@ -283,7 +285,7 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
       // print("Page: {}", penPosition.x - pageTopLeftPx.x);
 
       // if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
-      InterpolationPoint point;
+      SamplePoint point;
       point.pos_mm_scaled = penPosOnPage_mm * app->perfectFreehandAccuracyScaling;
       point.pressure = app->currentPenPressure * app->penPressureScaling;
       document.currentLine.points.push(document.arena, point);
