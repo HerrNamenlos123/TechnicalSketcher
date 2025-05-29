@@ -7,6 +7,8 @@
 #include <SDL3/SDL_pen.h>
 #include <SDL3/SDL_video.h>
 
+#include "cJSON.h"
+
 const auto RAMER_DOUGLAS_PEUCKER_SMOOTHING = 0.2;
 
 void addDocument(App* app)
@@ -31,7 +33,7 @@ void unloadDocument(App* app, Document& document)
   document.arena.free();
 }
 
-void addPageToDocument(App* app, Document& document)
+void addEmptyPageToDocument(App* app, Document& document)
 {
   Page page = Page {
     .document = &document,
@@ -44,59 +46,53 @@ void addPageToDocument(App* app, Document& document)
   document.pages.push(app->persistentApplicationArena, page);
 }
 
-double perpendicularDistance(Vec2 p, Vec2 p1, Vec2 p2)
+void saveDocumentToFile(App* app, Document& document, String filepath)
 {
-  double dx = p2.x - p1.x;
-  double dy = p2.y - p1.y;
-  if (dx == 0 && dy == 0)
-    return hypot(p.x - p1.x, p.y - p1.y);
-  double t = ((p.x - p1.x) * dx + (p.y - p1.y) * dy) / (dx * dx + dy * dy);
-  double projX = p1.x + t * dx;
-  double projY = p1.y + t * dy;
-  return hypot(p.x - projX, p.y - projY);
-}
+  static Arena* arena;
+  Arena _arena = Arena::create();
+  arena = &_arena;
+  cJSON_Hooks hooks = {
+    .malloc_fn = [](size_t size) -> void* { return arena->allocate<char>(size); },
+    .free_fn = [](void* ptr) {},
+  };
+  cJSON_InitHooks(&hooks);
 
-void rdp_impl(Arena& arena, List<Vec2> points, double epsilon, List<Vec2>& result)
-{
-  if (points.length < 2)
-    return;
+  auto file = cJSON_CreateObject();
+  cJSON_AddStringToObject(file, "filetype", "technicalsketcher");
+  cJSON_AddNumberToObject(file, "fileversion", 1);
+  cJSON_AddStringToObject(file, "papercolor", document.paperColor.toHex(*arena).c_str(*arena));
 
-  double maxDist = 0.0;
-  size_t index = 0;
-  for (size_t i = 1; i < points.length - 1; ++i) {
-    double dist = perpendicularDistance(points[i], points[0], points.back());
-    if (dist > maxDist) {
-      maxDist = dist;
-      index = i;
+  auto pages = cJSON_AddArrayToObject(file, "pages");
+
+  for (auto& page : document.pages) {
+    auto pageJson = cJSON_CreateObject();
+    auto shapesArray = cJSON_AddArrayToObject(pageJson, "shapes");
+    for (auto& shape : page.shapes) {
+      auto shapeJson = cJSON_CreateObject();
+      cJSON_AddStringToObject(shapeJson, "color", shape.color.toHex(*arena).c_str(*arena));
+      auto pointsArray = cJSON_AddArrayToObject(shapeJson, "points");
+      for (auto& point : shape.points) {
+        auto pointJson = cJSON_CreateObject();
+        cJSON_AddNumberToObject(pointJson, "x", point.pos_mm_scaled.x / app->perfectFreehandAccuracyScaling);
+        cJSON_AddNumberToObject(pointJson, "y", point.pos_mm_scaled.y / app->perfectFreehandAccuracyScaling);
+        cJSON_AddNumberToObject(pointJson, "pressure", point.pressure);
+        cJSON_AddItemToArray(pointsArray, pointJson);
+      }
+      cJSON_AddItemToArray(shapesArray, shapeJson);
     }
+    cJSON_AddItemToArray(pages, pageJson);
   }
 
-  if (maxDist > epsilon) {
-    List<Vec2> left, right;
-    for (size_t i = 0; i <= index; ++i)
-      left.push(arena, points[i]);
-    for (size_t i = index; i < points.length; ++i)
-      right.push(arena, points[i]);
+  const char* jsonContent = cJSON_PrintUnformatted(file);
 
-    List<Vec2> leftResult, rightResult;
-    rdp_impl(arena, left, epsilon, leftResult);
-    rdp_impl(arena, right, epsilon, rightResult);
-
-    for (size_t i = 0; i < leftResult.length - 1; ++i)
-      result.push(arena, leftResult[i]);
-    for (size_t i = 0; i < rightResult.length; ++i)
-      result.push(arena, rightResult[i]);
-  } else {
-    result.push(arena, points[0]);
-    result.push(arena, points[points.length - 1]);
+  FILE* f = fopen(filepath.c_str(*arena), "w");
+  if (!f) {
+    ts::panic("File failed to write");
   }
-}
+  fprintf(f, "%s", jsonContent);
+  fclose(f);
 
-List<Vec2> rdp(Arena& arena, List<Vec2> points, double epsilon)
-{
-  List<Vec2> result;
-  rdp_impl(arena, points, epsilon, result);
-  return result;
+  arena->free();
 }
 
 void handleZoomPan(App* appstate)

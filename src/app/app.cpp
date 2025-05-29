@@ -2,6 +2,7 @@
 #include "renderer.cpp"
 
 #include "shader.cpp"
+#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_pen.h>
 
 extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
@@ -78,9 +79,9 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   glGenBuffers(1, &app->rendererData.uiIBO);
 
   addDocument(app);
-  addPageToDocument(app, app->documents.back());
-  addPageToDocument(app, app->documents.back());
-  addPageToDocument(app, app->documents.back());
+  addEmptyPageToDocument(app, app->documents.back());
+  addEmptyPageToDocument(app, app->documents.back());
+  addEmptyPageToDocument(app, app->documents.back());
 
   app->documents.back().position = Vec2(300, 100);
   app->documents.back().pageWidthPercentOfWindow = 70;
@@ -204,6 +205,12 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
 
   case SDL_EVENT_PEN_BUTTON_UP:
     processPenButtonUpEvent(app, event->pbutton);
+    break;
+
+  case SDL_EVENT_KEY_DOWN:
+    if (event->key.scancode == SDL_SCANCODE_SPACE) {
+      saveDocumentToFile(app, app->documents[app->selectedDocument], "output.json");
+    }
     break;
 
   default:

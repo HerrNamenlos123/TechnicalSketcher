@@ -44,7 +44,7 @@ target_compile_options(core PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS} ${SDL
 target_link_options(core PRIVATE ${SDL_LINKER_FLAGS} ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 
 # App Shared Library
-add_library(app EXCLUDE_FROM_ALL SHARED src/app/app.cpp src/app/clay/clay_renderer.c $<TARGET_OBJECTS:shared>)
+add_library(app EXCLUDE_FROM_ALL SHARED src/app/app.cpp src/app/clay/clay_renderer.c src/app/cJSON.c $<TARGET_OBJECTS:shared>)
 target_compile_options(app PRIVATE ${COMMON_COMPILER_FLAGS} ${SANITIZERS} ${SDL_COMPILER_FLAGS})
 target_link_options(app PRIVATE ${SDL_LINKER_FLAGS} ${COMMON_LINKER_FLAGS} ${SANITIZERS})
 set_target_properties(app PROPERTIES OUTPUT_NAME "app" LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build")
