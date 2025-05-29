@@ -59,12 +59,11 @@ target_compile_definitions(shared PUBLIC TSK_LINUX)
 endif ()
 
 find_package(SDL3 REQUIRED)
-find_package(SDL3_ttf REQUIRED)
 find_package(SDL3_image REQUIRED)
 
-target_link_libraries(core PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image)
-target_link_libraries(shared PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image)
-target_link_libraries(app PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image)
+target_link_libraries(core PRIVATE SDL3::SDL3 SDL3_image::SDL3_image)
+target_link_libraries(shared PRIVATE SDL3::SDL3 SDL3_image::SDL3_image)
+target_link_libraries(app PRIVATE SDL3::SDL3 SDL3_image::SDL3_image)
 
 target_link_libraries(core PRIVATE shared)
 target_link_libraries(app PRIVATE shared)

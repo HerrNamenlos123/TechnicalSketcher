@@ -1,3 +1,4 @@
+
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "../GL/glad.h"
 #include "../shared/app.h"
@@ -8,7 +9,8 @@
 #include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
-#include <SDL3_ttf/SDL_ttf.h>
+
+#include <signal.h>
 
 #include "hotreload.cpp"
 
@@ -22,7 +24,7 @@ static SDL_AppResult AppLoop(App* app)
   }
 
   glClearColor(0, 0, 0, 255);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   if (!app->compileError && app->RenderApp) {
     app->RenderApp(app);
@@ -36,25 +38,34 @@ static SDL_AppResult AppLoop(App* app)
   return SDL_APP_CONTINUE;
 }
 
+bool terminate = false;
+
+void handleSigint(int)
+{
+  terminate = true;
+}
+
 static SDL_AppResult InitApp(App* app)
 {
   app->lastHotreloadUpdate = SDL_GetTicks();
-  SDL_SetAppMetadata("Example Pen Drawing Lines", "1.0", "com.example.pen-drawing-lines");
+  SDL_SetAppMetadata("Code Editor", "1.0", "com.example.code-editor");
+
+  signal(SIGINT, handleSigint);
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
-  app->window = SDL_CreateWindow("examples/pen/drawing-lines", (int)DEFAULT_WINDOW_SIZE.x, (int)DEFAULT_WINDOW_SIZE.y,
-      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  app->window = SDL_CreateWindow(
+      "Code Editor", (int)DEFAULT_WINDOW_SIZE.x, (int)DEFAULT_WINDOW_SIZE.y, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (!app->window) {
     SDL_Log("Couldn't create window: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
-  app->glContext = SDL_GL_CreateContext(app->window);
-  if (!app->glContext) {
+  app->rendererData.glContext = SDL_GL_CreateContext(app->window);
+  if (!app->rendererData.glContext) {
     SDL_Log("Couldn't create OpenGL context");
     return SDL_APP_FAILURE;
   }
@@ -63,33 +74,8 @@ static SDL_AppResult InitApp(App* app)
     SDL_Log("Couldn't load GLAD");
   }
 
-  if (!TTF_Init()) {
-    return SDL_APP_FAILURE;
-  }
-
-  // app->rendererData.textEngine = TTF_CreateRendererTextEngine(app->rendererData.renderer);
-  // if (!app->rendererData.textEngine) {
-  //   SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to create text engine from renderer: %s", SDL_GetError());
-  //   return SDL_APP_FAILURE;
-  // }
-
-  StackArena<1024> arena;
-  List<int> sizes;
-  sizes.push(arena, 12);
-  sizes.push(arena, 14);
-  sizes.push(arena, 16);
-  sizes.push(arena, 18);
-  sizes.push(arena, 20);
-  sizes.push(arena, 24);
-  app->rendererData.fonts = app->persistentApplicationArena.allocate<FontData>(sizes.length);
-  app->rendererData.numberOfFonts = 0;
-  for (auto size : sizes) {
-    TTF_Font* font = TTF_OpenFont("resource/Roboto-Regular.ttf", size);
-    if (!font) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", SDL_GetError());
-      return SDL_APP_FAILURE;
-    }
-    app->rendererData.fonts[app->rendererData.numberOfFonts++] = { font, size };
+  if (!SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8)) {
+    SDL_Log("Couldn't set alpha");
   }
 
   compileApp(app);
@@ -116,15 +102,7 @@ static void DestroyApp(App* app)
     app->UnloadApp(app);
   }
 
-  for (size_t i = 0; i < app->rendererData.numberOfFonts; i++) {
-    TTF_CloseFont(app->rendererData.fonts[i].font);
-  }
-
-  // if (app->rendererData.textEngine) {
-  //   TTF_DestroyRendererTextEngine(app->rendererData.textEngine);
-  // }
-
-  SDL_GL_DestroyContext(app->glContext);
+  SDL_GL_DestroyContext(app->rendererData.glContext);
 
   if (app->window) {
     SDL_DestroyWindow(app->window);
@@ -137,8 +115,6 @@ static void DestroyApp(App* app)
   // would free its own this pointer
   Arena arena = app->persistentApplicationArena;
   arena.free();
-
-  TTF_Quit();
 }
 
 SDL_AppResult SDL_AppInit(void** _app, int argc, char* argv[])
@@ -166,6 +142,9 @@ SDL_AppResult SDL_AppEvent(void* _app, SDL_Event* event)
 SDL_AppResult SDL_AppIterate(void* _app)
 {
   App* app = (App*)_app;
+  if (terminate) {
+    return SDL_APP_SUCCESS;
+  }
   return AppLoop(app);
 }
 

@@ -1,3 +1,5 @@
+#define FONTSTASH_IMPLEMENTATION
+#define GLFONTSTASH_IMPLEMENTATION
 
 #include "shared.h"
 
@@ -13,3 +15,6 @@
 #endif
 
 #include "app.cpp"
+#include <stdio.h>
+
+#include "../GL/glad.h"

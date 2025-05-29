@@ -267,6 +267,10 @@ void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, Li
   fbo.unbind();
   gl::setUniform(renderer.app->mainShader, "uUseTexture", 0.f);
 
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+
   glViewport(app->mainViewportBB.x, app->windowSize.y - app->mainViewportBB.y - app->mainViewportBB.height,
       app->mainViewportBB.width, app->mainViewportBB.height);
   setPixelProjection(app, app->mainViewportBB.width, app->mainViewportBB.height);
@@ -326,6 +330,10 @@ void RenderFBOToPage(Renderer& renderer, Document& document, Page& page, gl::Fra
   glBindTexture(GL_TEXTURE_2D, 0);
 
   gl::setUniform(renderer.app->mainShader, "uUseTexture", 0.f);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 }
 
 void RenderDocumentBackground(Renderer& renderer)
@@ -434,7 +442,6 @@ void RenderMainViewport(App* app)
 
   glBindBuffer(GL_ARRAY_BUFFER, app->mainViewportVBO);
   glBufferData(GL_ARRAY_BUFFER, renderer.lines.length * 2 * sizeof(gl::Vertex), lineVertices, GL_STATIC_DRAW);
-
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->mainViewportIBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, renderer.lines.length * 2 * sizeof(GLuint), lineIndices, GL_STATIC_DRAW);
 
@@ -444,6 +451,9 @@ void RenderMainViewport(App* app)
   glEnableVertexAttribArray(1);
   glLineWidth(1.f);
   glDrawElements(GL_LINES, renderer.lines.length * 2, GL_UNSIGNED_INT, (void*)0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 
   // Rectangles
   gl::Vertex* rectVertices = app->frameArena.allocate<gl::Vertex>(renderer.rectangles.length * 4);
@@ -492,6 +502,9 @@ void RenderMainViewport(App* app)
   glEnableVertexAttribArray(1);
 
   glDrawElements(GL_TRIANGLES, renderer.rectangles.length * 6, GL_UNSIGNED_INT, (void*)0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 
   // Polygons
   if (renderer.polygons.length > 0) {
@@ -540,26 +553,6 @@ void RenderMainViewport(App* app)
   }
 
   RenderDocumentForeground(renderer);
-}
-
-static inline Clay_Dimensions SDL_MeasureText(Clay_StringSlice text, Clay_TextElementConfig* config, void* _app)
-{
-  App* app = (App*)_app;
-  FontData font = app->rendererData.fonts[0];
-  for (size_t i = 0; i < app->rendererData.numberOfFonts; i++) {
-    if (app->rendererData.fonts[i].size == config->fontSize) {
-      font = app->rendererData.fonts[i];
-      break;
-    }
-  }
-
-  int width, height;
-
-  if (!TTF_GetStringSize(font.font, text.chars, text.length, &width, &height)) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to measure text: %s", SDL_GetError());
-  }
-
-  return Clay_Dimensions { (float)width, (float)height };
 }
 
 void HandleClayErrors(Clay_ErrorData errorData)

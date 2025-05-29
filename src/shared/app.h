@@ -125,6 +125,10 @@ struct App {
   Arena frameArena;
   Arena clayArena;
 
+  // UI
+  List<Pair<String, Color>> colors;
+  List<Pair<String, int>> fonts;
+
   // OpenGL
   bool recreateGlTexture;
   SDL_GLContext glContext;

@@ -18,29 +18,50 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   Clay_Arena clayMemory = Clay_Arena { .capacity = totalMemorySize, .memory = memory };
 
   Clay_Initialize(clayMemory, Clay_Dimensions { (float)width, (float)height }, Clay_ErrorHandler { HandleClayErrors });
-  Clay_SetMeasureTextFunction(SDL_MeasureText, app);
+  Clay_SetMeasureTextFunction(MeasureText, app);
 
   if (firstLoad) {
-    COLORS.push(app->persistentApplicationArena, { "white"_s, Color(255, 255, 255, 255) });
-    COLORS.push(app->persistentApplicationArena, { "black"_s, Color(0, 0, 0, 255) });
-    COLORS.push(app->persistentApplicationArena, { "red"_s, Color(255, 0, 0, 255) });
-    COLORS.push(app->persistentApplicationArena, { "green"_s, Color(0, 255, 0, 255) });
-    COLORS.push(app->persistentApplicationArena, { "blue"_s, Color(0, 0, 255, 255) });
-    COLORS.push(app->persistentApplicationArena, { "yellow"_s, Color(255, 255, 0, 255) });
-    COLORS.push(app->persistentApplicationArena, { "magenta"_s, Color(255, 0, 255, 255) });
-    COLORS.push(app->persistentApplicationArena, { "cyan"_s, Color(0, 255, 255, 255) });
-    COLORS.push(app->persistentApplicationArena, { "transparent"_s, Color(255, 255, 255, 255) });
-    FONT_SIZES.push(app->persistentApplicationArena, { "xs"_s, 12 });
-    FONT_SIZES.push(app->persistentApplicationArena, { "sm"_s, 14 });
-    FONT_SIZES.push(app->persistentApplicationArena, { "base"_s, 16 });
-    FONT_SIZES.push(app->persistentApplicationArena, { "lg"_s, 18 });
-    FONT_SIZES.push(app->persistentApplicationArena, { "xl"_s, 20 });
-    FONT_SIZES.push(app->persistentApplicationArena, { "2xl"_s, 24 });
+    auto an = app->persistentApplicationArena;
+    app->colors.push(an, { "white"_s, Color(255, 255, 255, 255) });
+    app->colors.push(an, { "black"_s, Color(0, 0, 0, 255) });
+    app->colors.push(an, { "red"_s, Color(255, 0, 0, 255) });
+    app->colors.push(an, { "green"_s, Color(0, 255, 0, 255) });
+    app->colors.push(an, { "blue"_s, Color(0, 0, 255, 255) });
+    app->colors.push(an, { "yellow"_s, Color(255, 255, 0, 255) });
+    app->colors.push(an, { "magenta"_s, Color(255, 0, 255, 255) });
+    app->colors.push(an, { "cyan"_s, Color(0, 255, 255, 255) });
+    app->colors.push(an, { "transparent"_s, Color(255, 255, 255, 255) });
+    app->fonts.push(an, { "xs"_s, 12 });
+    app->fonts.push(an, { "sm"_s, 14 });
+    app->fonts.push(an, { "base"_s, 16 });
+    app->fonts.push(an, { "lg"_s, 18 });
+    app->fonts.push(an, { "xl"_s, 20 });
+    app->fonts.push(an, { "2xl"_s, 24 });
   }
 
   if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
     SDL_Log("Couldn't load GLAD");
   }
+
+  app->rendererData.fontContext = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT);
+  if (app->rendererData.fontContext == NULL) {
+    print("Could not create stash.\n");
+  }
+
+  app->rendererData.fonts = app->persistentApplicationArena.allocate<int>(1);
+  app->rendererData.numberOfFonts = 0;
+  // auto roboto = b::embed<"resources/Roboto-Regular.ttf">();
+  // auto font
+  // = fonsAddFontMem(app->rendererData.fontContext, "Roboto", (unsigned char*)roboto.data(), roboto.length(), 0);
+  auto font = fonsAddFont(app->rendererData.fontContext, "RobotoRegular", "resource/Roboto-Regular.ttf");
+  // auto font
+  //     = fonsAddFont(app->rendererData.fontContext, "JetBrainsMono",
+  //     "resources/JetBrainsMonoNerdFontMono-Medium.ttf");
+  if (font == FONS_INVALID) {
+    ts::panic("Could not add font normal.\n");
+  }
+  app->rendererData.fonts[app->rendererData.numberOfFonts++] = font;
+
   glViewport(0, 0, width, height);
   app->mainShader = CreateShaderProgram(mainVertexShaderSrc, mainFragmentShaderSrc);
   app->lineshapeShader = CreateShaderProgram(lineshapeVertexShader, lineshapeFragmentShader);
@@ -52,6 +73,9 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   glGenVertexArrays(1, &app->mainViewportVAO);
   glGenBuffers(1, &app->mainViewportVBO);
   glGenBuffers(1, &app->mainViewportIBO);
+  glGenVertexArrays(1, &app->rendererData.uiVAO);
+  glGenBuffers(1, &app->rendererData.uiVBO);
+  glGenBuffers(1, &app->rendererData.uiIBO);
 
   addDocument(app);
   addPageToDocument(app, app->documents.back());
@@ -79,6 +103,12 @@ extern "C" __declspec(dllexport) void UnloadApp(App* app)
     unloadDocument(app, document);
   }
 
+  glDeleteVertexArrays(1, &app->rendererData.uiVAO);
+  app->rendererData.uiVAO = 0;
+  glDeleteBuffers(1, &app->rendererData.uiVBO);
+  app->rendererData.uiVBO = 0;
+  glDeleteBuffers(1, &app->rendererData.uiIBO);
+  app->rendererData.uiIBO = 0;
   glDeleteVertexArrays(1, &app->mainViewportVAO);
   app->mainViewportVAO = 0;
   glDeleteBuffers(1, &app->mainViewportVBO);
@@ -187,6 +217,9 @@ extern "C" __declspec(dllexport) void RenderApp(App* app)
   const auto STRING_CACHE_SIZE = 1;
   UICache uiCache = {};
   app->uiCache = &uiCache;
+  app->rendererData.windowWidth = app->windowSize.x;
+  app->rendererData.windowHeight = app->windowSize.y;
+  glViewport(0, 0, app->windowSize.x, app->windowSize.y);
 
   Clay_BeginLayout();
 
@@ -202,8 +235,6 @@ extern "C" __declspec(dllexport) void RenderApp(App* app)
   }
 
   Clay_RenderCommandArray renderCommands = Clay_EndLayout();
-
-  glViewport(0, 0, app->windowSize.x, app->windowSize.y);
 
   SDL_Clay_RenderClayCommands(&app->rendererData, &renderCommands);
 
