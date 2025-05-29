@@ -339,9 +339,6 @@ void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, Li
 void RenderFBOToPage(Renderer& renderer, Document& document, Page& page, gl::Framebuffer& fbo)
 {
   auto app = renderer.app;
-  auto& bb = renderer.app->mainViewportBB;
-  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
-  int pageHeightPx = pageWidthPx * 297 / 210;
 
   // glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer.app->mainViewportFBO.fbo);
   // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -354,24 +351,26 @@ void RenderFBOToPage(Renderer& renderer, Document& document, Page& page, gl::Fra
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+  auto topLeft = page.getTopLeftPx(app);
+  auto size = page.getRenderSizePx(app);
   gl::Vertex quadVertices[4] = {
     {
-        .pos = { document.position.x, document.position.y, 0 },
+        .pos = { topLeft.x, topLeft.y, 0 },
         .color = Color("#0000"),
         .uv = { 0, 1 },
     },
     {
-        .pos = { document.position.x + pageWidthPx, document.position.y, 0 },
+        .pos = { topLeft.x + size.x, topLeft.y, 0 },
         .color = Color("#0000"),
         .uv = { 1, 1 },
     },
     {
-        .pos = { document.position.x + pageWidthPx, document.position.y + pageHeightPx, 0 },
+        .pos = { topLeft.x + size.x, topLeft.y + size.y, 0 },
         .color = Color("#0000"),
         .uv = { 1, 0 },
     },
     {
-        .pos = { document.position.x, document.position.y + pageHeightPx, 0 },
+        .pos = { topLeft.x, topLeft.y + size.y, 0 },
         .color = Color("#0000"),
         .uv = { 0, 0 },
     },
@@ -452,8 +451,10 @@ void RenderDocumentForeground(Renderer& renderer)
     RenderFBOToPage(renderer, document, page, page.persistentFBO);
 
     page.previewFBO.clear({ pageSize.x, pageSize.y });
-    RenderShapeToPageFBO(renderer, document, page, document.currentLine, page.previewFBO);
-    RenderFBOToPage(renderer, document, page, page.previewFBO);
+    if (renderer.app->currentlyDrawingOnPage == page.pageNumId) {
+      RenderShapeToPageFBO(renderer, document, page, document.currentLine, page.previewFBO);
+      RenderFBOToPage(renderer, document, page, page.previewFBO);
+    }
   }
 
   glEnable(GL_DEPTH_TEST);

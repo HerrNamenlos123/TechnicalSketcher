@@ -150,7 +150,11 @@ void handleZoomPan(App* appstate)
 void processMouseWheelEvent(App* app, SDL_MouseWheelEvent event)
 {
   float scrollSpeed = 150;
-  app->documents[app->selectedDocument].position.y += event.y * scrollSpeed;
+  float zoomSpeed = 0.1;
+  // app->documents[app->selectedDocument].position.y += event.y * scrollSpeed;
+  auto& document = app->documents[app->selectedDocument];
+  auto ratio = 1 + event.y * zoomSpeed;
+  document.pageWidthPercentOfWindow *= ratio;
 }
 
 void processFingerDownEvent(App* app, SDL_TouchFingerEvent event)
@@ -169,72 +173,73 @@ void processFingerDownEvent(App* app, SDL_TouchFingerEvent event)
   handleZoomPan(app);
 }
 
-void processFingerMotionEvent(App* appstate, SDL_TouchFingerEvent event)
+void processFingerMotionEvent(App* app, SDL_TouchFingerEvent event)
 {
-  for (auto& finger : appstate->touchFingers) {
+  for (auto& finger : app->touchFingers) {
     if (finger.fingerID == event.fingerID) {
       finger = event;
-      handleZoomPan(appstate);
+      handleZoomPan(app);
       return;
     }
   }
 }
 
-void processFingerUpEvent(App* appstate, SDL_TouchFingerEvent event)
+void processFingerUpEvent(App* app, SDL_TouchFingerEvent event)
 {
-  appstate->touchFingers.remove_if([&](auto& elem) -> bool { return elem.fingerID == event.fingerID; });
-  appstate->prevAveragePos = {};
-  appstate->prevPinchDistance = {};
-  handleZoomPan(appstate);
+  app->touchFingers.remove_if([&](auto& elem) -> bool { return elem.fingerID == event.fingerID; });
+  app->prevAveragePos = {};
+  app->prevPinchDistance = {};
+  handleZoomPan(app);
 }
 
-void processFingerCancelledEvent(App* appstate, SDL_TouchFingerEvent event)
+void processFingerCancelledEvent(App* app, SDL_TouchFingerEvent event)
 {
-  appstate->touchFingers.remove_if([&](auto& elem) -> bool { return elem.fingerID == event.fingerID; });
-  appstate->prevAveragePos = {};
-  appstate->prevPinchDistance = {};
-  handleZoomPan(appstate);
+  app->touchFingers.remove_if([&](auto& elem) -> bool { return elem.fingerID == event.fingerID; });
+  app->prevAveragePos = {};
+  app->prevPinchDistance = {};
+  handleZoomPan(app);
 }
 
-void processPenAxisEvent(App* appstate, SDL_PenAxisEvent event)
+void processPenAxisEvent(App* app, SDL_PenAxisEvent event)
 {
   if (event.axis != SDL_PEN_AXIS_PRESSURE) {
     return;
   }
-  appstate->currentPenPressure = event.value;
+  app->currentPenPressure = event.value;
 }
 
-void processPenDownEvent(App* appstate, SDL_PenTouchEvent event)
+void processPenDownEvent(App* app, SDL_PenTouchEvent event)
 {
-  auto& document = appstate->documents[appstate->selectedDocument];
-  int pageWidthPx = document.pageWidthPercentOfWindow * appstate->mainViewportBB.width / 100.0;
+  auto& document = app->documents[app->selectedDocument];
+  int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
   int pageXOffset = document.position.x;
   int pageYOffset = document.position.y;
 
-  int pageIndex = 0;
   for (auto& page : document.pages) {
-    Vec2 penPosition = Vec2(event.x - appstate->mainViewportBB.x, event.y - appstate->mainViewportBB.y);
-    Vec2 pageTopLeftPx = Vec2(pageXOffset, pageYOffset);
-    Vec2 pageBottomRightPx = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
-    Vec2 penPosOnPagePx = penPosition - pageTopLeftPx;
+    Vec2 penPosition = Vec2(event.x - app->mainViewportBB.x, event.y - app->mainViewportBB.y);
+    auto topLeft = page.getTopLeftPx(app);
+    auto bottomRight = topLeft + page.getRenderSizePx(app);
+    Vec2 penPosOnPagePx = penPosition - topLeft;
     Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);
 
     if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
-      appstate->currentlyDrawingOnPage = pageIndex;
+      app->currentlyDrawingOnPage = page.pageNumId;
       document.currentLine = {};
       document.currentLine.color = Color("#FF0000");
       return;
     }
-    pageYOffset += pageHeightPx + pageHeightPx * appstate->pageGapPercentOfHeight / 100;
-    pageIndex++;
   }
-  appstate->currentlyDrawingOnPage = -1;
+  app->currentlyDrawingOnPage = -1;
 }
 
 void processPenUpEvent(App* app, SDL_PenTouchEvent event)
 {
   auto& document = app->documents[app->selectedDocument];
+  if (app->currentlyDrawingOnPage == -1) {
+    return;
+  }
+
   auto& page = document.pages[app->currentlyDrawingOnPage];
   page.shapes.push(document.arena, document.currentLine);
   document.currentLine = {};
@@ -268,30 +273,22 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
     return;
   }
 
-  int pageIndex = 0;
   if (event.pen_state & SDL_PEN_INPUT_DOWN) {
     for (auto& page : document.pages) {
 
-      if (app->currentlyDrawingOnPage != pageIndex) {
+      if (app->currentlyDrawingOnPage != page.pageNumId) {
         continue;
       }
 
+      auto topLeft = page.getTopLeftPx(app);
       Vec2 penPosition = Vec2(event.x - app->mainViewportBB.x, event.y - app->mainViewportBB.y);
-      Vec2 pageTopLeftPx = Vec2(pageXOffset, pageYOffset);
-      Vec2 pageBottomRightPx = Vec2(pageXOffset + pageWidthPx, pageYOffset + pageHeightPx);
-      Vec2 penPosOnPagePx = penPosition - pageTopLeftPx;
+      Vec2 penPosOnPagePx = penPosition - topLeft;
       Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);
-      // print("Event: {}", pageTopLeftPx.x);
-      // print("Page: {}", penPosition.x - pageTopLeftPx.x);
 
-      // if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
       SamplePoint point;
       point.pos_mm_scaled = penPosOnPage_mm * app->perfectFreehandAccuracyScaling;
       point.pressure = app->currentPenPressure * app->penPressureScaling;
       document.currentLine.points.push(document.arena, point);
-      // }
-      pageYOffset += pageHeightPx + pageHeightPx * app->pageGapPercentOfHeight / 100;
-      pageIndex++;
     }
   }
 }
