@@ -25,6 +25,7 @@ using ts::Pair;
 using ts::print;
 using ts::Vec2;
 using ts::Vec2f;
+using ts::Vec2i;
 using ts::Vec3;
 using ts::Vec3f;
 using namespace ts::literals;
@@ -58,8 +59,8 @@ struct Page {
   gl::Framebuffer persistentFBO;
   gl::Framebuffer previewFBO;
 
-  Vec2 getRenderSizePx(App* app);
-  Vec2 getTopLeftPx(App* app);
+  Vec2i getRenderSizePx(App* app);
+  Vec2i getTopLeftPx(App* app);
   bool overlapsWithViewport(App* app);
 };
 
@@ -142,6 +143,19 @@ struct App {
 
   // SVG
   resvg_options* svgOpts;
+
+  // Profiling
+  struct Profiler {
+    struct Result {
+      const char* scopeName;
+      double msTaken;
+    };
+    ts::Array<Result, 100> results;
+    size_t numOfResults;
+    double frametimeMs;
+  };
+  Profiler lastFrameProfilingResults;
+  Profiler currentProfilingResults;
 };
 
 #endif // APP_H

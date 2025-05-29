@@ -1,18 +1,18 @@
 
 #include "app.h"
 
-Vec2 Page::getRenderSizePx(App* app)
+Vec2i Page::getRenderSizePx(App* app)
 {
   float pageWidthPx = document->pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
   float pageHeightPx = pageWidthPx * 297 / 210;
-  return Vec2(pageWidthPx, pageHeightPx);
+  return Vec2i(pageWidthPx, pageHeightPx);
 }
 
-Vec2 Page::getTopLeftPx(App* app)
+Vec2i Page::getTopLeftPx(App* app)
 {
   auto pos = document->position;
   pos.y += pageNumId * getRenderSizePx(app).y * (1 + app->pageGapPercentOfHeight / 100.f);
-  return pos;
+  return Vec2i(pos.x, pos.y);
 }
 
 bool Page::overlapsWithViewport(App* app)

@@ -74,12 +74,33 @@ void ui(App* app)
               div(app,
                   {
                       .id = "sidenav"_s,
-                      .width = "200px"_s,
+                      .width = "350px"_s,
                       .height = "full"_s,
                       .backgroundColor = Color("#333"),
                       .fontColor = Color("#FFF"),
+                      .layoutDirection = "down"_s,
                   },
-                  [&](App* app) { text(app, {}, format(app->frameArena, "FPS: {}", fps)); });
+                  [&](App* app) {
+                    text(app, {}, format(app->frameArena, "FPS: {}", fps));
+
+                    div(app,
+                        {
+                            .id = "profiling"_s,
+                            .layoutDirection = "col"_s,
+                        },
+                        [&](App* app) {
+                          auto& p = app->lastFrameProfilingResults;
+                          text(app, {}, "Profiling Results:");
+
+                          text(app, {}, format(app->frameArena, "Frame time: {} ms", p.frametimeMs));
+
+                          for (size_t i = 0; i < p.numOfResults; i++) {
+                            auto& r = p.results[i];
+                            double ratio = r.msTaken / p.frametimeMs;
+                            text(app, {}, format(app->frameArena, "{}: {}%", r.scopeName, ratio * 100));
+                          }
+                        });
+                  });
               div(app,
                   {
                       .id = "editor-viewport"_s,

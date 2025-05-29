@@ -1,8 +1,8 @@
 
 #include "../shared/app.h"
 #include "../shared/gl.hpp"
-#include "documentrenderer.cpp"
 #include "math.h"
+#include "profiling.cpp"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_pen.h>
 #include <SDL3/SDL_video.h>
@@ -218,8 +218,11 @@ void processPenDownEvent(App* app, SDL_PenTouchEvent event)
 
   for (auto& page : document.pages) {
     Vec2 penPosition = Vec2(event.x - app->mainViewportBB.x, event.y - app->mainViewportBB.y);
-    auto topLeft = page.getTopLeftPx(app);
-    auto bottomRight = topLeft + page.getRenderSizePx(app);
+    Vec2i pageSizeI = page.getRenderSizePx(app);
+    Vec2 pageSize = { pageSizeI.x, pageSizeI.y };
+    Vec2i topLeftI = page.getTopLeftPx(app);
+    Vec2 topLeft = { topLeftI.x, topLeftI.y };
+    auto bottomRight = topLeft + pageSize;
     Vec2 penPosOnPagePx = penPosition - topLeft;
     Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);
 
@@ -280,7 +283,8 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
         continue;
       }
 
-      auto topLeft = page.getTopLeftPx(app);
+      Vec2i topLeftI = page.getTopLeftPx(app);
+      Vec2 topLeft = { topLeftI.x, topLeftI.y };
       Vec2 penPosition = Vec2(event.x - app->mainViewportBB.x, event.y - app->mainViewportBB.y);
       Vec2 penPosOnPagePx = penPosition - topLeft;
       Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);

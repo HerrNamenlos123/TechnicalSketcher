@@ -212,8 +212,9 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
   return SDL_APP_CONTINUE;
 }
 
-extern "C" __declspec(dllexport) void RenderApp(App* app)
+void DoRenderWork(App* app)
 {
+  PROFILE_SCOPE();
   const auto STRING_CACHE_SIZE = 1;
   UICache uiCache = {};
   app->uiCache = &uiCache;
@@ -250,4 +251,19 @@ extern "C" __declspec(dllexport) void RenderApp(App* app)
   glDisable(GL_SCISSOR_TEST);
 
   RenderMainViewport(app);
+}
+
+extern "C" __declspec(dllexport) void RenderApp(App* app)
+{
+  ProfilerInstance::profileFrametime(app);
+  DoRenderWork(app);
+
+  // Profiling done now
+  // Swap
+  auto tmp = app->lastFrameProfilingResults;
+  app->lastFrameProfilingResults = app->currentProfilingResults;
+  app->currentProfilingResults = app->lastFrameProfilingResults;
+
+  // And reinit
+  app->currentProfilingResults.numOfResults = 0;
 }

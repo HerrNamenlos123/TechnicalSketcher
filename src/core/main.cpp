@@ -78,6 +78,8 @@ static SDL_AppResult InitApp(App* app)
     SDL_Log("Couldn't set alpha");
   }
 
+  SDL_GL_SetSwapInterval(0);
+
   compileApp(app);
   if (app->compileError) {
     return SDL_APP_FAILURE;

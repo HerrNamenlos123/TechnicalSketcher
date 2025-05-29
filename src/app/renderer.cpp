@@ -148,7 +148,7 @@ void RenderRectOutline(Renderer& renderer, Vec2 pos, Vec2 size, Color color)
 
 String getPath(App* app, Arena& arena, List<SamplePoint> points)
 {
-  float penSize_mm = 1;
+  float penSize_mm = 0.5;
   auto outline = getStroke(arena, points,
       {
           .size = penSize_mm * app->perfectFreehandAccuracyScaling,
@@ -187,9 +187,10 @@ String getPath(App* app, Arena& arena, List<SamplePoint> points)
   return result.str();
 };
 
-void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, LineShape& shape, gl::Framebuffer& fbo)
+void RenderShapeToPageFBO(
+    App* app, Renderer& renderer, Document& document, Page& page, LineShape& shape, gl::Framebuffer& fbo)
 {
-  App* app = renderer.app;
+  PROFILE_SCOPE();
   int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
   int pageHeightPx = pageWidthPx * 297 / 210;
 
@@ -279,9 +280,9 @@ void RenderShapeToPageFBO(Renderer& renderer, Document& document, Page& page, Li
   resvg_tree_destroy(tree);
 }
 
-void RenderFBOToPage(Renderer& renderer, Document& document, Page& page, gl::Framebuffer& fbo)
+void RenderFBOToPage(App* app, Renderer& renderer, Document& document, Page& page, gl::Framebuffer& fbo)
 {
-  auto app = renderer.app;
+  PROFILE_SCOPE();
 
   // glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer.app->mainViewportFBO.fbo);
   // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -336,8 +337,9 @@ void RenderFBOToPage(Renderer& renderer, Document& document, Page& page, gl::Fra
   glBindVertexArray(0);
 }
 
-void RenderDocumentBackground(Renderer& renderer)
+void RenderDocumentBackground(App* app, Renderer& renderer)
 {
+  PROFILE_SCOPE();
   if (renderer.app->mainViewportBB.width == 0 || renderer.app->mainViewportBB.height == 0) {
     return;
   }
@@ -349,8 +351,10 @@ void RenderDocumentBackground(Renderer& renderer)
       continue;
     }
 
-    auto pageSize = page.getRenderSizePx(renderer.app);
-    Vec2 topLeft = page.getTopLeftPx(renderer.app);
+    Vec2i pageSizeI = page.getRenderSizePx(renderer.app);
+    Vec2 pageSize = { pageSizeI.x, pageSizeI.y };
+    Vec2i topLeftI = page.getTopLeftPx(renderer.app);
+    Vec2 topLeft = { topLeftI.x, topLeftI.y };
     RenderRect(renderer, topLeft, pageSize, "#FFF"_s);
     RenderRectOutline(renderer, topLeft, pageSize, PAGE_OUTLINE_COLOR);
     for (int x_mm = 0; x_mm < 210; x_mm += gridSpacing) {
@@ -364,8 +368,9 @@ void RenderDocumentBackground(Renderer& renderer)
   }
 }
 
-void RenderDocumentForeground(Renderer& renderer)
+void RenderDocumentForeground(App* app, Renderer& renderer)
 {
+  PROFILE_SCOPE();
   if (renderer.app->mainViewportBB.width == 0 || renderer.app->mainViewportBB.height == 0) {
     return;
   }
@@ -385,22 +390,23 @@ void RenderDocumentForeground(Renderer& renderer)
       page.persistentFBO.clear({ pageSize.x, pageSize.y });
       for (auto& shape : page.shapes) {
         shape.prerendered = false;
+        print("Invalidating all prerendered shapes");
       }
     }
 
     for (auto& shape : page.shapes) {
       if (!shape.prerendered) {
-        RenderShapeToPageFBO(renderer, document, page, shape, page.persistentFBO);
+        RenderShapeToPageFBO(app, renderer, document, page, shape, page.persistentFBO);
         shape.prerendered = true;
       }
     }
 
-    RenderFBOToPage(renderer, document, page, page.persistentFBO);
+    RenderFBOToPage(app, renderer, document, page, page.persistentFBO);
 
     page.previewFBO.clear({ pageSize.x, pageSize.y });
     if (renderer.app->currentlyDrawingOnPage == page.pageNumId) {
-      RenderShapeToPageFBO(renderer, document, page, document.currentLine, page.previewFBO);
-      RenderFBOToPage(renderer, document, page, page.previewFBO);
+      RenderShapeToPageFBO(app, renderer, document, page, document.currentLine, page.previewFBO);
+      RenderFBOToPage(app, renderer, document, page, page.previewFBO);
     }
   }
 
@@ -409,10 +415,11 @@ void RenderDocumentForeground(Renderer& renderer)
 
 void RenderMainViewport(App* app)
 {
+  PROFILE_SCOPE();
   Renderer renderer = { .arena = app->frameArena, .app = app };
   renderer.nextZIndex = 1;
 
-  RenderDocumentBackground(renderer);
+  RenderDocumentBackground(app, renderer);
 
   // Now draw the line shapes
   auto& doc = app->documents[app->selectedDocument];
@@ -552,7 +559,7 @@ void RenderMainViewport(App* app)
     glDrawElements(GL_TRIANGLES, totalPolygonIndices, GL_UNSIGNED_INT, (void*)0);
   }
 
-  RenderDocumentForeground(renderer);
+  RenderDocumentForeground(app, renderer);
 }
 
 void HandleClayErrors(Clay_ErrorData errorData)
