@@ -88,7 +88,7 @@ extern "C" __declspec(dllexport) void LoadApp(App* app, bool firstLoad)
   app->pageGapPercentOfHeight = 2.f;
   app->currentlyDrawingOnPage = -1;
   app->perfectFreehandAccuracyScaling = 10;
-  app->penPressureScaling = 10;
+  app->penPressureScaling = 1;
 
   resvg_init_log();
   app->svgOpts = resvg_options_create();
@@ -140,13 +140,13 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
 
   case SDL_EVENT_MOUSE_MOTION:
     Clay_SetPointerState(Clay_Vector2 { event->motion.x, event->motion.y }, event->motion.state & SDL_BUTTON_LMASK);
-    event->pmotion.x = event->motion.x;
-    event->pmotion.y = event->motion.y;
-    event->pmotion.pen_state = SDL_PEN_INPUT_DOWN;
-    event->paxis.axis = SDL_PEN_AXIS_PRESSURE;
-    event->paxis.value = 0.5;
-    processPenAxisEvent(app, event->paxis);
-    processPenMotionEvent(app, event->pmotion);
+    // event->pmotion.x = event->motion.x;
+    // event->pmotion.y = event->motion.y;
+    // event->pmotion.pen_state = SDL_PEN_INPUT_DOWN;
+    // event->paxis.axis = SDL_PEN_AXIS_PRESSURE;
+    // event->paxis.value = 0.5;
+    // processPenAxisEvent(app, event->paxis);
+    // processPenMotionEvent(app, event->pmotion);
     break;
 
   case SDL_EVENT_MOUSE_BUTTON_DOWN:

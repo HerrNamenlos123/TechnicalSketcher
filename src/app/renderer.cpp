@@ -152,7 +152,7 @@ String getPath(App* app, Arena& arena, List<SamplePoint> points)
   auto outline = getStroke(arena, points,
       {
           .size = penSize_mm * app->perfectFreehandAccuracyScaling,
-          .thinning = 0,
+          .thinning = 1,
           .smoothing = 1,
           .streamline = 1,
           .easing =
