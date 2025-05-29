@@ -57,6 +57,8 @@ struct Page {
   List<LineShape> shapes;
   gl::Texture tempRenderTexture;
   gl::Framebuffer persistentFBO;
+  Vec2 visibleSizePx;
+  Vec2 visibleOffsetPx;
   gl::Framebuffer previewFBO;
 
   Vec2i getRenderSizePx(App* app);
@@ -65,8 +67,8 @@ struct Page {
 };
 
 struct Document {
-  float pageWidthPercentOfWindow = 0;
-  int pageScroll = 0;
+  float zoomMmPerPx = {};
+  int pageScroll = {};
   Vec2 position = {};
   List<Page> pages = {};
   Color paperColor = {};

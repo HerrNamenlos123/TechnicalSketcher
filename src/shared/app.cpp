@@ -3,8 +3,8 @@
 
 Vec2i Page::getRenderSizePx(App* app)
 {
-  float pageWidthPx = document->pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
-  float pageHeightPx = pageWidthPx * 297 / 210;
+  float pageWidthPx = 210 / document->zoomMmPerPx;
+  float pageHeightPx = 297 / document->zoomMmPerPx;
   return Vec2i(pageWidthPx, pageHeightPx);
 }
 

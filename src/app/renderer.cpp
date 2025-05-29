@@ -191,17 +191,19 @@ void RenderShapeToPageFBO(
     App* app, Renderer& renderer, Document& document, Page& page, LineShape& shape, gl::Framebuffer& fbo)
 {
   PROFILE_SCOPE();
-  int pageWidthPx = document.pageWidthPercentOfWindow * renderer.app->mainViewportBB.width / 100.0;
-  int pageHeightPx = pageWidthPx * 297 / 210;
 
   String svgPath = getPath(renderer.app, renderer.app->frameArena, shape.points);
 
   ts::StringBuffer svg;
   svg.append(renderer.app->frameArena,
       format(renderer.app->frameArena,
-          "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{}\" height=\"{}\" viewBox=\"0 0 {} {}\">", pageWidthPx,
-          pageHeightPx, 210 * renderer.app->perfectFreehandAccuracyScaling,
-          297 * renderer.app->perfectFreehandAccuracyScaling));
+          "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{}\" height=\"{}\" viewBox=\"{} {} {} {}\">",
+          page.visibleSizePx.x, page.visibleSizePx.y,
+          page.visibleOffsetPx.x * document.zoomMmPerPx * app->perfectFreehandAccuracyScaling,
+          page.visibleOffsetPx.y * document.zoomMmPerPx * app->perfectFreehandAccuracyScaling,
+          page.visibleSizePx.x * document.zoomMmPerPx * app->perfectFreehandAccuracyScaling,
+          page.visibleSizePx.y * document.zoomMmPerPx * app->perfectFreehandAccuracyScaling));
+  // print("Svg: {}", svg.str());
   svg.append(renderer.app->frameArena, "<path d=\"");
   svg.append(renderer.app->frameArena, svgPath);
   svg.append(renderer.app->frameArena, "\" fill=\"black\" /></svg>");
@@ -213,8 +215,9 @@ void RenderShapeToPageFBO(
     return;
   }
 
-  cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pageWidthPx, pageHeightPx);
-  assert(cairo_image_surface_get_stride(surface) == (int)pageWidthPx * 4);
+  cairo_surface_t* surface
+      = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, page.visibleSizePx.x, page.visibleSizePx.y);
+  assert(cairo_image_surface_get_stride(surface) == (int)page.visibleSizePx.x * 4);
 
   unsigned char* surface_data = cairo_image_surface_get_data(surface);
   cairo_t* cr = cairo_create(surface);
@@ -223,12 +226,12 @@ void RenderShapeToPageFBO(
   cairo_paint(cr);
   cairo_destroy(cr);
 
-  resvg_render(tree, resvg_transform_identity(), pageWidthPx, pageHeightPx, (char*)surface_data);
+  resvg_render(tree, resvg_transform_identity(), page.visibleSizePx.x, page.visibleSizePx.y, (char*)surface_data);
 
   gl::setUniform(renderer.app->mainShader, "uUseTexture", 1.f);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  page.tempRenderTexture.uploadData({ pageWidthPx, pageHeightPx }, gl::Format::BGRA, surface_data);
+  page.tempRenderTexture.uploadData({ page.visibleSizePx.x, page.visibleSizePx.y }, gl::Format::BGRA, surface_data);
 
   gl::Vertex quadVertices[4] = {
     {
@@ -237,17 +240,17 @@ void RenderShapeToPageFBO(
         .uv = { 0, 0 },
     },
     {
-        .pos = { pageWidthPx, 0, 0 },
+        .pos = { page.visibleSizePx.x, 0, 0 },
         .color = Color("#0000"),
         .uv = { 1, 0 },
     },
     {
-        .pos = { pageWidthPx, pageHeightPx, 0 },
+        .pos = { page.visibleSizePx.x, page.visibleSizePx.y, 0 },
         .color = Color("#0000"),
         .uv = { 1, 1 },
     },
     {
-        .pos = { 0, pageHeightPx, 0 },
+        .pos = { 0, page.visibleSizePx.y, 0 },
         .color = Color("#0000"),
         .uv = { 0, 1 },
     },
@@ -255,14 +258,16 @@ void RenderShapeToPageFBO(
   GLuint quadIndices[6] = { 0, 1, 2, 2, 3, 0 };
 
   fbo.bind();
+  // glClearColor(1, 0, 0, 0.5);
+  // glClear(GL_COLOR_BUFFER_BIT);
   glBindVertexArray(renderer.app->mainViewportVAO);
   gl::uploadVertexBufferData(renderer.app->mainViewportVBO, quadVertices, 4, gl::DrawType::Dynamic);
   gl::uploadIndexBufferData(renderer.app->mainViewportIBO, quadIndices, 6, gl::DrawType::Dynamic);
   gl::setupBuffers();
 
-  setPixelProjection(app, pageWidthPx, pageHeightPx);
+  setPixelProjection(app, page.visibleSizePx.x, page.visibleSizePx.y);
   auto& bb = app->mainViewportBB;
-  glViewport(0, 0, pageWidthPx, pageHeightPx);
+  glViewport(0, 0, page.visibleSizePx.x, page.visibleSizePx.y);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
   fbo.unbind();
@@ -296,25 +301,25 @@ void RenderFBOToPage(App* app, Renderer& renderer, Document& document, Page& pag
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   auto topLeft = page.getTopLeftPx(app);
-  auto size = page.getRenderSizePx(app);
+  auto size = page.visibleSizePx;
   gl::Vertex quadVertices[4] = {
     {
-        .pos = { topLeft.x, topLeft.y, 0 },
+        .pos = { topLeft.x + page.visibleOffsetPx.x, topLeft.y + page.visibleOffsetPx.y, 0 },
         .color = Color("#0000"),
         .uv = { 0, 1 },
     },
     {
-        .pos = { topLeft.x + size.x, topLeft.y, 0 },
+        .pos = { topLeft.x + page.visibleOffsetPx.x + size.x, topLeft.y + page.visibleOffsetPx.y, 0 },
         .color = Color("#0000"),
         .uv = { 1, 1 },
     },
     {
-        .pos = { topLeft.x + size.x, topLeft.y + size.y, 0 },
+        .pos = { topLeft.x + page.visibleOffsetPx.x + size.x, topLeft.y + page.visibleOffsetPx.y + size.y, 0 },
         .color = Color("#0000"),
         .uv = { 1, 0 },
     },
     {
-        .pos = { topLeft.x, topLeft.y + size.y, 0 },
+        .pos = { topLeft.x + page.visibleOffsetPx.x, topLeft.y + page.visibleOffsetPx.y + size.y, 0 },
         .color = Color("#0000"),
         .uv = { 0, 0 },
     },
@@ -384,10 +389,33 @@ void RenderDocumentForeground(App* app, Renderer& renderer)
       continue;
     }
 
-    auto pageSize = page.getRenderSizePx(renderer.app);
+    auto desiredPageSize = Vec2(page.getRenderSizePx(renderer.app).x, page.getRenderSizePx(renderer.app).y);
+    auto topLeft = Vec2(page.getTopLeftPx(app).x, page.getTopLeftPx(app).y);
+    page.visibleSizePx = Vec2(desiredPageSize.x, desiredPageSize.y);
+
+    auto oldOffset = page.visibleOffsetPx;
+
+    page.visibleOffsetPx.x = max(-topLeft.x, 0);
+    page.visibleOffsetPx.y = max(-topLeft.y, 0);
+
+    // Now clamp size to page size
+    page.visibleSizePx.x = min(page.visibleSizePx.x, desiredPageSize.x - page.visibleOffsetPx.x);
+    page.visibleSizePx.y = min(page.visibleSizePx.y, desiredPageSize.y - page.visibleOffsetPx.y);
+
+    // Now clamp to right viewport edge
+    page.visibleSizePx.x = min(page.visibleSizePx.x, app->mainViewportBB.width - (topLeft.x + page.visibleOffsetPx.x));
+    page.visibleSizePx.y = min(page.visibleSizePx.y, app->mainViewportBB.height - (topLeft.y + page.visibleOffsetPx.y));
+
+    // auto from = topLeft + page.visibleOffsetPx;
+    // auto to = from + page.visibleSizePx;
+    // RenderRectOutline(renderer, { from.x + 1, from.y + 1 }, { to.x - from.x - 2, to.y - from.y - 2 }, "#F00");
+    // print("Offset: {} {} with size {} {}", page.visibleOffsetPx.x, page.visibleOffsetPx.y, page.visibleSizePx.x,
+    //     page.visibleSizePx.y);
+
     auto fboSize = page.persistentFBO.getSize();
-    if (fboSize.x != pageSize.x || fboSize.y != pageSize.y) {
-      page.persistentFBO.clear({ pageSize.x, pageSize.y });
+    if (fboSize.x != (int)page.visibleSizePx.x || fboSize.y != (int)page.visibleSizePx.y
+        || page.visibleOffsetPx != oldOffset) {
+      page.persistentFBO.clear({ (int)page.visibleSizePx.x, (int)page.visibleSizePx.y });
       for (auto& shape : page.shapes) {
         shape.prerendered = false;
         print("Invalidating all prerendered shapes");
@@ -403,7 +431,7 @@ void RenderDocumentForeground(App* app, Renderer& renderer)
 
     RenderFBOToPage(app, renderer, document, page, page.persistentFBO);
 
-    page.previewFBO.clear({ pageSize.x, pageSize.y });
+    page.previewFBO.clear({ (int)page.visibleSizePx.x, (int)page.visibleSizePx.y });
     if (renderer.app->currentlyDrawingOnPage == page.pageNumId) {
       RenderShapeToPageFBO(app, renderer, document, page, document.currentLine, page.previewFBO);
       RenderFBOToPage(app, renderer, document, page, page.previewFBO);
@@ -413,17 +441,8 @@ void RenderDocumentForeground(App* app, Renderer& renderer)
   glEnable(GL_DEPTH_TEST);
 }
 
-void RenderMainViewport(App* app)
+void RenderBatch(App* app, Renderer& renderer)
 {
-  PROFILE_SCOPE();
-  Renderer renderer = { .arena = app->frameArena, .app = app };
-  renderer.nextZIndex = 1;
-
-  RenderDocumentBackground(app, renderer);
-
-  // Now draw the line shapes
-  auto& doc = app->documents[app->selectedDocument];
-
   // Lines
   gl::Vertex* lineVertices = app->frameArena.allocate<gl::Vertex>(renderer.lines.length * 2);
   GLuint* lineIndices = app->frameArena.allocate<GLuint>(renderer.lines.length * 2);
@@ -559,7 +578,22 @@ void RenderMainViewport(App* app)
     glDrawElements(GL_TRIANGLES, totalPolygonIndices, GL_UNSIGNED_INT, (void*)0);
   }
 
+  renderer.lines.clear();
+  renderer.nextZIndex = 1;
+  renderer.polygons.clear();
+  renderer.rectangles.clear();
+}
+
+void RenderMainViewport(App* app)
+{
+  PROFILE_SCOPE();
+  Renderer renderer = { .arena = app->frameArena, .app = app, .nextZIndex = 1 };
+
+  RenderDocumentBackground(app, renderer);
+  RenderBatch(app, renderer);
+
   RenderDocumentForeground(app, renderer);
+  RenderBatch(app, renderer);
 }
 
 void HandleClayErrors(Clay_ErrorData errorData)

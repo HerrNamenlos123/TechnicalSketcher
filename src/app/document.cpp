@@ -11,12 +11,12 @@
 
 const auto RAMER_DOUGLAS_PEUCKER_SMOOTHING = 0.2;
 const auto DOCUMENT_START_POSITION = Vec2(300, 100);
-const auto DOCUMENT_DEFAULT_PAGE_WIDTH = 70;
+const auto DOCUMENT_DEFAULT_ZOOM_MM_PER_PX = 0.2;
 
 void addDocument(App* app)
 {
   Document document = Document {
-    .pageWidthPercentOfWindow = DOCUMENT_DEFAULT_PAGE_WIDTH,
+    .zoomMmPerPx = DOCUMENT_DEFAULT_ZOOM_MM_PER_PX,
     .pageScroll = 0,
     .position = DOCUMENT_START_POSITION,
     .pages = {},
@@ -130,7 +130,7 @@ void openDocumentFromFile(App* app, String filepath)
   }
 
   Document _document = Document {
-    .pageWidthPercentOfWindow = DOCUMENT_DEFAULT_PAGE_WIDTH,
+    .zoomMmPerPx = DOCUMENT_DEFAULT_ZOOM_MM_PER_PX,
     .pageScroll = 0,
     .position = DOCUMENT_START_POSITION,
     .pages = {},
@@ -191,7 +191,7 @@ void openDocumentFromFile(App* app, String filepath)
 void zoomInAtPoint(App* app, double amount, Vec2 point)
 {
   auto& document = app->documents[app->selectedDocument];
-  document.pageWidthPercentOfWindow *= amount;
+  document.zoomMmPerPx /= amount;
 
   auto averageToOrigin = document.position - point;
   auto scaledAverageToOrigin = averageToOrigin * amount;
@@ -311,10 +311,6 @@ void processPenAxisEvent(App* app, SDL_PenAxisEvent event)
 void processPenDownEvent(App* app, SDL_PenTouchEvent event)
 {
   auto& document = app->documents[app->selectedDocument];
-  int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
-  int pageHeightPx = pageWidthPx * 297 / 210;
-  int pageXOffset = document.position.x;
-  int pageYOffset = document.position.y;
 
   for (auto& page : document.pages) {
     Vec2 penPosition = Vec2(event.x - app->mainViewportBB.x, event.y - app->mainViewportBB.y);
@@ -324,7 +320,7 @@ void processPenDownEvent(App* app, SDL_PenTouchEvent event)
     Vec2 topLeft = { topLeftI.x, topLeftI.y };
     auto bottomRight = topLeft + pageSize;
     Vec2 penPosOnPagePx = penPosition - topLeft;
-    Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);
+    Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageSize.x, penPosOnPagePx.y * 297 / pageSize.y);
 
     if (penPosOnPage_mm.x >= 0 && penPosOnPage_mm.x <= 210 && penPosOnPage_mm.y >= 0 && penPosOnPage_mm.y <= 297) {
       app->currentlyDrawingOnPage = page.pageNumId;
@@ -375,10 +371,6 @@ void processMouseMotionEvent(App* app, SDL_MouseMotionEvent event)
 void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
 {
   auto& document = app->documents[app->selectedDocument];
-  int pageWidthPx = document.pageWidthPercentOfWindow * app->mainViewportBB.width / 100.0;
-  int pageHeightPx = pageWidthPx * 297 / 210;
-  int pageXOffset = document.position.x;
-  int pageYOffset = document.position.y;
 
   if (app->currentlyDrawingOnPage == -1) {
     return;
@@ -386,6 +378,7 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
 
   if (event.pen_state & SDL_PEN_INPUT_DOWN) {
     for (auto& page : document.pages) {
+      auto pageSize = page.getRenderSizePx(app);
 
       if (app->currentlyDrawingOnPage != page.pageNumId) {
         continue;
@@ -395,7 +388,7 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
       Vec2 topLeft = { topLeftI.x, topLeftI.y };
       Vec2 penPosition = Vec2(event.x - app->mainViewportBB.x, event.y - app->mainViewportBB.y);
       Vec2 penPosOnPagePx = penPosition - topLeft;
-      Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageWidthPx, penPosOnPagePx.y * 297 / pageHeightPx);
+      Vec2 penPosOnPage_mm = Vec2(penPosOnPagePx.x * 210 / pageSize.x, penPosOnPagePx.y * 297 / pageSize.y);
 
       SamplePoint point;
       point.pos_mm_scaled = penPosOnPage_mm * app->perfectFreehandAccuracyScaling;
