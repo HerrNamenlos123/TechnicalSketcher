@@ -124,8 +124,35 @@ extern "C" __declspec(dllexport) void UnloadApp(App* app)
   app->mainShader = 0;
 }
 
+void handleEvent(SDL_Event& e)
+{
+  auto& event = e;
+  if (e.type == SDL_EVENT_PEN_BUTTON_DOWN) {
+    print("button down");
+    // if (e..proximity) {
+    //   printf("Tablet tool %s proximity in\n", e.ttablet.pointerType == SDL_TABLET_TOOL_PEN ? "pen" : "eraser");
+    // } else {
+    //   printf("Tablet tool proximity out\n");
+    // }
+    // } else if (e.type == SDL_TABLET_TOOL_BUTTON) {
+    //   printf("Tablet button %d %s\n", e.ttbutton.button, e.ttbutton.state ? "pressed" : "released");
+  }
+  if (e.type == SDL_EVENT_PEN_PROXIMITY_IN) {
+    print("proximity in");
+  }
+  if (e.type == SDL_EVENT_PEN_PROXIMITY_OUT) {
+    print("proximity out");
+  }
+  if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
+    print("key");
+    // console.log(`Key event : scancode = $ { event.key.keysym.scancode }, sym = $ { event.key.keysym.sym }`);
+  }
+}
+
 extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event* event)
 {
+  handleEvent(*event);
+
   switch (event->type) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
@@ -199,6 +226,14 @@ extern "C" __declspec(dllexport) SDL_AppResult EventHandler(App* app, SDL_Event*
 
   case SDL_EVENT_PEN_BUTTON_DOWN:
     processPenButtonDownEvent(app, event->pbutton);
+    break;
+
+  case SDL_EVENT_PEN_PROXIMITY_IN:
+    print("Proximity in");
+    break;
+
+  case SDL_EVENT_PEN_PROXIMITY_OUT:
+    print("Proximity out");
     break;
 
   case SDL_EVENT_PEN_BUTTON_UP:

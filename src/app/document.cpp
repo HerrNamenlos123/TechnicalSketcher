@@ -400,8 +400,10 @@ void processPenMotionEvent(App* app, SDL_PenMotionEvent event)
 
 void processPenButtonDownEvent(App* appstate, SDL_PenButtonEvent event)
 {
+  print("Pen button down: {}", (int)event.button);
 }
 
 void processPenButtonUpEvent(App* appstate, SDL_PenButtonEvent event)
 {
+  print("Pen button up: {}", (int)event.button);
 }
