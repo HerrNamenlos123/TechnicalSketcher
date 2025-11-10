@@ -6,7 +6,6 @@
 #include "../../shared/clay.h"
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
-#include <SDL3_ttf/SDL_ttf.h>
 
 #include "../font/fontstash.h"
 #include "../font/glfontstash.h"
